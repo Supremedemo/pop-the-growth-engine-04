@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,9 +46,19 @@ export interface CanvasState {
   zoom: number;
   showGrid: boolean;
   gridSize: number;
+  layout: PopupLayout;
 }
 
 export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
+  const defaultLayout: PopupLayout = {
+    id: "modal-center",
+    name: "Modal - Center",
+    type: "modal",
+    description: "Classic popup in the center of screen",
+    dimensions: { width: 500, height: 400 },
+    position: "center"
+  };
+
   const [canvasState, setCanvasState] = useState<CanvasState>({
     width: 500,
     height: 400,
@@ -58,19 +67,12 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
     elements: [],
     zoom: 1,
     showGrid: true,
-    gridSize: 8
+    gridSize: 8,
+    layout: defaultLayout
   });
 
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [previewDevice, setPreviewDevice] = useState("desktop");
-  const [popupLayout, setPopupLayout] = useState<PopupLayout>({
-    id: "modal-center",
-    name: "Modal - Center",
-    type: "modal",
-    description: "Classic popup in the center of screen",
-    dimensions: { width: 500, height: 400 },
-    position: "center"
-  });
 
   const historyRef = useRef<CanvasState[]>([canvasState]);
   const historyIndexRef = useRef(0);
@@ -100,6 +102,15 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
       return newState;
     });
   }, []);
+
+  const handleLayoutChange = useCallback((layout: PopupLayout) => {
+    console.log('Layout changed:', layout);
+    updateCanvasState({
+      layout,
+      width: layout.dimensions.width,
+      height: layout.dimensions.height
+    });
+  }, [updateCanvasState]);
 
   const handleBackgroundChange = useCallback((type: 'color' | 'image' | 'gradient', value: string) => {
     const updates: Partial<CanvasState> = { backgroundType: type };
@@ -193,8 +204,6 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
       
       console.log('Saving template:', templateData);
       
-      // Here you would typically save to a backend or local storage
-      // For now, we'll just show a success message
       setTemplateName("");
       setTemplateDescription("");
       setTemplateTags([]);
@@ -234,6 +243,9 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
                 <span>{selectedElements.length} element{selectedElements.length > 1 ? 's' : ''} selected</span>
               )}
             </div>
+            <Badge variant="outline" className="text-xs">
+              {canvasState.layout.name} - {canvasState.width}×{canvasState.height}px
+            </Badge>
           </div>
           
           {/* Enhanced Toolbar */}
@@ -379,13 +391,20 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
         <div className="w-80 bg-white border-r border-slate-200 overflow-y-auto">
           <ElementToolbar onAddElement={addElement} />
           
-          <Tabs defaultValue="properties" className="w-full">
+          <Tabs defaultValue="layout" className="w-full">
             <TabsList className="grid w-full grid-cols-4 m-4">
+              <TabsTrigger value="layout">Layout</TabsTrigger>
               <TabsTrigger value="properties">Properties</TabsTrigger>
               <TabsTrigger value="layers">Layers</TabsTrigger>
               <TabsTrigger value="background">Background</TabsTrigger>
-              <TabsTrigger value="layout">Layout</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="layout" className="p-4">
+              <LayoutSelector 
+                selectedLayout={canvasState.layout}
+                onLayoutChange={handleLayoutChange}
+              />
+            </TabsContent>
 
             <TabsContent value="properties" className="p-0">
               <PropertyPanel 
@@ -410,13 +429,6 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
                 backgroundImage={canvasState.backgroundImage}
                 backgroundGradient={canvasState.backgroundGradient}
                 onBackgroundChange={handleBackgroundChange}
-              />
-            </TabsContent>
-
-            <TabsContent value="layout" className="p-4">
-              <LayoutSelector 
-                selectedLayout={popupLayout}
-                onLayoutChange={setPopupLayout}
               />
             </TabsContent>
           </Tabs>
@@ -475,7 +487,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               
               <div className="text-sm text-slate-500">
                 {canvasState.elements.length} element{canvasState.elements.length !== 1 ? 's' : ''} • 
-                Canvas: {canvasState.width}×{canvasState.height}px
+                Canvas: {canvasState.width}×{canvasState.height}px • {canvasState.layout.type}
               </div>
             </div>
           </div>

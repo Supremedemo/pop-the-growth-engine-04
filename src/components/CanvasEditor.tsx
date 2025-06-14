@@ -34,6 +34,8 @@ export const CanvasEditor = ({
 
   const getCanvasStyle = () => {
     const scale = previewDevice === "mobile" ? 0.8 : 1;
+    const layout = canvasState.layout;
+    
     let backgroundStyle = {};
     
     if (canvasState.backgroundType === 'color') {
@@ -48,15 +50,52 @@ export const CanvasEditor = ({
     } else if (canvasState.backgroundType === 'gradient' && canvasState.backgroundGradient) {
       backgroundStyle = { background: canvasState.backgroundGradient };
     }
+
+    // Layout-specific styling
+    let layoutStyle = {};
+    switch (layout.type) {
+      case 'banner':
+        layoutStyle = {
+          width: layout.position === 'top' || layout.position === 'bottom' 
+            ? '100%' 
+            : canvasState.width * scale,
+          height: canvasState.height * scale,
+          maxWidth: layout.dimensions.maxWidth || '100%',
+          borderRadius: layout.position === 'top' || layout.position === 'bottom' ? '0' : '12px'
+        };
+        break;
+      case 'fullscreen':
+        layoutStyle = {
+          width: '100%',
+          height: '100%',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          borderRadius: '0'
+        };
+        break;
+      case 'slide-in':
+        layoutStyle = {
+          width: canvasState.width * scale,
+          height: canvasState.height * scale,
+          borderRadius: layout.position === 'left' || layout.position === 'right' ? '12px 0 0 12px' : '12px'
+        };
+        break;
+      default:
+        layoutStyle = {
+          width: canvasState.width * scale,
+          height: canvasState.height * scale,
+          borderRadius: '12px'
+        };
+    }
     
     return {
-      width: canvasState.width * scale,
-      height: canvasState.height * scale,
+      ...layoutStyle,
       ...backgroundStyle,
       position: 'relative' as const,
-      margin: '40px auto',
-      boxShadow: '0 12px 48px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1)',
-      borderRadius: '12px',
+      margin: layout.type === 'fullscreen' ? '0' : '40px auto',
+      boxShadow: layout.type === 'banner' || layout.type === 'fullscreen' 
+        ? 'none' 
+        : '0 12px 48px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1)',
       overflow: 'hidden',
       border: `2px solid ${isDragOver ? '#3b82f6' : '#e2e8f0'}`,
       transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
@@ -158,12 +197,10 @@ export const CanvasEditor = ({
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // Check if clicking on canvas background
     if (e.target === canvasRef.current) {
       const coords = getCanvasCoordinates(e);
       
       if (e.ctrlKey || e.metaKey) {
-        // Start panning with Ctrl/Cmd + click
         setIsPanning(true);
         setPanStart({
           x: e.clientX,
@@ -173,7 +210,6 @@ export const CanvasEditor = ({
         });
         document.body.style.cursor = 'grabbing';
       } else {
-        // Start selection
         setIsSelecting(true);
         setDragStart(coords);
         setSelectionBox({ x: coords.x, y: coords.y, width: 0, height: 0 });
@@ -211,7 +247,6 @@ export const CanvasEditor = ({
     }
 
     if (isSelecting) {
-      // Find elements within selection box
       const selectedIds = canvasState.elements
         .filter(element => {
           const elementRight = element.x + element.width;
@@ -276,7 +311,6 @@ export const CanvasEditor = ({
     }
     if (e.ctrlKey && e.key === 'd') {
       e.preventDefault();
-      // Duplicate selected elements
       if (selectedElementIds.length > 0) {
         const elementsToClone = canvasState.elements.filter(el => selectedElementIds.includes(el.id));
         const newElements = elementsToClone.map(el => ({
@@ -334,12 +368,44 @@ export const CanvasEditor = ({
     }
   }, [canvasState.zoom]);
 
+  const getLayoutPreviewStyle = () => {
+    const layout = canvasState.layout;
+    
+    switch (layout.type) {
+      case 'banner':
+        return layout.position === 'top' 
+          ? 'border-t-4 border-blue-500' 
+          : 'border-b-4 border-blue-500';
+      case 'slide-in':
+        return layout.position === 'right' 
+          ? 'border-r-4 border-green-500' 
+          : 'border-l-4 border-green-500';
+      case 'fullscreen':
+        return 'border-4 border-purple-500';
+      default:
+        return 'border-2 border-blue-300';
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
       className="w-full h-full overflow-auto bg-gradient-to-br from-slate-50 to-slate-100 p-8"
       onWheel={handleWheel}
     >
+      {/* Layout indicator */}
+      <div className="text-center mb-4">
+        <div className="inline-flex items-center space-x-2 text-sm text-slate-600 bg-white px-3 py-1 rounded-full shadow-sm">
+          <div className={`w-3 h-3 rounded-full ${
+            canvasState.layout.type === 'modal' ? 'bg-blue-500' :
+            canvasState.layout.type === 'banner' ? 'bg-orange-500' :
+            canvasState.layout.type === 'slide-in' ? 'bg-green-500' :
+            canvasState.layout.type === 'fullscreen' ? 'bg-purple-500' : 'bg-gray-500'
+          }`} />
+          <span>{canvasState.layout.name}</span>
+        </div>
+      </div>
+
       <div
         ref={canvasRef}
         style={getCanvasStyle()}
@@ -347,7 +413,7 @@ export const CanvasEditor = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative select-none transition-all duration-200 ${
+        className={`relative select-none transition-all duration-200 ${getLayoutPreviewStyle()} ${
           isPanning ? 'cursor-grabbing' : isSelecting ? 'cursor-crosshair' : 'cursor-default'
         } ${isDragOver ? 'ring-2 ring-blue-400 ring-opacity-50' : ''}`}
       >
@@ -400,7 +466,7 @@ export const CanvasEditor = ({
                   </svg>
                 </div>
               </div>
-              <p className="text-lg font-medium text-slate-600 mb-2">Start building your popup</p>
+              <p className="text-lg font-medium text-slate-600 mb-2">Start building your {canvasState.layout.type}</p>
               <p className="text-sm text-slate-500 mb-4">Drag elements from the toolbar to create your design</p>
               <div className="text-xs text-slate-400 space-y-1">
                 <p>💡 Hold Ctrl/Cmd + click to pan around</p>
