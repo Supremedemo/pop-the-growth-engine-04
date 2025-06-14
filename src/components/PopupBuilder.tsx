@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,6 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-  ResizableHandleDirection,
 } from "@/components/ui/resizable";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
@@ -64,6 +64,10 @@ export interface Layout {
   dimensions?: {
     maxWidth?: string;
   };
+}
+
+interface PopupBuilderProps {
+  onBack?: () => void;
 }
 
 const defaultLayouts: Layout[] = [
@@ -94,7 +98,7 @@ const layoutsConfig = {
   fullscreen: { width: window.innerWidth, height: window.innerHeight }
 };
 
-export const PopupBuilder = () => {
+export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
   const [canvasState, setCanvasState] = useState<CanvasState>(initialCanvasState);
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [showTemplateGallery, setShowTemplateGallery] = useState(true);
@@ -115,6 +119,40 @@ export const PopupBuilder = () => {
 
       // Handle canvas templates (existing logic)
       if (templateData.elements) {
+        const validElements = templateData.elements.map((el: any) => {
+          // Ensure each element has a proper type
+          if (el.type === 'text') {
+            return {
+              type: 'text' as const,
+              id: el.id || uuidv4(),
+              x: el.x || 0,
+              y: el.y || 0,
+              width: el.width || 200,
+              height: el.height || 50,
+              zIndex: el.zIndex || 1,
+              content: el.content || 'Text',
+              fontSize: el.fontSize || 16,
+              fontWeight: el.fontWeight || 'normal',
+              textAlign: el.textAlign || 'left',
+              color: el.color || '#000000'
+            };
+          } else if (el.type === 'image') {
+            return {
+              type: 'image' as const,
+              id: el.id || uuidv4(),
+              x: el.x || 0,
+              y: el.y || 0,
+              width: el.width || 200,
+              height: el.height || 150,
+              zIndex: el.zIndex || 1,
+              src: el.src || '',
+              alt: el.alt || 'Image',
+              borderRadius: el.borderRadius || 0
+            };
+          }
+          return null;
+        }).filter(Boolean);
+
         setCanvasState(prev => ({
           ...prev,
           width: templateData.width || 500,
@@ -122,7 +160,7 @@ export const PopupBuilder = () => {
           backgroundColor: templateData.backgroundColor || "#ffffff",
           backgroundType: templateData.backgroundType || 'color',
           backgroundGradient: templateData.backgroundGradient || "",
-          elements: templateData.elements || []
+          elements: validElements
         }));
         setShowTemplateGallery(false);
       }
@@ -266,8 +304,10 @@ export const PopupBuilder = () => {
 
         {showPublishDialog && (
           <PublishDialog
-            canvasState={canvasState}
-            onClose={() => setShowPublishDialog(false)}
+            open={showPublishDialog}
+            onOpenChange={setShowPublishDialog}
+            templateName={`${gameType} Game`}
+            canvasData={canvasState}
           />
         )}
       </div>
@@ -684,8 +724,10 @@ export const PopupBuilder = () => {
 
       {showPublishDialog && (
         <PublishDialog
-          canvasState={canvasState}
-          onClose={() => setShowPublishDialog(false)}
+          open={showPublishDialog}
+          onOpenChange={setShowPublishDialog}
+          templateName="Popup"
+          canvasData={canvasState}
         />
       )}
     </div>
