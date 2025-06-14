@@ -4,6 +4,7 @@ import { CanvasState } from "@/components/PopupBuilder";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useAssetManagement } from "@/hooks/useAssetManagement";
+import { useTemplateManagement } from "@/hooks/useTemplateManagement";
 import { toast } from "sonner";
 
 interface TemplateManagerProps {
@@ -16,12 +17,14 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
   const { templates, saveTemplate, updateTemplate, isSaving } = useTemplates();
   const { createCampaign, isCreating } = useCampaigns();
   const { uploadAsset, isUploading } = useAssetManagement();
+  const { saveTemplateWithCanvas, generateTemplateCode, isSavingTemplate } = useTemplateManagement();
 
   const [currentTemplateId, setCurrentTemplateId] = useState(templateId);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [isCodeDialogOpen, setIsCodeDialogOpen] = useState(false);
 
   // Load template if templateId is provided
   const loadedTemplate = currentTemplateId ? templates.find(t => t.id === currentTemplateId) : null;
@@ -48,7 +51,8 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
         }
       });
     } else {
-      saveTemplate({
+      // Use the new saveTemplateWithCanvas method
+      saveTemplateWithCanvas({
         name: templateName.trim(),
         description: templateDescription.trim() || undefined,
         canvasData: canvasState,
@@ -57,7 +61,7 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
     }
     
     setIsSaveDialogOpen(false);
-  }, [templateName, currentTemplateId, updateTemplate, templateDescription, canvasState, templateTags, saveTemplate]);
+  }, [templateName, currentTemplateId, updateTemplate, templateDescription, canvasState, templateTags, saveTemplateWithCanvas]);
 
   const handleCreateCampaign = useCallback(() => {
     if (!templateName.trim()) {
@@ -111,6 +115,12 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
     setTemplateTags(templateTags.filter(tag => tag !== tagToRemove));
   }, [templateTags]);
 
+  const handleGenerateCode = useCallback(() => {
+    setIsCodeDialogOpen(true);
+  }, []);
+
+  const generatedCode = generateTemplateCode(canvasState);
+
   return {
     templates,
     currentTemplateId,
@@ -122,7 +132,7 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
     setTemplateTags,
     newTag,
     setNewTag,
-    isSaving,
+    isSaving: isSaving || isSavingTemplate,
     isCreating,
     isUploading,
     isSaveDialogOpen,
@@ -133,11 +143,15 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
     setIsPreviewDialogOpen,
     isTemplateDialogOpen,
     setIsTemplateDialogOpen,
+    isCodeDialogOpen,
+    setIsCodeDialogOpen,
+    generatedCode,
     handleSaveTemplate,
     handleCreateCampaign,
     handleLoadTemplate,
     loadTemplate,
     handleFileUpload,
+    handleGenerateCode,
     addTag,
     removeTag
   };

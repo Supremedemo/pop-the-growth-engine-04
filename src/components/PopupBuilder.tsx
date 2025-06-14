@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Smartphone, Monitor } from "lucide-react";
@@ -15,6 +14,7 @@ import { PopupLayout } from "./LayoutSelector";
 import { useCanvasStateManager } from "./popup-builder/CanvasStateManager";
 import { useZoomControls } from "./popup-builder/ZoomControls";
 import { useTemplateManager } from "./popup-builder/TemplateManager";
+import { TemplatePublisher } from "./popup-builder/TemplatePublisher";
 
 interface PopupBuilderProps {
   onBack: () => void;
@@ -127,6 +127,7 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
         onPreview={() => templateManager.setIsPreviewDialogOpen(true)}
         onSave={() => templateManager.setIsSaveDialogOpen(true)}
         onCreateCampaign={templateManager.handleCreateCampaign}
+        onGenerateCode={templateManager.handleGenerateCode}
       />
 
       <TemplateDialogs
@@ -152,6 +153,14 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
         onSave={templateManager.handleSaveTemplate}
         onAddTag={templateManager.addTag}
         onRemoveTag={templateManager.removeTag}
+      />
+
+      <TemplatePublisher
+        isOpen={templateManager.isCodeDialogOpen}
+        onOpenChange={templateManager.setIsCodeDialogOpen}
+        canvasData={canvasState}
+        templateName={templateManager.templateName || "Untitled Template"}
+        generatedCode={templateManager.generatedCode}
       />
 
       <PublishDialog

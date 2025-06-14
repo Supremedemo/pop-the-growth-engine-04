@@ -1,18 +1,29 @@
-
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowLeft, 
-  Eye, 
-  Save, 
-  Undo,
+import { Input } from "@/components/ui/input";
+import {
+  ArrowLeft,
+  Code,
+  Eye,
+  FileText,
+  Loader2,
   Redo,
+  Reset,
+  Rocket,
+  Save,
+  Undo,
   ZoomIn,
   ZoomOut,
-  Grid,
-  FolderOpen,
-  ExternalLink
+  LayoutDashboard,
+  Brush,
+  Grip,
+  EyeOff
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface EditorHeaderProps {
   onBack: () => void;
@@ -38,6 +49,7 @@ interface EditorHeaderProps {
   onPreview: () => void;
   onSave: () => void;
   onCreateCampaign: () => void;
+  onGenerateCode: () => void;
 }
 
 export const EditorHeader = ({
@@ -63,95 +75,170 @@ export const EditorHeader = ({
   onToggleGrid,
   onPreview,
   onSave,
-  onCreateCampaign
+  onCreateCampaign,
+  onGenerateCode
 }: EditorHeaderProps) => {
   return (
     <div className="bg-white border-b border-slate-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            Back
           </Button>
-          <h1 className="text-xl font-semibold">
-            {currentTemplateId ? `Editing: ${templateName}` : 'Canvas Editor'}
-          </h1>
-          <div className="text-sm text-slate-500">
-            {selectedElementsCount > 0 && (
-              <span>{selectedElementsCount} element{selectedElementsCount > 1 ? 's' : ''} selected</span>
-            )}
+          
+          <div className="h-6 w-px bg-slate-300" />
+          
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={onLoadTemplate}>
+              <FileText className="w-4 h-4 mr-2" />
+              Templates
+            </Button>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onUndo}
+                    disabled={!canUndo}
+                  >
+                    <Undo className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Undo</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onRedo}
+                    disabled={!canRedo}
+                  >
+                    <Redo className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Redo</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={onZoomIn}>
+                    <ZoomIn className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Zoom In</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={onZoomOut}>
+                    <ZoomOut className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Zoom Out</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={onResetZoom}>
+                    <Reset className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Reset Zoom</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={onToggleGrid}>
+                    {showGrid ? <Grip className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{showGrid ? 'Hide Grid' : 'Show Grid'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
-          <Badge variant="outline" className="text-xs">
-            {layoutName} - {canvasWidth}×{canvasHeight}px
-          </Badge>
         </div>
-        
+
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={onLoadTemplate}>
-            <FolderOpen className="w-4 h-4 mr-1" />
-            Load
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onUndo}
-            disabled={!canUndo}
-            className="disabled:opacity-50"
-          >
-            <Undo className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onRedo}
-            disabled={!canRedo}
-            className="disabled:opacity-50"
-          >
-            <Redo className="w-4 h-4" />
-          </Button>
-          <div className="w-px h-6 bg-slate-300" />
-          <Button variant="outline" size="sm" onClick={onZoomOut}>
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onResetZoom}
-            className="min-w-[60px] text-center"
-          >
-            {Math.round(zoom * 100)}%
-          </Button>
-          <Button variant="outline" size="sm" onClick={onZoomIn}>
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-          <Button 
-            variant={showGrid ? "default" : "outline"} 
-            size="sm" 
-            onClick={onToggleGrid}
-          >
-            <Grid className="w-4 h-4" />
-          </Button>
-          <div className="w-px h-6 bg-slate-300" />
-          <Button variant="outline" onClick={onPreview}>
+          <Button variant="outline" size="sm" onClick={onPreview}>
             <Eye className="w-4 h-4 mr-2" />
             Preview
           </Button>
+          
+          <Button variant="outline" size="sm" onClick={onGenerateCode}>
+            <Code className="w-4 h-4 mr-2" />
+            Generate Code
+          </Button>
+          
           <Button 
-            variant="outline" 
+            size="sm" 
             onClick={onSave}
             disabled={isSaving}
           >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                {currentTemplateId ? 'Update' : 'Save'}
+              </>
+            )}
           </Button>
+          
           <Button 
-            className="bg-gradient-to-r from-blue-600 to-purple-600"
+            variant="secondary" 
+            size="sm" 
             onClick={onCreateCampaign}
             disabled={isCreating}
           >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            {isCreating ? 'Creating...' : 'Create Campaign'}
+            {isCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Rocket className="w-4 h-4 mr-2" />
+                Create Campaign
+              </>
+            )}
           </Button>
+        </div>
+      </div>
+      
+      <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
+        <div>
+          <span className="mr-2">
+            <LayoutDashboard className="w-3 h-3 inline-block mr-1 align-text-bottom" />
+            {layoutName}
+          </span>
+          <span>
+            <Brush className="w-3 h-3 inline-block mr-1 align-text-bottom" />
+            {canvasWidth}×{canvasHeight}px
+          </span>
+        </div>
+        
+        <div>
+          Zoom: {(zoom * 100).toFixed(0)}%
+          {currentTemplateId && ' • Template: ' + templateName}
+          {selectedElementsCount > 0 && ` • ${selectedElementsCount} element${selectedElementsCount !== 1 ? 's' : ''} selected`}
         </div>
       </div>
     </div>
