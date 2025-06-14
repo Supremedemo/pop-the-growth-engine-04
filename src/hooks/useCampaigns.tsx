@@ -44,7 +44,7 @@ export const useCampaigns = () => {
       // Cast the Json canvas_data to CanvasState
       return (data || []).map(campaign => ({
         ...campaign,
-        canvas_data: campaign.canvas_data as CanvasState
+        canvas_data: campaign.canvas_data as unknown as CanvasState
       })) as Campaign[];
     },
     enabled: !!user
@@ -78,7 +78,7 @@ export const useCampaigns = () => {
       
       return {
         ...data,
-        canvas_data: data.canvas_data as CanvasState
+        canvas_data: data.canvas_data as unknown as CanvasState
       } as Campaign;
     },
     onSuccess: () => {
@@ -114,7 +114,7 @@ export const useCampaigns = () => {
       
       return {
         ...data,
-        canvas_data: data.canvas_data as CanvasState
+        canvas_data: data.canvas_data as unknown as CanvasState
       } as Campaign;
     },
     onSuccess: () => {

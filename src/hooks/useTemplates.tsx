@@ -41,7 +41,7 @@ export const useTemplates = () => {
       // Cast the Json canvas_data to CanvasState
       return (data || []).map(template => ({
         ...template,
-        canvas_data: template.canvas_data as CanvasState
+        canvas_data: template.canvas_data as unknown as CanvasState
       })) as UserTemplate[];
     },
     enabled: !!user
@@ -73,7 +73,7 @@ export const useTemplates = () => {
       
       return {
         ...data,
-        canvas_data: data.canvas_data as CanvasState
+        canvas_data: data.canvas_data as unknown as CanvasState
       } as UserTemplate;
     },
     onSuccess: () => {
@@ -109,7 +109,7 @@ export const useTemplates = () => {
       
       return {
         ...data,
-        canvas_data: data.canvas_data as CanvasState
+        canvas_data: data.canvas_data as unknown as CanvasState
       } as UserTemplate;
     },
     onSuccess: () => {
