@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,6 +30,7 @@ import { LayerPanel } from "./LayerPanel";
 import { AlignmentTools } from "./AlignmentTools";
 import { BackgroundControls } from "./BackgroundControls";
 import { PublishDialog } from "./PublishDialog";
+import { PreviewDialog } from "./PreviewDialog";
 import { PopupElement } from "./PopupElements";
 
 interface PopupBuilderProps {
@@ -79,6 +81,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
 
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateTags, setTemplateTags] = useState<string[]>([]);
@@ -291,7 +294,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <Grid className="w-4 h-4" />
             </Button>
             <div className="w-px h-6 bg-slate-300" />
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setIsPreviewDialogOpen(true)}>
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
@@ -383,6 +386,13 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
         onOpenChange={setIsPublishDialogOpen}
         templateName={templateName || "Untitled Template"}
         canvasData={canvasState}
+      />
+
+      {/* Preview Dialog */}
+      <PreviewDialog
+        open={isPreviewDialogOpen}
+        onOpenChange={setIsPreviewDialogOpen}
+        canvasState={canvasState}
       />
 
       {/* Main Content */}
