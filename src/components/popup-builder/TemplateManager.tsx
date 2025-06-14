@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { CanvasState } from "@/components/PopupBuilder";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useCampaigns } from "@/hooks/useCampaigns";
-import { useFileUpload } from "@/hooks/useFileUpload";
+import { useAssetManagement } from "@/hooks/useAssetManagement";
 import { toast } from "sonner";
 
 interface TemplateManagerProps {
@@ -15,7 +15,7 @@ interface TemplateManagerProps {
 export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: TemplateManagerProps) => {
   const { templates, saveTemplate, updateTemplate, isSaving } = useTemplates();
   const { createCampaign, isCreating } = useCampaigns();
-  const { uploadFile, isUploading } = useFileUpload();
+  const { uploadAsset, isUploading } = useAssetManagement();
 
   const [currentTemplateId, setCurrentTemplateId] = useState(templateId);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
@@ -92,13 +92,13 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
     if (!file) return;
 
     try {
-      const uploadedFile = await uploadFile(file, '/popup-assets/');
+      const uploadedFile = await uploadAsset(file, '/popup-assets/');
       return uploadedFile.url;
     } catch (error) {
       console.error('Error uploading file:', error);
       throw error;
     }
-  }, [uploadFile]);
+  }, [uploadAsset]);
 
   const addTag = useCallback(() => {
     if (newTag.trim() && !templateTags.includes(newTag.trim())) {
