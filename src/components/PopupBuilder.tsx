@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +19,8 @@ import {
   ZoomIn,
   ZoomOut,
   Plus,
-  X
+  X,
+  ExternalLink
 } from "lucide-react";
 import { ElementToolbar } from "./ElementToolbar";
 import { PropertyPanel } from "./PropertyPanel";
@@ -27,6 +29,7 @@ import { CanvasEditor } from "./CanvasEditor";
 import { LayerPanel } from "./LayerPanel";
 import { AlignmentTools } from "./AlignmentTools";
 import { BackgroundControls } from "./BackgroundControls";
+import { PublishDialog } from "./PublishDialog";
 import { PopupElement } from "./PopupElements";
 
 interface PopupBuilderProps {
@@ -73,6 +76,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
   const historyIndexRef = useRef(0);
 
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateTags, setTemplateTags] = useState<string[]>([]);
@@ -283,7 +287,11 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <Save className="w-4 h-4 mr-2" />
               Save
             </Button>
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+            <Button 
+              className="bg-gradient-to-r from-blue-600 to-purple-600"
+              onClick={() => setIsPublishDialogOpen(true)}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
               Publish
             </Button>
           </div>
@@ -356,6 +364,14 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Publish Dialog */}
+      <PublishDialog
+        open={isPublishDialogOpen}
+        onOpenChange={setIsPublishDialogOpen}
+        templateName={templateName || "Untitled Template"}
+        canvasData={canvasState}
+      />
 
       {/* Main Content */}
       <div className="flex h-[calc(100vh-80px)]">
