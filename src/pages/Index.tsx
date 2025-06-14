@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, Shield, LogOut, User } from "lucide-react";
+import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, Shield, LogOut, User, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
 import { TemplateGallery } from "@/components/TemplateGallery";
@@ -18,6 +20,7 @@ interface IndexProps {
 
 const Index = ({ username, onLogout }: IndexProps) => {
   const [activeView, setActiveView] = useState("dashboard");
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const renderActiveView = () => {
     switch (activeView) {
@@ -39,9 +42,9 @@ const Index = ({ username, onLogout }: IndexProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Navigation Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+      <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -55,7 +58,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
                   Pop The Builder
                 </h1>
               </div>
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
+              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                 Pro Plan
               </Badge>
             </div>
@@ -65,7 +68,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 <button
                   onClick={() => setActiveView("dashboard")}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                    activeView === "dashboard" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
+                    activeView === "dashboard" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
                   }`}
                 >
                   <BarChart3 className="w-4 h-4" />
@@ -74,7 +77,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 <button
                   onClick={() => setActiveView("campaigns")}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                    activeView === "campaigns" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
+                    activeView === "campaigns" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
                   }`}
                 >
                   <Target className="w-4 h-4" />
@@ -83,7 +86,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 <button
                   onClick={() => setActiveView("templates")}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                    activeView === "templates" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
+                    activeView === "templates" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
                   }`}
                 >
                   <Lightbulb className="w-4 h-4" />
@@ -92,7 +95,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 <button
                   onClick={() => setActiveView("analytics")}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                    activeView === "analytics" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
+                    activeView === "analytics" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
                   }`}
                 >
                   <TrendingUp className="w-4 h-4" />
@@ -101,7 +104,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 <button
                   onClick={() => setActiveView("admin")}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                    activeView === "admin" ? "bg-red-100 text-red-700" : "text-slate-600 hover:text-slate-900"
+                    activeView === "admin" ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300" : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
                   }`}
                 >
                   <Shield className="w-4 h-4" />
@@ -116,9 +119,17 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 </Button>
               </nav>
               
-              {/* User section with logout */}
-              <div className="flex items-center space-x-3 border-l border-slate-200 pl-6">
-                <div className="flex items-center space-x-2 text-slate-700">
+              {/* User section with theme toggle and logout */}
+              <div className="flex items-center space-x-3 border-l border-slate-200 dark:border-slate-700 pl-6">
+                <Button
+                  onClick={toggleTheme}
+                  variant="outline"
+                  size="sm"
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
+                >
+                  {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
+                <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
                   <User className="w-4 h-4" />
                   <span className="font-medium">{username}</span>
                 </div>
@@ -126,7 +137,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
                   onClick={onLogout}
                   variant="outline"
                   size="sm"
-                  className="text-slate-600 hover:text-red-600 hover:border-red-300"
+                  className="text-slate-600 hover:text-red-600 hover:border-red-300 dark:text-slate-300 dark:hover:text-red-400"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
