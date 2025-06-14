@@ -7,8 +7,10 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, Copy, ExternalLink } from "lucide-react";
-import { PopupElement, TextElement, ImageElement, FormElement, TimerElement, CustomHtmlElementType, MultiStepFormElement, FormStep, FormFieldType, SuccessPageConfig } from "./PopupElements";
+import { PopupElement, TextElement, ImageElement, FormElement, TimerElement, CustomHtmlElementType, FormField } from "./PopupElements";
+import { MultiStepFormElement, FormStep, FormFieldType, SuccessPageConfig } from "./MultiStepFormElement";
 
 interface PropertyPanelProps {
   selectedElement: PopupElement | null;
