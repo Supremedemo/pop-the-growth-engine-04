@@ -113,55 +113,60 @@ const createTypedElement = (el: any): PopupElement | null => {
 
   switch (el.type) {
     case 'text': {
-      return {
+      const textElement: TextElement = {
         ...baseProps,
-        type: 'text' as const,
+        type: 'text',
         content: el.content || 'Text',
         fontSize: el.fontSize || 16,
         fontWeight: el.fontWeight || 'normal',
         textAlign: el.textAlign || 'left',
         color: el.color || '#000000'
       };
+      return textElement;
     }
     case 'image': {
-      return {
+      const imageElement: ImageElement = {
         ...baseProps,
-        type: 'image' as const,
+        type: 'image',
         src: el.src || '',
         alt: el.alt || 'Image',
         borderRadius: el.borderRadius || 0
       };
+      return imageElement;
     }
     case 'form': {
-      return {
+      const formElement: FormElement = {
         ...baseProps,
-        type: 'form' as const,
+        type: 'form',
         fields: el.fields || [],
         buttonText: el.buttonText || 'Submit',
         buttonColor: el.buttonColor || '#000000'
       };
+      return formElement;
     }
     case 'timer': {
-      return {
+      const timerElement: TimerElement = {
         ...baseProps,
-        type: 'timer' as const,
+        type: 'timer',
         duration: el.duration || 60,
         format: el.format || 'mm:ss',
         backgroundColor: el.backgroundColor || '#000000',
         textColor: el.textColor || '#ffffff'
       };
+      return timerElement;
     }
     case 'html': {
-      return {
+      const htmlElement: CustomHtmlElementType = {
         ...baseProps,
-        type: 'html' as const,
+        type: 'html',
         htmlContent: el.htmlContent || ''
       };
+      return htmlElement;
     }
     case 'multi-step-form': {
-      return {
+      const multiStepFormElement: MultiStepFormElement = {
         ...baseProps,
-        type: 'multi-step-form' as const,
+        type: 'multi-step-form',
         steps: el.steps || [],
         successPage: el.successPage || {
           title: 'Thank you!',
@@ -175,6 +180,7 @@ const createTypedElement = (el: any): PopupElement | null => {
         buttonColor: el.buttonColor || '#3b82f6',
         backgroundColor: el.backgroundColor || '#ffffff'
       };
+      return multiStepFormElement;
     }
     default:
       return null;
