@@ -92,6 +92,11 @@ export const TemplatePublisher = ({
   };
 
   const generateJSBeacon = () => {
+    // Escape the template literals properly for the beacon
+    const escapedCss = generatedCode.css.replace(/`/g, '\\`').replace(/\${/g, '\\${');
+    const escapedHtml = generatedCode.html.replace(/`/g, '\\`').replace(/\${/g, '\\${');
+    const escapedJs = generatedCode.js.replace(/`/g, '\\`').replace(/\${/g, '\\${');
+    
     return `(function() {
   // PopupBuilder JS Beacon for ${templateName}
   
@@ -131,17 +136,17 @@ export const TemplatePublisher = ({
   
   // Inject styles
   var styleSheet = document.createElement('style');
-  styleSheet.textContent = \`${generatedCode.css}\`;
+  styleSheet.textContent = \`${escapedCss}\`;
   document.head.appendChild(styleSheet);
   
   // Inject popup HTML
   var popupContainer = document.createElement('div');
-  popupContainer.innerHTML = \`${generatedCode.html}\`;
+  popupContainer.innerHTML = \`${escapedHtml}\`;
   document.body.appendChild(popupContainer);
   
   // Inject and execute popup JavaScript
   var script = document.createElement('script');
-  script.textContent = \`${generatedCode.js}\`;
+  script.textContent = \`${escapedJs}\`;
   document.body.appendChild(script);
   
   // Track beacon loaded
@@ -303,7 +308,7 @@ export const TemplatePublisher = ({
                   <ol className="text-sm space-y-1 list-decimal list-inside">
                     <li>Download the .liquid file</li>
                     <li>Upload to your theme's <code>snippets/</code> folder</li>
-                    <li>Include in your template: <code>{% raw %}{% include 'popup-template' %}{% endraw %}</code></li>
+                    <li>Include in your template: <code>{"{% include 'popup-template' %}"}</code></li>
                     <li>The popup will automatically appear on index and product pages</li>
                   </ol>
                 </div>
