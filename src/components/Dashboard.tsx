@@ -14,7 +14,7 @@ import { useCampaigns } from "@/hooks/useCampaigns";
 import { useWebsiteManagement } from "@/hooks/useWebsiteManagement";
 import { 
   Plus, 
-  Template, 
+  FileText, 
   Rocket, 
   BarChart3, 
   Globe,
@@ -77,7 +77,7 @@ export const Dashboard = ({ onNavigateToBuilder }: DashboardProps) => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Templates</CardTitle>
-                  <Template className="w-4 h-4 text-slate-600" />
+                  <FileText className="w-4 h-4 text-slate-600" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.templates}</div>
@@ -154,7 +154,7 @@ export const Dashboard = ({ onNavigateToBuilder }: DashboardProps) => {
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("templates")}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Template className="w-5 h-5" />
+                    <FileText className="w-5 h-5" />
                     Browse Templates
                   </CardTitle>
                   <CardDescription>Explore and use existing templates</CardDescription>
@@ -211,7 +211,7 @@ export const Dashboard = ({ onNavigateToBuilder }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="templates">
-            <TemplateGallery onSelectTemplate={(template) => {
+            <TemplateGallery onSelectTemplate={() => {
               // Navigate to builder with selected template
               setActiveTab("builder");
             }} />

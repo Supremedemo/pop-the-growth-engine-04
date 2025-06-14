@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -14,7 +13,6 @@ export interface Website {
   beacon_id: string;
   api_key: string;
   tracking_enabled: boolean;
-  popup_triggers: any[];
   created_at: string;
   updated_at: string;
 }
@@ -23,7 +21,6 @@ export const useWebsiteManagement = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch user websites
   const {
     data: websites = [],
     isLoading,
@@ -39,20 +36,19 @@ export const useWebsiteManagement = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Website[];
+      
+      return (data || []) as Website[];
     },
     enabled: !!user
   });
 
-  // Add website mutation
   const addWebsiteMutation = useMutation({
     mutationFn: async ({ name, url }: { name: string; url: string }) => {
       if (!user) throw new Error('User not authenticated');
 
       // Extract domain from URL
-      const domain = new URL(url).hostname;
-      const beaconId = `beacon_${Math.random().toString(36).substr(2, 12)}`;
-      const apiKey = `api_${Math.random().toString(36).substr(2, 16)}`;
+      const urlObj = new URL(url);
+      const domain = urlObj.hostname;
 
       const { data, error } = await supabase
         .from('websites')
@@ -60,16 +56,13 @@ export const useWebsiteManagement = () => {
           user_id: user.id,
           name,
           url,
-          domain,
-          beacon_id: beaconId,
-          api_key: apiKey,
-          tracking_enabled: true,
-          popup_triggers: []
+          domain
         })
         .select()
         .single();
 
       if (error) throw error;
+      
       return data as Website;
     },
     onSuccess: () => {
@@ -82,7 +75,6 @@ export const useWebsiteManagement = () => {
     }
   });
 
-  // Update website mutation
   const updateWebsiteMutation = useMutation({
     mutationFn: async ({ id, updates }: {
       id: string;
@@ -90,15 +82,13 @@ export const useWebsiteManagement = () => {
     }) => {
       const { data, error } = await supabase
         .from('websites')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
+      
       return data as Website;
     },
     onSuccess: () => {
@@ -111,7 +101,6 @@ export const useWebsiteManagement = () => {
     }
   });
 
-  // Delete website mutation
   const deleteWebsiteMutation = useMutation({
     mutationFn: async (websiteId: string) => {
       const { error } = await supabase
@@ -131,154 +120,100 @@ export const useWebsiteManagement = () => {
     }
   });
 
-  // Generate beacon code for a website
   const generateBeaconCode = (website: Website) => {
-    return `
-<!-- ${website.name} Tracking Beacon -->
+    return `<!-- Pop The Builder Tracking Beacon -->
 <script>
 (function() {
-  window.PopupTracker = {
-    websiteId: '${website.id}',
-    beaconId: '${website.beacon_id}',
-    apiKey: '${website.api_key}',
-    domain: '${website.domain}',
-    apiEndpoint: 'https://qxwjsqnjwjdnawpwotfv.supabase.co/functions/v1/track-events',
+  var ptb = window.ptb = window.ptb || {};
+  ptb.websiteId = "${website.beacon_id}";
+  ptb.apiKey = "${website.api_key}";
+  ptb.apiUrl = "https://qxwjsqnjwjdnawpwotfv.supabase.co";
+  
+  // Generate or get session ID
+  ptb.sessionId = sessionStorage.getItem('ptb_session') || 
+    Math.random().toString(36).substring(2) + Date.now().toString(36);
+  sessionStorage.setItem('ptb_session', ptb.sessionId);
+  
+  // Generate or get user ID
+  ptb.userId = localStorage.getItem('ptb_user') || 
+    Math.random().toString(36).substring(2) + Date.now().toString(36);
+  localStorage.setItem('ptb_user', ptb.userId);
+  
+  // Track page view
+  ptb.track = function(eventType, data) {
+    var eventData = {
+      event_type: eventType,
+      website_id: ptb.websiteId,
+      user_id: ptb.userId,
+      session_id: ptb.sessionId,
+      url: window.location.href,
+      referrer: document.referrer,
+      user_agent: navigator.userAgent,
+      timestamp: new Date().toISOString(),
+      data: data || {}
+    };
     
-    // Initialize tracking
-    init: function() {
-      this.userId = this.getUserId();
-      this.sessionId = this.getSessionId();
-      this.trackPageView();
-      this.setupEventListeners();
-    },
-    
-    // Get or create user ID
-    getUserId: function() {
-      let userId = localStorage.getItem('popup_user_id');
-      if (!userId) {
-        userId = 'user_' + Math.random().toString(36).substr(2, 16);
-        localStorage.setItem('popup_user_id', userId);
-      }
-      return userId;
-    },
-    
-    // Get or create session ID
-    getSessionId: function() {
-      let sessionId = sessionStorage.getItem('popup_session_id');
-      if (!sessionId) {
-        sessionId = 'session_' + Math.random().toString(36).substr(2, 16);
-        sessionStorage.setItem('popup_session_id', sessionId);
-      }
-      return sessionId;
-    },
-    
-    // Track events
-    track: function(eventType, eventData = {}) {
-      const payload = {
-        website_id: this.websiteId,
-        user_id: this.userId,
-        session_id: this.sessionId,
-        event_type: eventType,
-        event_data: eventData,
-        url: window.location.href,
-        referrer: document.referrer,
-        user_agent: navigator.userAgent,
-        timestamp: Date.now()
-      };
-      
-      fetch(this.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + this.apiKey
-        },
-        body: JSON.stringify(payload)
-      }).catch(err => console.warn('Tracking error:', err));
-      
-      // Check for popup triggers
-      this.checkTriggers(eventType, eventData);
-    },
-    
-    // Track page view
-    trackPageView: function() {
-      this.track('page_view', {
-        page_title: document.title,
-        page_path: window.location.pathname
-      });
-    },
-    
-    // Setup event listeners
-    setupEventListeners: function() {
-      // Track clicks
-      document.addEventListener('click', (e) => {
-        this.track('click', {
-          element: e.target.tagName,
-          text: e.target.textContent?.slice(0, 100),
-          classes: e.target.className
-        });
-      });
-      
-      // Track form submissions
-      document.addEventListener('submit', (e) => {
-        this.track('form_submit', {
-          form_id: e.target.id,
-          form_action: e.target.action
-        });
-      });
-      
-      // Track scroll depth
-      let maxScroll = 0;
-      window.addEventListener('scroll', () => {
-        const scrollPercent = Math.round(
-          (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
-        );
-        if (scrollPercent > maxScroll) {
-          maxScroll = scrollPercent;
-          if (maxScroll % 25 === 0) { // Track at 25%, 50%, 75%, 100%
-            this.track('scroll_depth', { percent: maxScroll });
-          }
-        }
-      });
-      
-      // Track time on page
-      let timeOnPage = 0;
-      setInterval(() => {
-        timeOnPage += 10;
-        if (timeOnPage % 30 === 0) { // Track every 30 seconds
-          this.track('time_on_page', { seconds: timeOnPage });
-        }
-      }, 10000);
-    },
-    
-    // Check for popup triggers
-    checkTriggers: function(eventType, eventData) {
-      // This will be enhanced with server-side trigger rules
-      // For now, basic client-side triggers
-      if (eventType === 'scroll_depth' && eventData.percent >= 50) {
-        this.triggerPopup('scroll_trigger');
-      }
-      
-      if (eventType === 'time_on_page' && eventData.seconds >= 60) {
-        this.triggerPopup('time_trigger');
-      }
-    },
-    
-    // Trigger popup display
-    triggerPopup: function(triggerType) {
-      this.track('popup_triggered', { trigger_type: triggerType });
-      // Load and display popup based on trigger rules
-      // This will be enhanced with template loading
-    }
+    // Send to your tracking endpoint
+    fetch(ptb.apiUrl + '/rest/v1/analytics_events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': ptb.apiKey,
+        'Authorization': 'Bearer ' + ptb.apiKey
+      },
+      body: JSON.stringify({
+        event_type: eventData.event_type,
+        event_data: eventData
+      })
+    }).catch(function(err) {
+      console.warn('PTB tracking failed:', err);
+    });
   };
   
-  // Initialize when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => PopupTracker.init());
-  } else {
-    PopupTracker.init();
-  }
+  // Auto-track page view
+  ptb.track('page_view', {
+    title: document.title,
+    path: window.location.pathname
+  });
+  
+  // Track clicks
+  document.addEventListener('click', function(e) {
+    ptb.track('click', {
+      element: e.target.tagName,
+      id: e.target.id,
+      class: e.target.className,
+      text: e.target.textContent.substring(0, 100)
+    });
+  });
+  
+  // Track form submissions
+  document.addEventListener('submit', function(e) {
+    ptb.track('form_submit', {
+      form_id: e.target.id,
+      form_class: e.target.className,
+      action: e.target.action
+    });
+  });
+  
+  // Track scroll depth
+  var maxScroll = 0;
+  window.addEventListener('scroll', function() {
+    var scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+    if (scrollPercent > maxScroll && scrollPercent % 25 === 0) {
+      maxScroll = scrollPercent;
+      ptb.track('scroll', { depth: scrollPercent });
+    }
+  });
+  
+  // Track time on page
+  var startTime = Date.now();
+  window.addEventListener('beforeunload', function() {
+    var timeOnPage = Math.round((Date.now() - startTime) / 1000);
+    ptb.track('time_on_page', { duration: timeOnPage });
+  });
 })();
-</script>`;
+</script>
+<!-- End Pop The Builder Beacon -->`;
   };
 
   return {

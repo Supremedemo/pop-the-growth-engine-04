@@ -240,6 +240,45 @@ export type Database = {
         }
         Relationships: []
       }
+      websites: {
+        Row: {
+          api_key: string
+          beacon_id: string
+          created_at: string
+          domain: string
+          id: string
+          name: string
+          tracking_enabled: boolean
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string
+          beacon_id?: string
+          created_at?: string
+          domain: string
+          id?: string
+          name: string
+          tracking_enabled?: boolean
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          beacon_id?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          name?: string
+          tracking_enabled?: boolean
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
