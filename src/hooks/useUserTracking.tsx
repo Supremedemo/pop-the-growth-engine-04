@@ -8,8 +8,8 @@ export interface TrackedUser {
   id: string;
   website_id: string;
   cookie_id: string;
-  user_agent: string;
-  ip_address: string;
+  user_agent: string | null;
+  ip_address: string | null;
   first_seen: string;
   last_seen: string;
   page_views: number;
@@ -24,7 +24,7 @@ export interface UserEvent {
   event_type: string;
   event_data: any;
   url: string;
-  referrer: string;
+  referrer: string | null;
   timestamp: string;
   session_id: string;
 }
@@ -42,14 +42,22 @@ export const useUserTracking = (websiteId?: string) => {
     queryFn: async () => {
       if (!user || !websiteId) return [];
       
-      const { data, error } = await supabase
-        .from('tracked_users')
-        .select('*')
-        .eq('website_id', websiteId)
-        .order('last_seen', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('tracked_users' as any)
+          .select('*')
+          .eq('website_id', websiteId)
+          .order('last_seen', { ascending: false });
 
-      if (error) throw error;
-      return data as TrackedUser[];
+        if (error) {
+          console.error('Error fetching tracked users:', error);
+          return [];
+        }
+        return (data || []) as TrackedUser[];
+      } catch (error) {
+        console.error('Error in tracked users query:', error);
+        return [];
+      }
     },
     enabled: !!user && !!websiteId
   });
@@ -63,15 +71,23 @@ export const useUserTracking = (websiteId?: string) => {
     queryFn: async () => {
       if (!user || !websiteId) return [];
       
-      const { data, error } = await supabase
-        .from('user_events')
-        .select('*')
-        .eq('website_id', websiteId)
-        .order('timestamp', { ascending: false })
-        .limit(1000);
+      try {
+        const { data, error } = await supabase
+          .from('user_events' as any)
+          .select('*')
+          .eq('website_id', websiteId)
+          .order('timestamp', { ascending: false })
+          .limit(1000);
 
-      if (error) throw error;
-      return data as UserEvent[];
+        if (error) {
+          console.error('Error fetching user events:', error);
+          return [];
+        }
+        return (data || []) as UserEvent[];
+      } catch (error) {
+        console.error('Error in user events query:', error);
+        return [];
+      }
     },
     enabled: !!user && !!websiteId
   });

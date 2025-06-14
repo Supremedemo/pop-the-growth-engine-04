@@ -165,6 +165,104 @@ export type Database = {
           },
         ]
       }
+      tracked_users: {
+        Row: {
+          cookie_id: string
+          created_at: string
+          first_seen: string
+          id: string
+          ip_address: unknown | null
+          last_seen: string
+          page_views: number
+          session_count: number
+          user_agent: string | null
+          website_id: string
+        }
+        Insert: {
+          cookie_id: string
+          created_at?: string
+          first_seen?: string
+          id?: string
+          ip_address?: unknown | null
+          last_seen?: string
+          page_views?: number
+          session_count?: number
+          user_agent?: string | null
+          website_id: string
+        }
+        Update: {
+          cookie_id?: string
+          created_at?: string
+          first_seen?: string
+          id?: string
+          ip_address?: unknown | null
+          last_seen?: string
+          page_views?: number
+          session_count?: number
+          user_agent?: string | null
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracked_users_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_events: {
+        Row: {
+          event_data: Json | null
+          event_type: string
+          id: string
+          referrer: string | null
+          session_id: string
+          timestamp: string
+          tracked_user_id: string
+          url: string
+          website_id: string
+        }
+        Insert: {
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          referrer?: string | null
+          session_id: string
+          timestamp?: string
+          tracked_user_id: string
+          url: string
+          website_id: string
+        }
+        Update: {
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          referrer?: string | null
+          session_id?: string
+          timestamp?: string
+          tracked_user_id?: string
+          url?: string
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_events_tracked_user_id_fkey"
+            columns: ["tracked_user_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_events_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_templates: {
         Row: {
           canvas_data: Json
