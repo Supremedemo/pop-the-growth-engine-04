@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,64 +121,99 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
 
       // Handle canvas templates (existing logic)
       if (templateData.elements) {
-        const validElements: PopupElement[] = templateData.elements.map((el: any): PopupElement | null => {
-          // Create base properties
-          const baseProps = {
-            id: el.id || uuidv4(),
-            x: el.x || 0,
-            y: el.y || 0,
-            width: el.width || 200,
-            height: el.height || 50,
-            zIndex: el.zIndex || 1,
-            isPinned: el.isPinned || false
-          };
-
-          // Create element based on type with proper typing
-          if (el.type === 'text') {
-            return {
-              ...baseProps,
-              type: 'text' as const,
-              content: el.content || 'Text',
-              fontSize: el.fontSize || 16,
-              fontWeight: el.fontWeight || 'normal',
-              textAlign: el.textAlign || 'left',
-              color: el.color || '#000000'
-            };
-          } else if (el.type === 'image') {
-            return {
-              ...baseProps,
-              type: 'image' as const,
-              height: el.height || 150,
-              src: el.src || '',
-              alt: el.alt || 'Image',
-              borderRadius: el.borderRadius || 0
-            };
-          } else if (el.type === 'form') {
-            return {
-              ...baseProps,
-              type: 'form' as const,
-              fields: el.fields || [],
-              buttonText: el.buttonText || 'Submit',
-              buttonColor: el.buttonColor || '#000000'
-            };
-          } else if (el.type === 'timer') {
-            return {
-              ...baseProps,
-              type: 'timer' as const,
-              duration: el.duration || 60,
-              format: el.format || 'mm:ss',
-              backgroundColor: el.backgroundColor || '#000000',
-              textColor: el.textColor || '#ffffff'
-            };
-          } else if (el.type === 'html') {
-            return {
-              ...baseProps,
-              type: 'html' as const,
-              htmlContent: el.htmlContent || ''
-            };
-          }
-          return null;
-        }).filter((el): el is PopupElement => el !== null);
+        const validElements: PopupElement[] = templateData.elements
+          .map((el: any): PopupElement | null => {
+            // Create element based on type with proper typing
+            if (el.type === 'text') {
+              return {
+                type: 'text',
+                id: el.id || uuidv4(),
+                x: el.x || 0,
+                y: el.y || 0,
+                width: el.width || 200,
+                height: el.height || 50,
+                zIndex: el.zIndex || 1,
+                isPinned: el.isPinned || false,
+                content: el.content || 'Text',
+                fontSize: el.fontSize || 16,
+                fontWeight: el.fontWeight || 'normal',
+                textAlign: el.textAlign || 'left',
+                color: el.color || '#000000'
+              };
+            } else if (el.type === 'image') {
+              return {
+                type: 'image',
+                id: el.id || uuidv4(),
+                x: el.x || 0,
+                y: el.y || 0,
+                width: el.width || 200,
+                height: el.height || 150,
+                zIndex: el.zIndex || 1,
+                isPinned: el.isPinned || false,
+                src: el.src || '',
+                alt: el.alt || 'Image',
+                borderRadius: el.borderRadius || 0
+              };
+            } else if (el.type === 'form') {
+              return {
+                type: 'form',
+                id: el.id || uuidv4(),
+                x: el.x || 0,
+                y: el.y || 0,
+                width: el.width || 200,
+                height: el.height || 50,
+                zIndex: el.zIndex || 1,
+                isPinned: el.isPinned || false,
+                fields: el.fields || [],
+                buttonText: el.buttonText || 'Submit',
+                buttonColor: el.buttonColor || '#000000'
+              };
+            } else if (el.type === 'timer') {
+              return {
+                type: 'timer',
+                id: el.id || uuidv4(),
+                x: el.x || 0,
+                y: el.y || 0,
+                width: el.width || 200,
+                height: el.height || 50,
+                zIndex: el.zIndex || 1,
+                isPinned: el.isPinned || false,
+                duration: el.duration || 60,
+                format: el.format || 'mm:ss',
+                backgroundColor: el.backgroundColor || '#000000',
+                textColor: el.textColor || '#ffffff'
+              };
+            } else if (el.type === 'html') {
+              return {
+                type: 'html',
+                id: el.id || uuidv4(),
+                x: el.x || 0,
+                y: el.y || 0,
+                width: el.width || 200,
+                height: el.height || 50,
+                zIndex: el.zIndex || 1,
+                isPinned: el.isPinned || false,
+                htmlContent: el.htmlContent || ''
+              };
+            } else if (el.type === 'multi-step-form') {
+              return {
+                type: 'multi-step-form',
+                id: el.id || uuidv4(),
+                x: el.x || 0,
+                y: el.y || 0,
+                width: el.width || 400,
+                height: el.height || 300,
+                zIndex: el.zIndex || 1,
+                isPinned: el.isPinned || false,
+                steps: el.steps || [],
+                currentStep: el.currentStep || 0,
+                onSubmit: el.onSubmit || (() => {}),
+                onStepChange: el.onStepChange || (() => {})
+              };
+            }
+            return null;
+          })
+          .filter((el): el is PopupElement => el !== null);
 
         setCanvasState(prev => ({
           ...prev,
@@ -747,6 +781,50 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                             value={element.htmlContent}
                             onChange={(e) =>
                               handleUpdateElement(element.id, { htmlContent: e.target.value })
+                            }
+                          />
+                        </div>
+                      );
+                    case "multi-step-form":
+                      return (
+                        <div key={element.id} className="space-y-4">
+                          <Label htmlFor="steps">Steps</Label>
+                          <Input
+                            type="text"
+                            id="steps"
+                            value={element.steps}
+                            onChange={(e) =>
+                              handleUpdateElement(element.id, { steps: e.target.value })
+                            }
+                          />
+
+                          <Label htmlFor="current-step">Current Step</Label>
+                          <Input
+                            type="number"
+                            id="current-step"
+                            value={element.currentStep}
+                            onChange={(e) =>
+                              handleUpdateElement(element.id, { currentStep: parseInt(e.target.value) })
+                            }
+                          />
+
+                          <Label htmlFor="on-submit">On Submit</Label>
+                          <Input
+                            type="text"
+                            id="on-submit"
+                            value={element.onSubmit}
+                            onChange={(e) =>
+                              handleUpdateElement(element.id, { onSubmit: e.target.value })
+                            }
+                          />
+
+                          <Label htmlFor="on-step-change">On Step Change</Label>
+                          <Input
+                            type="text"
+                            id="on-step-change"
+                            value={element.onStepChange}
+                            onChange={(e) =>
+                              handleUpdateElement(element.id, { onStepChange: e.target.value })
                             }
                           />
                         </div>
