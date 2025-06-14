@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ import { PopupElement } from "./PopupElements";
 
 interface PopupBuilderProps {
   onBack: () => void;
+  templateData?: any;
 }
 
 export interface CanvasState {
@@ -55,7 +56,7 @@ export interface CanvasState {
   closeButtonPosition: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 }
 
-export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
+export const PopupBuilder = ({ onBack, templateData }: PopupBuilderProps) => {
   const defaultLayout: PopupLayout = {
     id: "modal-center",
     name: "Modal - Center",
@@ -65,23 +66,50 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
     position: "center"
   };
 
-  const [canvasState, setCanvasState] = useState<CanvasState>({
-    width: 500,
-    height: 400,
-    backgroundColor: "#ffffff",
-    backgroundType: 'color',
-    elements: [],
-    zoom: 1,
-    showGrid: true,
-    gridSize: 8,
-    layout: defaultLayout,
-    showOverlay: true,
-    overlayColor: "#000000",
-    overlayOpacity: 50,
-    showCloseButton: true,
-    closeButtonPosition: 'top-right'
-  });
+  const getInitialCanvasState = (): CanvasState => {
+    if (templateData) {
+      return {
+        width: templateData.width || 500,
+        height: templateData.height || 400,
+        backgroundColor: templateData.backgroundColor || "#ffffff",
+        backgroundImage: templateData.backgroundImage,
+        backgroundGradient: templateData.backgroundGradient,
+        backgroundType: templateData.backgroundType || 'color',
+        elements: templateData.elements || [],
+        zoom: 1,
+        showGrid: true,
+        gridSize: 8,
+        layout: {
+          ...defaultLayout,
+          dimensions: { width: templateData.width || 500, height: templateData.height || 400 }
+        },
+        showOverlay: true,
+        overlayColor: "#000000",
+        overlayOpacity: 50,
+        showCloseButton: true,
+        closeButtonPosition: 'top-right'
+      };
+    }
 
+    return {
+      width: 500,
+      height: 400,
+      backgroundColor: "#ffffff",
+      backgroundType: 'color',
+      elements: [],
+      zoom: 1,
+      showGrid: true,
+      gridSize: 8,
+      layout: defaultLayout,
+      showOverlay: true,
+      overlayColor: "#000000",
+      overlayOpacity: 50,
+      showCloseButton: true,
+      closeButtonPosition: 'top-right'
+    };
+  };
+
+  const [canvasState, setCanvasState] = useState<CanvasState>(getInitialCanvasState());
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [previewDevice, setPreviewDevice] = useState("desktop");
 
@@ -95,6 +123,17 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateTags, setTemplateTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+
+  // Update canvas state when template data changes
+  useEffect(() => {
+    if (templateData) {
+      const newState = getInitialCanvasState();
+      setCanvasState(newState);
+      historyRef.current = [newState];
+      historyIndexRef.current = 0;
+      setSelectedElementIds([]);
+    }
+  }, [templateData]);
 
   const updateCanvasState = useCallback((updates: Partial<CanvasState>) => {
     setCanvasState(prev => {
@@ -249,7 +288,9 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
-            <h1 className="text-xl font-semibold">Canvas Editor</h1>
+            <h1 className="text-xl font-semibold">
+              {templateData ? 'Template Editor' : 'Canvas Editor'}
+            </h1>
             <div className="text-sm text-slate-500">
               {selectedElements.length > 0 && (
                 <span>{selectedElements.length} element{selectedElements.length > 1 ? 's' : ''} selected</span>
@@ -258,6 +299,11 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
             <Badge variant="outline" className="text-xs">
               {canvasState.layout.name} - {canvasState.width}×{canvasState.height}px
             </Badge>
+            {templateData && (
+              <Badge className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                Customizing Template
+              </Badge>
+            )}
           </div>
           
           {/* Enhanced Toolbar */}
@@ -583,6 +629,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <div className="text-sm text-slate-500">
                 {canvasState.elements.length} element{canvasState.elements.length !== 1 ? 's' : ''} • 
                 Canvas: {canvasState.width}×{canvasState.height}px • {canvasState.layout.type}
+                {templateData && <span className="text-purple-600"> • Template Mode</span>}
               </div>
             </div>
           </div>
