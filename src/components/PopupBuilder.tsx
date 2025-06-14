@@ -67,6 +67,7 @@ export interface Layout {
 
 interface PopupBuilderProps {
   onBack?: () => void;
+  startWithTemplates?: boolean;
 }
 
 const defaultLayouts: Layout[] = [
@@ -97,20 +98,22 @@ const layoutsConfig = {
   fullscreen: { width: window.innerWidth, height: window.innerHeight }
 };
 
-export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
+export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilderProps) => {
   const [canvasState, setCanvasState] = useState<CanvasState>(initialCanvasState);
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
-  const [showTemplateGallery, setShowTemplateGallery] = useState(true);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(startWithTemplates);
   const [showPreview, setShowPreview] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const [templateData, setTemplateData] = useState<any>(null);
+  const [showModeSelector, setShowModeSelector] = useState(!startWithTemplates);
 
   React.useEffect(() => {
     if (templateData) {
       // Handle game templates
       if (templateData.type === 'game') {
         setShowTemplateGallery(false);
+        setShowModeSelector(false);
         setIsGameMode(true);
         setGameType(templateData.gameType);
         return;
@@ -118,7 +121,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
 
       // Handle canvas templates (existing logic)
       if (templateData.elements) {
-        const validElements: PopupElement[] = templateData.elements.map((el: any) => {
+        const validElements: PopupElement[] = templateData.elements.map((el: any): PopupElement | null => {
           // Ensure each element has a proper type
           if (el.type === 'text') {
             return {
@@ -162,6 +165,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
           elements: validElements
         }));
         setShowTemplateGallery(false);
+        setShowModeSelector(false);
       }
     }
   }, [templateData]);
@@ -172,6 +176,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
 
   const handleBackToTemplates = () => {
     setShowTemplateGallery(true);
+    setShowModeSelector(false);
     setIsGameMode(false);
     setGameType('');
   };
@@ -183,6 +188,16 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
 
   const handleSelectTemplate = (templateData: any) => {
     setTemplateData(templateData);
+  };
+
+  const handleModeSelect = (mode: 'template' | 'diy') => {
+    if (mode === 'template') {
+      setShowTemplateGallery(true);
+      setShowModeSelector(false);
+    } else {
+      setShowTemplateGallery(false);
+      setShowModeSelector(false);
+    }
   };
 
   const handleAddElement = (element: PopupElement) => {
@@ -224,6 +239,72 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
       height: layoutsConfig[layout.type]?.height || 400
     });
   };
+
+  // Mode selector screen
+  if (showModeSelector) {
+    return (
+      <div className="h-screen bg-background flex items-center justify-center">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-4">Create Your Popup</h1>
+            <p className="text-muted-foreground text-lg">Choose how you'd like to get started</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleModeSelect('template')}>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <LayoutDashboard className="w-6 h-6 text-white" />
+                  </div>
+                  <span>Use Template</span>
+                </CardTitle>
+                <CardDescription>
+                  Start with professionally designed templates and customize them to your needs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-sm text-muted-foreground space-y-2">
+                  <li>• Pre-designed layouts</li>
+                  <li>• Interactive games</li>
+                  <li>• Quick customization</li>
+                  <li>• Best practices included</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleModeSelect('diy')}>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center">
+                    <Settings className="w-6 h-6 text-white" />
+                  </div>
+                  <span>DIY Editor</span>
+                </CardTitle>
+                <CardDescription>
+                  Build from scratch with our drag-and-drop canvas editor
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-sm text-muted-foreground space-y-2">
+                  <li>• Complete creative control</li>
+                  <li>• Drag & drop elements</li>
+                  <li>• Custom layouts</li>
+                  <li>• Advanced styling options</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {onBack && (
+            <Button variant="outline" onClick={onBack} className="mt-8">
+              ← Back to Dashboard
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (showTemplateGallery) {
     return <TemplateGallery onSelectTemplate={handleSelectTemplate} />;
@@ -319,13 +400,13 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
       <div className="border-b bg-card">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => setShowTemplateGallery(true)}>
-              ← Back to Templates
+            <Button variant="ghost" onClick={() => setShowModeSelector(true)}>
+              ← Back to Mode Selection
             </Button>
             <div>
-              <h1 className="text-xl font-semibold">Popup Builder</h1>
+              <h1 className="text-xl font-semibold">DIY Popup Builder</h1>
               <p className="text-sm text-muted-foreground">
-                Design your custom popup
+                Design your custom popup from scratch
               </p>
             </div>
           </div>

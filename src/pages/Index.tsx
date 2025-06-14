@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +26,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
       case "dashboard":
         return <Dashboard onNavigate={setActiveView} />;
       case "builder":
-        return <PopupBuilder onBack={() => setActiveView("dashboard")} />;
+        return <PopupBuilder onBack={() => setActiveView("dashboard")} startWithTemplates={false} />;
       case "templates":
         return <TemplateGallery onSelectTemplate={() => setActiveView("builder")} />;
       case "campaigns":
