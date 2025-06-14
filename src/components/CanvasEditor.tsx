@@ -11,6 +11,7 @@ interface CanvasEditorProps {
   onUpdateElement: (id: string, updates: Partial<PopupElement>) => void;
   onDeleteElements: (ids: string[]) => void;
   previewDevice: string;
+  onAddElement?: (element: PopupElement) => void;
 }
 
 export const CanvasEditor = ({
@@ -19,7 +20,8 @@ export const CanvasEditor = ({
   onSelectElements,
   onUpdateElement,
   onDeleteElements,
-  previewDevice
+  previewDevice,
+  onAddElement
 }: CanvasEditorProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,6 +71,88 @@ export const CanvasEditor = ({
     const x = (e.clientX - rect.left) / scale;
     const y = (e.clientY - rect.top) / scale;
     return { x, y };
+  };
+
+  const createElement = (type: string, coords: { x: number; y: number }) => {
+    const generateId = () => Math.random().toString(36).substr(2, 9);
+    
+    switch (type) {
+      case 'text':
+        return {
+          id: generateId(),
+          type: "text" as const,
+          x: coords.x,
+          y: coords.y,
+          width: 200,
+          height: 40,
+          zIndex: Math.max(...canvasState.elements.map(el => el.zIndex), 0) + 1,
+          content: "Click to edit text",
+          fontSize: 16,
+          fontWeight: "normal",
+          textAlign: "left",
+          color: "#000000",
+        };
+      case 'image':
+        return {
+          id: generateId(),
+          type: "image" as const,
+          x: coords.x,
+          y: coords.y,
+          width: 150,
+          height: 100,
+          zIndex: Math.max(...canvasState.elements.map(el => el.zIndex), 0) + 1,
+          src: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=300&h=200&fit=crop",
+          alt: "Placeholder image",
+          borderRadius: 8,
+        };
+      case 'form':
+        return {
+          id: generateId(),
+          type: "form" as const,
+          x: coords.x,
+          y: coords.y,
+          width: 280,
+          height: 140,
+          zIndex: Math.max(...canvasState.elements.map(el => el.zIndex), 0) + 1,
+          fields: [
+            {
+              id: generateId(),
+              type: "email" as const,
+              placeholder: "Enter your email",
+              required: true,
+            },
+          ],
+          buttonText: "Subscribe",
+          buttonColor: "#3b82f6",
+        };
+      case 'timer':
+        return {
+          id: generateId(),
+          type: "timer" as const,
+          x: coords.x,
+          y: coords.y,
+          width: 180,
+          height: 70,
+          zIndex: Math.max(...canvasState.elements.map(el => el.zIndex), 0) + 1,
+          duration: 300,
+          format: "mm:ss",
+          backgroundColor: "#ef4444",
+          textColor: "#ffffff",
+        };
+      case 'html':
+        return {
+          id: generateId(),
+          type: "html" as const,
+          x: coords.x,
+          y: coords.y,
+          width: 200,
+          height: 100,
+          zIndex: Math.max(...canvasState.elements.map(el => el.zIndex), 0) + 1,
+          htmlContent: '<div style="padding: 16px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border-radius: 8px; text-align: center; font-weight: bold;">Custom HTML Block</div>',
+        };
+      default:
+        return null;
+    }
   };
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
@@ -232,9 +316,12 @@ export const CanvasEditor = ({
     setIsDragOver(false);
     
     const elementType = e.dataTransfer.getData('application/element-type');
-    if (elementType) {
+    if (elementType && onAddElement) {
       const coords = getCanvasCoordinates(e as any);
-      console.log('Dropped element:', elementType, 'at:', coords);
+      const newElement = createElement(elementType, coords);
+      if (newElement) {
+        onAddElement(newElement as PopupElement);
+      }
     }
   };
 

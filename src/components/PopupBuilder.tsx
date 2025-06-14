@@ -431,6 +431,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               onUpdateElement={updateElement}
               onDeleteElements={deleteElements}
               previewDevice={previewDevice}
+              onAddElement={addElement}
             />
           </div>
 
