@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,7 +115,7 @@ const createTypedElement = (el: any): PopupElement => {
   };
 
   switch (el.type) {
-    case 'text': {
+    case 'text':
       return {
         ...baseProps,
         type: 'text' as const,
@@ -125,27 +124,24 @@ const createTypedElement = (el: any): PopupElement => {
         fontWeight: el.fontWeight || 'normal',
         textAlign: el.textAlign || 'left',
         color: el.color || '#000000'
-      } as TextElement;
-    }
-    case 'image': {
+      };
+    case 'image':
       return {
         ...baseProps,
         type: 'image' as const,
         src: el.src || '',
         alt: el.alt || 'Image',
         borderRadius: el.borderRadius || 0
-      } as ImageElement;
-    }
-    case 'form': {
+      };
+    case 'form':
       return {
         ...baseProps,
         type: 'form' as const,
         fields: el.fields || [],
         buttonText: el.buttonText || 'Submit',
         buttonColor: el.buttonColor || '#000000'
-      } as FormElement;
-    }
-    case 'timer': {
+      };
+    case 'timer':
       return {
         ...baseProps,
         type: 'timer' as const,
@@ -153,16 +149,14 @@ const createTypedElement = (el: any): PopupElement => {
         format: el.format || 'mm:ss',
         backgroundColor: el.backgroundColor || '#000000',
         textColor: el.textColor || '#ffffff'
-      } as TimerElement;
-    }
-    case 'html': {
+      };
+    case 'html':
       return {
         ...baseProps,
         type: 'html' as const,
         htmlContent: el.htmlContent || ''
-      } as CustomHtmlElementType;
-    }
-    case 'multi-step-form': {
+      };
+    case 'multi-step-form':
       return {
         ...baseProps,
         type: 'multi-step-form' as const,
@@ -178,8 +172,7 @@ const createTypedElement = (el: any): PopupElement => {
         },
         buttonColor: el.buttonColor || '#3b82f6',
         backgroundColor: el.backgroundColor || '#ffffff'
-      } as MultiStepFormElement;
-    }
+      };
     default:
       throw new Error(`Unknown element type: ${el.type}`);
   }

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, ChevronLeft, ChevronRight, Copy, ExternalLink, Edit, Trash2 } from "lucide-react";
+import { Plus, X, ChevronLeft, ChevronRight, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { BaseElement } from "./PopupElements";
 
 export interface FormStep {
@@ -61,9 +61,8 @@ export const MultiStepFormRenderer = ({
   const [isComplete, setIsComplete] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [copiedCoupon, setCopiedCoupon] = useState(false);
-  const [editingStep, setEditingStep] = useState<string | null>(null);
 
-  // Initialize with default step if none exist
+  // Initialize with default step if none exist in editor mode
   React.useEffect(() => {
     if (element.steps.length === 0 && isEditor && onUpdate) {
       const defaultStep: FormStep = {
@@ -110,12 +109,6 @@ export const MultiStepFormRenderer = ({
       navigator.clipboard.writeText(element.successPage.couponCode);
       setCopiedCoupon(true);
       setTimeout(() => setCopiedCoupon(false), 2000);
-    }
-  };
-
-  const handleRedirect = () => {
-    if (element.successPage.redirectUrl) {
-      window.open(element.successPage.redirectUrl, '_blank');
     }
   };
 
@@ -216,14 +209,6 @@ export const MultiStepFormRenderer = ({
   };
 
   const renderField = (field: FormFieldType, stepId?: string) => {
-    const commonProps = {
-      id: field.id,
-      value: formData[field.id] || '',
-      onChange: (e: any) => handleFieldChange(field.id, e.target.value),
-      required: field.required,
-      className: "w-full"
-    };
-
     if (isEditor && stepId) {
       return (
         <div className="space-y-2 p-3 border rounded-lg bg-muted/20">
@@ -298,6 +283,14 @@ export const MultiStepFormRenderer = ({
     }
 
     // Regular field rendering for preview/live mode
+    const commonProps = {
+      id: field.id,
+      value: formData[field.id] || '',
+      onChange: (e: any) => handleFieldChange(field.id, e.target.value),
+      required: field.required,
+      className: "w-full"
+    };
+
     switch (field.type) {
       case 'textarea':
         return (
@@ -362,6 +355,7 @@ export const MultiStepFormRenderer = ({
     }
   };
 
+  // Success page rendering
   if (isComplete && !isEditor) {
     return (
       <div 
@@ -401,7 +395,11 @@ export const MultiStepFormRenderer = ({
             <Button
               style={{ backgroundColor: element.buttonColor }}
               className="text-white flex items-center space-x-2"
-              onClick={handleRedirect}
+              onClick={() => {
+                if (element.successPage.redirectUrl) {
+                  window.open(element.successPage.redirectUrl, '_blank');
+                }
+              }}
             >
               <span>{element.successPage.redirectButtonText}</span>
               <ExternalLink className="w-4 h-4" />
@@ -412,11 +410,11 @@ export const MultiStepFormRenderer = ({
     );
   }
 
-  // Show editor mode
+  // Editor mode
   if (isEditor) {
     return (
       <div 
-        className="p-6 rounded-lg space-y-6"
+        className="p-6 rounded-lg space-y-6 w-full h-full overflow-auto"
         style={{ backgroundColor: element.backgroundColor }}
       >
         <div className="flex items-center justify-between">
@@ -513,7 +511,7 @@ export const MultiStepFormRenderer = ({
 
   return (
     <div 
-      className="p-6 rounded-lg space-y-4"
+      className="p-6 rounded-lg space-y-4 w-full h-full"
       style={{ backgroundColor: element.backgroundColor }}
     >
       {/* Progress indicator */}
