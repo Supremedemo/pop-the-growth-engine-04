@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,12 @@ import {
   Database,
   Globe,
   Eye,
-  EyeOff
+  EyeOff,
+  CreditCard,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Clock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -55,10 +59,14 @@ export const Admin = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="users" className="flex items-center space-x-2">
             <User className="w-4 h-4" />
             <span>Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="subscriptions" className="flex items-center space-x-2">
+            <CreditCard className="w-4 h-4" />
+            <span>Subscriptions</span>
           </TabsTrigger>
           <TabsTrigger value="api" className="flex items-center space-x-2">
             <Key className="w-4 h-4" />
@@ -76,6 +84,10 @@ export const Admin = () => {
 
         <TabsContent value="users">
           <UserManagement onPasswordReset={handlePasswordReset} />
+        </TabsContent>
+
+        <TabsContent value="subscriptions">
+          <SubscriptionManagement />
         </TabsContent>
 
         <TabsContent value="api">
@@ -164,6 +176,130 @@ const UserManagement = ({ onPasswordReset }: { onPasswordReset: (email: string) 
                   <Button variant="outline" size="sm">
                     Edit
                   </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const SubscriptionManagement = () => {
+  const subscriptions = [
+    { 
+      id: 1, 
+      email: "user1@example.com", 
+      plan: "Pro", 
+      status: "Active", 
+      nextBilling: "2024-07-15",
+      amount: "$29/month",
+      features: ["Unlimited Popups", "Advanced Analytics", "Priority Support"]
+    },
+    { 
+      id: 2, 
+      email: "user2@example.com", 
+      plan: "Starter", 
+      status: "Active", 
+      nextBilling: "2024-07-20",
+      amount: "$9/month",
+      features: ["5 Popups", "Basic Analytics", "Email Support"]
+    },
+    { 
+      id: 3, 
+      email: "user3@example.com", 
+      plan: "Enterprise", 
+      status: "Cancelled", 
+      nextBilling: "2024-06-30",
+      amount: "$99/month",
+      features: ["Unlimited Everything", "Custom Branding", "Dedicated Support"]
+    },
+  ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "Active":
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case "Cancelled":
+        return <XCircle className="w-4 h-4 text-red-600" />;
+      case "Pending":
+        return <Clock className="w-4 h-4 text-yellow-600" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscription Overview</CardTitle>
+          <CardDescription>Monitor subscription metrics and revenue</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="text-center p-4 border rounded-lg">
+              <CreditCard className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+              <div className="text-2xl font-bold">142</div>
+              <div className="text-sm text-slate-600">Active Subscriptions</div>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <Calendar className="w-8 h-8 mx-auto mb-2 text-green-600" />
+              <div className="text-2xl font-bold">$4,280</div>
+              <div className="text-sm text-slate-600">Monthly Revenue</div>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <CheckCircle className="w-8 h-8 mx-auto mb-2 text-purple-600" />
+              <div className="text-2xl font-bold">94.2%</div>
+              <div className="text-sm text-slate-600">Retention Rate</div>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <XCircle className="w-8 h-8 mx-auto mb-2 text-red-600" />
+              <div className="text-2xl font-bold">8</div>
+              <div className="text-sm text-slate-600">Churn This Month</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscription Details</CardTitle>
+          <CardDescription>Manage individual subscriptions and billing</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {subscriptions.map((subscription) => (
+              <div key={subscription.id} className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    {getStatusIcon(subscription.status)}
+                    <div>
+                      <div className="font-medium">{subscription.email}</div>
+                      <div className="text-sm text-slate-600">
+                        {subscription.plan} Plan • {subscription.amount}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={subscription.status === "Active" ? "default" : subscription.status === "Cancelled" ? "destructive" : "secondary"}>
+                      {subscription.status}
+                    </Badge>
+                    <Button variant="outline" size="sm">
+                      Manage
+                    </Button>
+                  </div>
+                </div>
+                <div className="text-sm text-slate-600 mb-2">
+                  Next billing: {subscription.nextBilling}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {subscription.features.map((feature, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {feature}
+                    </Badge>
+                  ))}
                 </div>
               </div>
             ))}

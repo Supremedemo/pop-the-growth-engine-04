@@ -58,9 +58,6 @@ const Index = ({ username, onLogout }: IndexProps) => {
                   Pop The Builder
                 </h1>
               </div>
-              <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/30">
-                Pro Plan
-              </Badge>
             </div>
             
             <div className="flex items-center space-x-6">
