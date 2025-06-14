@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -38,7 +37,12 @@ export const useTemplates = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as UserTemplate[];
+      
+      // Cast the Json canvas_data to CanvasState
+      return (data || []).map(template => ({
+        ...template,
+        canvas_data: template.canvas_data as CanvasState
+      })) as UserTemplate[];
     },
     enabled: !!user
   });
@@ -58,7 +62,7 @@ export const useTemplates = () => {
           user_id: user.id,
           name,
           description: description || null,
-          canvas_data: canvasData,
+          canvas_data: canvasData as any, // Cast CanvasState to Json
           tags: tags || [],
           is_public: false
         })
@@ -66,7 +70,11 @@ export const useTemplates = () => {
         .single();
 
       if (error) throw error;
-      return data as UserTemplate;
+      
+      return {
+        ...data,
+        canvas_data: data.canvas_data as CanvasState
+      } as UserTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
@@ -83,15 +91,26 @@ export const useTemplates = () => {
       id: string;
       updates: Partial<Omit<UserTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>>;
     }) => {
+      // Cast CanvasState to Json for database storage
+      const dbUpdates = {
+        ...updates,
+        canvas_data: updates.canvas_data ? updates.canvas_data as any : undefined,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('user_templates')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-      return data as UserTemplate;
+      
+      return {
+        ...data,
+        canvas_data: data.canvas_data as CanvasState
+      } as UserTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });

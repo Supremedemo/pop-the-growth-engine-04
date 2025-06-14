@@ -98,6 +98,7 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
   const [canvasState, setCanvasState] = useState<CanvasState>(initialCanvasState);
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [previewDevice, setPreviewDevice] = useState("desktop");
+  const [currentTemplateId, setCurrentTemplateId] = useState(templateId);
 
   const historyRef = useRef<CanvasState[]>([canvasState]);
   const historyIndexRef = useRef(0);
@@ -110,7 +111,6 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
   const [templateDescription, setTemplateDescription] = useState(loadedTemplate?.description || "");
   const [templateTags, setTemplateTags] = useState<string[]>(loadedTemplate?.tags || []);
   const [newTag, setNewTag] = useState("");
-  const [currentTemplateId, setCurrentTemplateId] = useState(templateId);
 
   const updateCanvasState = useCallback((updates: Partial<CanvasState>) => {
     setCanvasState(prev => {
@@ -270,11 +270,10 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
 
   const loadTemplate = (template: any) => {
     setCanvasState(template.canvas_data);
-    setTemplateId(template.id);
+    setCurrentTemplateId(template.id);
     setTemplateName(template.name);
     setTemplateDescription(template.description || "");
     setTemplateTags(template.tags || []);
-    setCurrentTemplateId(template.id);
     setIsTemplateDialogOpen(false);
     toast.success(`Template "${template.name}" loaded successfully!`);
   };

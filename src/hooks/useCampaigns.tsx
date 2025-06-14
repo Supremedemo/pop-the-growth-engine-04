@@ -40,7 +40,12 @@ export const useCampaigns = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Campaign[];
+      
+      // Cast the Json canvas_data to CanvasState
+      return (data || []).map(campaign => ({
+        ...campaign,
+        canvas_data: campaign.canvas_data as CanvasState
+      })) as Campaign[];
     },
     enabled: !!user
   });
@@ -61,7 +66,7 @@ export const useCampaigns = () => {
           template_id: templateId || null,
           name,
           description: description || null,
-          canvas_data: canvasData,
+          canvas_data: canvasData as any, // Cast CanvasState to Json
           status: 'draft',
           targeting_rules: {},
           display_settings: {}
@@ -70,7 +75,11 @@ export const useCampaigns = () => {
         .single();
 
       if (error) throw error;
-      return data as Campaign;
+      
+      return {
+        ...data,
+        canvas_data: data.canvas_data as CanvasState
+      } as Campaign;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
@@ -87,15 +96,26 @@ export const useCampaigns = () => {
       id: string;
       updates: Partial<Omit<Campaign, 'id' | 'user_id' | 'created_at' | 'updated_at'>>;
     }) => {
+      // Cast CanvasState to Json for database storage
+      const dbUpdates = {
+        ...updates,
+        canvas_data: updates.canvas_data ? updates.canvas_data as any : undefined,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('campaigns')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-      return data as Campaign;
+      
+      return {
+        ...data,
+        canvas_data: data.canvas_data as CanvasState
+      } as Campaign;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
