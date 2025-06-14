@@ -1,6 +1,11 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   ArrowLeft, 
   Eye, 
@@ -11,7 +16,9 @@ import {
   Undo,
   Redo,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Plus,
+  X
 } from "lucide-react";
 import { ElementToolbar } from "./ElementToolbar";
 import { PropertyPanel } from "./PropertyPanel";
@@ -64,6 +71,12 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
 
   const historyRef = useRef<CanvasState[]>([canvasState]);
   const historyIndexRef = useRef(0);
+
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [templateDescription, setTemplateDescription] = useState("");
+  const [templateTags, setTemplateTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   const updateCanvasState = useCallback((updates: Partial<CanvasState>) => {
     setCanvasState(prev => {
@@ -164,6 +177,38 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
     updateCanvasState({ showGrid: !canvasState.showGrid });
   }, [canvasState.showGrid, updateCanvasState]);
 
+  const handleSaveTemplate = () => {
+    if (templateName.trim()) {
+      const templateData = {
+        name: templateName.trim(),
+        description: templateDescription.trim(),
+        tags: templateTags,
+        canvasData: canvasState,
+        thumbnail: `bg-gradient-to-br ${canvasState.backgroundType === 'gradient' ? canvasState.backgroundGradient : 'from-blue-500 to-purple-600'}`
+      };
+      
+      console.log('Saving template:', templateData);
+      
+      // Here you would typically save to a backend or local storage
+      // For now, we'll just show a success message
+      setTemplateName("");
+      setTemplateDescription("");
+      setTemplateTags([]);
+      setIsSaveDialogOpen(false);
+    }
+  };
+
+  const addTag = () => {
+    if (newTag.trim() && !templateTags.includes(newTag.trim())) {
+      setTemplateTags([...templateTags, newTag.trim()]);
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTemplateTags(templateTags.filter(tag => tag !== tagToRemove));
+  };
+
   const selectedElements = canvasState.elements.filter(el => selectedElementIds.includes(el.id));
 
   const canUndo = historyIndexRef.current > 0;
@@ -234,7 +279,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setIsSaveDialogOpen(true)}>
               <Save className="w-4 h-4 mr-2" />
               Save
             </Button>
@@ -245,6 +290,74 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
         </div>
       </div>
 
+      {/* Save Template Dialog */}
+      <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Template</DialogTitle>
+            <DialogDescription>
+              Save your current design as a reusable template
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="templateName">Template Name</Label>
+              <Input
+                id="templateName"
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Enter template name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="templateDescription">Description</Label>
+              <Textarea
+                id="templateDescription"
+                value={templateDescription}
+                onChange={(e) => setTemplateDescription(e.target.value)}
+                placeholder="Describe your template..."
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Tags</Label>
+              <div className="flex space-x-2 mb-2">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Add tag..."
+                  className="flex-1"
+                  onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                />
+                <Button size="sm" onClick={addTag}>
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {templateTags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    {tag}
+                    <button
+                      onClick={() => removeTag(tag)}
+                      className="ml-1 hover:text-red-500"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveTemplate}>Save Template</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Content */}
       <div className="flex h-[calc(100vh-80px)]">
         {/* Left Panel */}
         <div className="w-80 bg-white border-r border-slate-200 overflow-y-auto">
