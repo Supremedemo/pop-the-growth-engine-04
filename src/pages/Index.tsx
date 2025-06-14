@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LandingPageBuilder } from "@/components/LandingPageBuilder";
 
 interface IndexProps {
   username: string;
@@ -35,8 +35,6 @@ const Index = ({ username, onLogout }: IndexProps) => {
         return <Dashboard onNavigate={setActiveView} />;
       case "builder":
         return <PopupBuilder onBack={() => setActiveView("dashboard")} />;
-      case "landing-builder":
-        return <LandingPageBuilder onBack={() => setActiveView("dashboard")} />;
       case "ai-builder":
         return <AiLandingPageBuilder onBack={() => setActiveView("dashboard")} />;
       case "templates":
@@ -58,7 +56,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
       <header className="glass-effect sticky top-0 z-50">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-3">
                 <img 
                   src="/lovable-uploads/01b275f3-962e-49f3-bc04-9696b715d718.png" 
@@ -93,6 +91,17 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 >
                   <Target className="w-4 h-4" />
                   <span className="font-medium text-sm">Campaigns</span>
+                </button>
+                <button
+                  onClick={() => setActiveView("templates")}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    activeView === "templates" 
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  }`}
+                >
+                  <Lightbulb className="w-4 h-4" />
+                  <span className="font-medium text-sm">Templates</span>
                 </button>
                 <button
                   onClick={() => setActiveView("analytics")}
@@ -151,16 +160,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   <span className="hidden sm:inline">Create Popup</span>
-                  <span className="sm:hidden">Popup</span>
-                </Button>
-                <Button
-                  onClick={() => setActiveView("landing-builder")}
-                  size="sm"
-                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 shadow-sm border-0"
-                >
-                  <Lightbulb className="w-4 h-4 mr-1" />
-                  <span className="hidden sm:inline">Landing Page</span>
-                  <span className="sm:hidden">Landing</span>
+                  <span className="sm:hidden">Create</span>
                 </Button>
                 <Button
                   onClick={() => setActiveView("ai-builder")}
