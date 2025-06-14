@@ -91,16 +91,10 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
   };
 
   const baseStyle = {
-    position: 'absolute' as const,
-    left: element.x,
-    top: element.y,
-    width: element.width,
-    height: element.height,
-    zIndex: element.zIndex,
+    width: '100%',
+    height: '100%',
     cursor: element.isPinned ? 'default' : 'move',
     opacity: element.isPinned ? 0.8 : 1,
-    border: isSelected ? '2px solid #3b82f6' : '1px solid transparent',
-    borderRadius: '4px',
   };
 
   const renderElement = () => {
@@ -108,13 +102,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
       case "multi-step-form":
         return (
           <div style={baseStyle} onClick={handleClick}>
-            <div className="w-full h-full overflow-hidden">
-              <MultiStepFormRenderer 
-                element={element as MultiStepFormElement}
-                isEditor={isSelected}
-                onUpdate={(updates) => onUpdate(element.id, updates)}
-              />
-            </div>
+            <MultiStepFormRenderer element={element as MultiStepFormElement} />
           </div>
         );
 
@@ -143,8 +131,6 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
               display: 'flex',
               alignItems: 'center',
               justifyContent: textEl.textAlign === 'center' ? 'center' : textEl.textAlign === 'right' ? 'flex-end' : 'flex-start',
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(4px)',
             }}
             onClick={handleClick}
           >
@@ -173,7 +159,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
         const formEl = element as FormElement;
         return (
           <div style={baseStyle} onClick={handleClick}>
-            <div className="p-4 space-y-3 bg-white/90 backdrop-blur-sm rounded shadow-lg h-full overflow-auto">
+            <div className="p-4 space-y-3 bg-white rounded">
               {formEl.fields.map((field) => (
                 <Input
                   key={field.id}
@@ -212,10 +198,12 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
         return (
           <div style={baseStyle} onClick={handleClick}>
             <div
-              className="flex items-center justify-center rounded p-4 h-full backdrop-blur-sm"
+              className="flex items-center justify-center rounded p-4"
               style={{
                 backgroundColor: timerEl.backgroundColor,
                 color: timerEl.textColor,
+                width: '100%',
+                height: '100%',
               }}
             >
               <Clock className="w-5 h-5 mr-2" />

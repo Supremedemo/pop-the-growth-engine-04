@@ -40,13 +40,11 @@ import {
   Crosshair,
   Puzzle,
   Gamepad2,
-  Flame,
-  Settings
+  Flame
 } from "lucide-react";
-import { PopupElement } from "./PopupElements";
 
 interface TemplateGalleryProps {
-  onSelectTemplate: (templateData?: any) => void;
+  onSelectTemplate: () => void;
 }
 
 export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
@@ -55,221 +53,6 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
   const [userLevel] = useState(5);
   const [userPoints] = useState(2450);
   const [unlockedTemplates] = useState(new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]));
-
-  // Template configurations for customization
-  const getTemplateConfig = (templateId: number) => {
-    switch (templateId) {
-      case 16: // Spin-to-Win Fortune Wheel
-        return {
-          width: 500,
-          height: 600,
-          backgroundColor: "#ffffff",
-          backgroundType: 'gradient' as const,
-          backgroundGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          elements: [
-            {
-              id: "wheel-container",
-              type: "container",
-              x: 50,
-              y: 80,
-              width: 400,
-              height: 400,
-              backgroundColor: "#ffffff",
-              borderRadius: 200,
-              border: "4px solid #ffd700",
-              zIndex: 1,
-              isPinned: false
-            },
-            {
-              id: "wheel-title",
-              type: "text",
-              x: 125,
-              y: 20,
-              width: 250,
-              height: 40,
-              content: "🎡 SPIN TO WIN! 🎡",
-              fontSize: 24,
-              fontWeight: "bold",
-              textAlign: "center",
-              color: "#ffffff",
-              zIndex: 2,
-              isPinned: false
-            },
-            {
-              id: "wheel-subtitle",
-              type: "text",
-              x: 100,
-              y: 500,
-              width: 300,
-              height: 30,
-              content: "Click the wheel to spin and win amazing prizes!",
-              fontSize: 14,
-              textAlign: "center",
-              color: "#666666",
-              zIndex: 2,
-              isPinned: false
-            },
-            {
-              id: "spin-button",
-              type: "button",
-              x: 200,
-              y: 540,
-              width: 100,
-              height: 40,
-              content: "SPIN NOW!",
-              backgroundColor: "#ff6b6b",
-              color: "#ffffff",
-              borderRadius: 20,
-              fontSize: 16,
-              fontWeight: "bold",
-              zIndex: 3,
-              isPinned: false
-            }
-          ] as PopupElement[]
-        };
-      
-      case 17: // Scratch Card Mystery Box
-        return {
-          width: 450,
-          height: 550,
-          backgroundColor: "#ffffff",
-          backgroundType: 'gradient' as const,
-          backgroundGradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          elements: [
-            {
-              id: "scratch-title",
-              type: "text",
-              x: 75,
-              y: 20,
-              width: 300,
-              height: 40,
-              content: "🎫 SCRATCH TO WIN! 🎫",
-              fontSize: 24,
-              fontWeight: "bold",
-              textAlign: "center",
-              color: "#ffffff",
-              zIndex: 2,
-              isPinned: false
-            },
-            {
-              id: "scratch-card",
-              type: "container",
-              x: 75,
-              y: 80,
-              width: 300,
-              height: 200,
-              backgroundColor: "#c0c0c0",
-              borderRadius: 10,
-              border: "2px solid #888888",
-              zIndex: 1,
-              isPinned: false
-            },
-            {
-              id: "scratch-text",
-              type: "text",
-              x: 100,
-              y: 150,
-              width: 250,
-              height: 60,
-              content: "Scratch here to reveal your prize!",
-              fontSize: 16,
-              textAlign: "center",
-              color: "#333333",
-              zIndex: 2,
-              isPinned: false
-            },
-            {
-              id: "instructions",
-              type: "text",
-              x: 50,
-              y: 300,
-              width: 350,
-              height: 80,
-              content: "Use your mouse or finger to scratch off the silver coating and discover what you've won!",
-              fontSize: 14,
-              textAlign: "center",
-              color: "#666666",
-              zIndex: 2,
-              isPinned: false
-            }
-          ] as PopupElement[]
-        };
-
-      default:
-        return {
-          width: 500,
-          height: 400,
-          backgroundColor: "#ffffff",
-          backgroundType: 'color' as const,
-          elements: [
-            {
-              id: "default-title",
-              type: "text",
-              x: 50,
-              y: 50,
-              width: 400,
-              height: 40,
-              content: "Template Title",
-              fontSize: 24,
-              fontWeight: "bold",
-              textAlign: "center",
-              color: "#333333",
-              zIndex: 1,
-              isPinned: false
-            },
-            {
-              id: "default-content",
-              type: "text",
-              x: 50,
-              y: 150,
-              width: 400,
-              height: 100,
-              content: "This is a customizable template. Edit this text and add your own elements!",
-              fontSize: 16,
-              textAlign: "center",
-              color: "#666666",
-              zIndex: 1,
-              isPinned: false
-            }
-          ] as PopupElement[]
-        };
-    }
-  };
-
-  const handleCustomizeTemplate = (template: any) => {
-    // For gamified templates, open the game editor instead of canvas
-    if (template.category === "gamified") {
-      switch (template.id) {
-        case 16: // Spin-to-Win Fortune Wheel
-        case 10: // Alternative Spin-to-Win
-          onSelectTemplate({
-            type: 'game',
-            gameType: 'spin-wheel',
-            templateId: template.id
-          });
-          return;
-        case 17: // Scratch Card Mystery Box
-          onSelectTemplate({
-            type: 'game', 
-            gameType: 'scratch-card',
-            templateId: template.id
-          });
-          return;
-        default:
-          // For other games, show coming soon or fallback to canvas
-          onSelectTemplate({
-            type: 'game',
-            gameType: 'coming-soon',
-            templateId: template.id
-          });
-          return;
-      }
-    }
-
-    // For non-game templates, use the existing canvas approach
-    const templateConfig = getTemplateConfig(template.id);
-    onSelectTemplate(templateConfig);
-  };
 
   const categories = [
     { id: "gamified", name: "🎮 Gamified", count: 12, icon: GamepadIcon },
@@ -303,24 +86,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 1,
       premium: false,
       conversionRate: "24.3%",
-      features: ["Animated Wheel", "Sound Effects", "Custom Prizes", "Mobile Touch"],
-      customizable: true
-    },
-    {
-      id: 10,
-      name: "Alternative Spin-to-Win",
-      category: "gamified",
-      type: "Modal",
-      preview: "bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600",
-      rating: 4.9,
-      uses: 3247,
-      devices: ["desktop", "mobile"],
-      description: "Interactive spinning wheel with customizable prizes and sound effects",
-      level: 1,
-      premium: false,
-      conversionRate: "24.3%",
-      features: ["Animated Wheel", "Sound Effects", "Custom Prizes", "Mobile Touch"],
-      customizable: true
+      features: ["Animated Wheel", "Sound Effects", "Custom Prizes", "Mobile Touch"]
     },
     {
       id: 17,
@@ -335,8 +101,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 1,
       premium: false,
       conversionRate: "19.7%",
-      features: ["Touch Scratch", "Instant Reveal", "Prize Animation", "Haptic Feedback"],
-      customizable: true
+      features: ["Touch Scratch", "Instant Reveal", "Prize Animation", "Haptic Feedback"]
     },
     {
       id: 18,
@@ -351,8 +116,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 2,
       premium: false,
       conversionRate: "16.2%",
-      features: ["Card Flip Animation", "Timer Challenge", "Difficulty Levels", "Leaderboard"],
-      customizable: false
+      features: ["Card Flip Animation", "Timer Challenge", "Difficulty Levels", "Leaderboard"]
     },
     {
       id: 19,
@@ -367,8 +131,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 1,
       premium: false,
       conversionRate: "22.1%",
-      features: ["Click Animation", "Hidden Rewards", "Progress Bar", "Surprise Elements"],
-      customizable: false
+      features: ["Click Animation", "Hidden Rewards", "Progress Bar", "Surprise Elements"]
     },
     {
       id: 20,
@@ -383,8 +146,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 2,
       premium: true,
       conversionRate: "27.5%",
-      features: ["Spinning Reels", "Win Animations", "Jackpot Sound", "Auto-spin"],
-      customizable: false
+      features: ["Spinning Reels", "Win Animations", "Jackpot Sound", "Auto-spin"]
     },
     {
       id: 21,
@@ -399,8 +161,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 2,
       premium: false,
       conversionRate: "18.9%",
-      features: ["Multiple Choice", "Timer", "Score Tracking", "Reward System"],
-      customizable: false
+      features: ["Multiple Choice", "Timer", "Score Tracking", "Reward System"]
     },
     {
       id: 22,
@@ -415,8 +176,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 1,
       premium: false,
       conversionRate: "20.3%",
-      features: ["3D Dice Animation", "Random Rewards", "Sound Effects", "Roll History"],
-      customizable: false
+      features: ["3D Dice Animation", "Random Rewards", "Sound Effects", "Roll History"]
     },
     {
       id: 23,
@@ -431,8 +191,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 1,
       premium: false,
       conversionRate: "15.8%",
-      features: ["Coin Animation", "50/50 Chance", "Quick Game", "Instant Result"],
-      customizable: false
+      features: ["Coin Animation", "50/50 Chance", "Quick Game", "Instant Result"]
     },
     {
       id: 24,
@@ -447,8 +206,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 3,
       premium: true,
       conversionRate: "21.6%",
-      features: ["Drag & Drop", "Progress Tracking", "Completion Reward", "Visual Progress"],
-      customizable: false
+      features: ["Drag & Drop", "Progress Tracking", "Completion Reward", "Visual Progress"]
     },
     {
       id: 25,
@@ -463,8 +221,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 1,
       premium: false,
       conversionRate: "17.4%",
-      features: ["Pop Animation", "Hidden Prizes", "Sound Effects", "Floating Balloons"],
-      customizable: false
+      features: ["Pop Animation", "Hidden Prizes", "Sound Effects", "Floating Balloons"]
     },
     {
       id: 26,
@@ -479,8 +236,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 1,
       premium: false,
       conversionRate: "14.9%",
-      features: ["Number Animation", "Lucky Draw", "Instant Win", "Number History"],
-      customizable: false
+      features: ["Number Animation", "Lucky Draw", "Instant Win", "Number History"]
     },
     {
       id: 27,
@@ -495,9 +251,9 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 2,
       premium: false,
       conversionRate: "19.2%",
-      features: ["AI Opponent", "Win Detection", "Game Board", "Victory Animation"],
-      customizable: false
+      features: ["AI Opponent", "Win Detection", "Game Board", "Victory Animation"]
     },
+    // ... keep existing code (other non-gamified templates)
     {
       id: 1,
       name: "Welcome Discount",
@@ -510,8 +266,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       description: "Convert first-time visitors with an irresistible welcome offer",
       level: 1,
       premium: false,
-      conversionRate: "12.5%",
-      customizable: false
+      conversionRate: "12.5%"
     },
     {
       id: 2,
@@ -525,8 +280,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       description: "Build your email list with a clean, professional signup form",
       level: 1,
       premium: false,
-      conversionRate: "8.3%",
-      customizable: false
+      conversionRate: "8.3%"
     },
     {
       id: 9,
@@ -541,8 +295,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 3,
       premium: true,
       conversionRate: "18.7%",
-      features: ["AI Analytics", "Smart Targeting", "Dynamic Content"],
-      customizable: false
+      features: ["AI Analytics", "Smart Targeting", "Dynamic Content"]
     },
     {
       id: 10,
@@ -557,8 +310,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 2,
       premium: false,
       conversionRate: "15.2%",
-      features: ["Gamification", "Sound Effects", "Animated Wheel"],
-      customizable: false
+      features: ["Gamification", "Sound Effects", "Animated Wheel"]
     },
     {
       id: 11,
@@ -573,8 +325,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 2,
       premium: false,
       conversionRate: "9.8%",
-      features: ["Real-time Data", "Auto-refresh", "Customizable Timing"],
-      customizable: false
+      features: ["Real-time Data", "Auto-refresh", "Customizable Timing"]
     },
     {
       id: 12,
@@ -589,8 +340,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 3,
       premium: true,
       conversionRate: "22.1%",
-      features: ["Multi-Step Form", "Progress Indicator", "Smart Validation"],
-      customizable: false
+      features: ["Multi-Step Form", "Progress Indicator", "Smart Validation"]
     },
     {
       id: 13,
@@ -605,8 +355,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 4,
       premium: true,
       conversionRate: "14.6%",
-      features: ["Video Background", "Auto-play", "Mobile Optimized"],
-      customizable: false
+      features: ["Video Background", "Auto-play", "Mobile Optimized"]
     },
     {
       id: 14,
@@ -621,8 +370,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 3,
       premium: true,
       conversionRate: "19.3%",
-      features: ["AI Personalization", "Behavioral Triggers", "Smart Timing"],
-      customizable: false
+      features: ["AI Personalization", "Behavioral Triggers", "Smart Timing"]
     },
     {
       id: 15,
@@ -637,8 +385,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       level: 2,
       premium: false,
       conversionRate: "16.4%",
-      features: ["Touch Interaction", "Reveal Animation", "Sound Effects"],
-      customizable: false
+      features: ["Touch Interaction", "Reveal Animation", "Sound Effects"]
     },
     {
       id: 3,
@@ -652,8 +399,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       description: "Recover lost sales with targeted cart abandonment popups",
       level: 1,
       premium: false,
-      conversionRate: "11.2%",
-      customizable: false
+      conversionRate: "11.2%"
     },
     {
       id: 4,
@@ -667,8 +413,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       description: "Capture leaving visitors with last-chance offers",
       level: 1,
       premium: false,
-      conversionRate: "7.9%",
-      customizable: false
+      conversionRate: "7.9%"
     },
     {
       id: 5,
@@ -682,8 +427,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       description: "Drive mobile app downloads with compelling CTAs",
       level: 1,
       premium: false,
-      conversionRate: "6.3%",
-      customizable: false
+      conversionRate: "6.3%"
     },
     {
       id: 6,
@@ -697,8 +441,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       description: "Help customers find perfect products with interactive quizzes",
       level: 2,
       premium: false,
-      conversionRate: "13.7%",
-      customizable: false
+      conversionRate: "13.7%"
     },
     {
       id: 7,
@@ -712,8 +455,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       description: "Create urgency with high-impact sale announcements",
       level: 1,
       premium: false,
-      conversionRate: "20.4%",
-      customizable: false
+      conversionRate: "20.4%"
     },
     {
       id: 8,
@@ -727,8 +469,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       description: "Drive event registrations with professional forms",
       level: 1,
       premium: false,
-      conversionRate: "10.1%",
-      customizable: false
+      conversionRate: "10.1%"
     }
   ];
 
@@ -976,7 +717,6 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                 {filteredTemplates.map((template) => {
                   const isLocked = !canUseTemplate(template);
                   const isGameTemplate = template.category === "gamified";
-                  const isCustomizable = template.customizable;
                   return (
                     <Card key={template.id} className={`hover:shadow-lg transition-all group relative ${isLocked ? 'opacity-75' : ''} ${isGameTemplate ? 'ring-2 ring-purple-500/20 bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-900/10 dark:to-pink-900/10' : ''}`}>
                       {isLocked && (
@@ -989,15 +729,6 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                         <div className="absolute top-2 left-2 z-10">
                           <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs">
                             🎮 Game
-                          </Badge>
-                        </div>
-                      )}
-
-                      {isCustomizable && (
-                        <div className="absolute top-2 right-8 z-10">
-                          <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs">
-                            <Settings className="w-3 h-3 mr-1" />
-                            Customizable
                           </Badge>
                         </div>
                       )}
@@ -1015,28 +746,15 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                           )}
                           
                           <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                className="bg-white/90 text-slate-900 hover:bg-white"
-                                onClick={() => onSelectTemplate()}
-                                disabled={isLocked}
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                Preview
-                              </Button>
-                              {isCustomizable && !isLocked && (
-                                <Button
-                                  size="sm"
-                                  className="bg-blue-600 text-white hover:bg-blue-700"
-                                  onClick={() => handleCustomizeTemplate(template)}
-                                >
-                                  <Settings className="w-4 h-4 mr-1" />
-                                  Customize
-                                </Button>
-                              )}
-                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-white text-slate-900 hover:bg-slate-100"
+                              onClick={onSelectTemplate}
+                              disabled={isLocked}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Preview
+                            </Button>
                           </div>
                           
                           {/* Mock popup preview with game elements */}
@@ -1118,46 +836,23 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                             Level {template.level}
                           </Badge>
                           
-                          {isCustomizable && !isLocked ? (
-                            <div className="flex space-x-2 flex-1 ml-3">
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                className="flex-1"
-                                onClick={() => onSelectTemplate()}
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                Preview
-                              </Button>
-                              <Button 
-                                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                                size="sm"
-                                onClick={() => handleCustomizeTemplate(template)}
-                              >
-                                <Settings className="w-4 h-4 mr-1" />
-                                Customize
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button 
-                              className={`flex-1 ml-3 ${isGameTemplate && !isLocked ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}`}
-                              onClick={() => onSelectTemplate()}
-                              disabled={isLocked}
-                              size="sm"
-                            >
-                              {isLocked ? (
-                                <>
-                                  <Lock className="w-4 h-4 mr-2" />
-                                  Locked
-                                </>
-                              ) : (
-                                <>
-                                  {isGameTemplate ? <Gamepad2 className="w-4 h-4 mr-2" /> : <Unlock className="w-4 h-4 mr-2" />}
-                                  {isGameTemplate ? 'Play Game' : 'Use Template'}
-                                </>
-                              )}
-                            </Button>
-                          )}
+                          <Button 
+                            className={`flex-1 ml-3 ${isGameTemplate && !isLocked ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}`}
+                            onClick={onSelectTemplate}
+                            disabled={isLocked}
+                          >
+                            {isLocked ? (
+                              <>
+                                <Lock className="w-4 h-4 mr-2" />
+                                Locked
+                              </>
+                            ) : (
+                              <>
+                                {isGameTemplate ? <Gamepad2 className="w-4 h-4 mr-2" /> : <Unlock className="w-4 h-4 mr-2" />}
+                                {isGameTemplate ? 'Play Game' : 'Use Template'}
+                              </>
+                            )}
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

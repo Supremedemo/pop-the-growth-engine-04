@@ -1,17 +1,14 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, X, ChevronLeft, ChevronRight, Copy, ExternalLink, Trash2 } from "lucide-react";
+import { Plus, X, ChevronLeft, ChevronRight, Copy, ExternalLink } from "lucide-react";
 import { BaseElement } from "./PopupElements";
 
 export interface FormStep {
   id: string;
   title: string;
-  description?: string;
   fields: FormFieldType[];
 }
 
@@ -47,44 +44,13 @@ export interface MultiStepFormElement extends BaseElement {
 interface MultiStepFormRendererProps {
   element: MultiStepFormElement;
   isPreview?: boolean;
-  isEditor?: boolean;
-  onUpdate?: (updates: Partial<MultiStepFormElement>) => void;
 }
 
-export const MultiStepFormRenderer = ({ 
-  element, 
-  isPreview = false,
-  isEditor = false,
-  onUpdate 
-}: MultiStepFormRendererProps) => {
+export const MultiStepFormRenderer = ({ element, isPreview = false }: MultiStepFormRendererProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [copiedCoupon, setCopiedCoupon] = useState(false);
-
-  // Initialize with default step if none exist in editor mode
-  React.useEffect(() => {
-    if (element.steps.length === 0 && isEditor && onUpdate) {
-      const defaultStep: FormStep = {
-        id: `step_${Date.now()}`,
-        title: "Step 1",
-        description: "Please fill out the information below",
-        fields: [
-          {
-            id: `field_${Date.now()}`,
-            type: "text",
-            label: "Full Name",
-            placeholder: "Enter your full name",
-            required: true
-          }
-        ]
-      };
-      
-      onUpdate({
-        steps: [defaultStep]
-      });
-    }
-  }, [element.steps.length, isEditor, onUpdate]);
 
   const handleNext = () => {
     if (currentStep < element.steps.length - 1) {
@@ -112,183 +78,19 @@ export const MultiStepFormRenderer = ({
     }
   };
 
-  const addNewStep = () => {
-    if (!onUpdate) return;
-    
-    const newStep: FormStep = {
-      id: `step_${Date.now()}`,
-      title: `Step ${element.steps.length + 1}`,
-      description: "Please fill out the information below",
-      fields: [
-        {
-          id: `field_${Date.now()}`,
-          type: "text",
-          label: "Field Name",
-          placeholder: "Enter value",
-          required: false
-        }
-      ]
-    };
-    
-    onUpdate({
-      steps: [...element.steps, newStep]
-    });
-  };
-
-  const updateStep = (stepId: string, updates: Partial<FormStep>) => {
-    if (!onUpdate) return;
-    
-    const updatedSteps = element.steps.map(step =>
-      step.id === stepId ? { ...step, ...updates } : step
-    );
-    
-    onUpdate({ steps: updatedSteps });
-  };
-
-  const deleteStep = (stepId: string) => {
-    if (!onUpdate || element.steps.length <= 1) return;
-    
-    const updatedSteps = element.steps.filter(step => step.id !== stepId);
-    onUpdate({ steps: updatedSteps });
-    
-    if (currentStep >= updatedSteps.length) {
-      setCurrentStep(Math.max(0, updatedSteps.length - 1));
+  const handleRedirect = () => {
+    if (element.successPage.redirectUrl) {
+      window.open(element.successPage.redirectUrl, '_blank');
     }
   };
 
-  const addFieldToStep = (stepId: string) => {
-    if (!onUpdate) return;
-    
-    const newField: FormFieldType = {
-      id: `field_${Date.now()}`,
-      type: "text",
-      label: "New Field",
-      placeholder: "Enter value",
-      required: false
-    };
-    
-    const updatedSteps = element.steps.map(step =>
-      step.id === stepId
-        ? { ...step, fields: [...step.fields, newField] }
-        : step
-    );
-    
-    onUpdate({ steps: updatedSteps });
-  };
-
-  const updateField = (stepId: string, fieldId: string, updates: Partial<FormFieldType>) => {
-    if (!onUpdate) return;
-    
-    const updatedSteps = element.steps.map(step =>
-      step.id === stepId
-        ? {
-            ...step,
-            fields: step.fields.map(field =>
-              field.id === fieldId ? { ...field, ...updates } : field
-            )
-          }
-        : step
-    );
-    
-    onUpdate({ steps: updatedSteps });
-  };
-
-  const deleteField = (stepId: string, fieldId: string) => {
-    if (!onUpdate) return;
-    
-    const updatedSteps = element.steps.map(step =>
-      step.id === stepId
-        ? {
-            ...step,
-            fields: step.fields.filter(field => field.id !== fieldId)
-          }
-        : step
-    );
-    
-    onUpdate({ steps: updatedSteps });
-  };
-
-  const renderField = (field: FormFieldType, stepId?: string) => {
-    if (isEditor && stepId) {
-      return (
-        <div className="space-y-2 p-3 border rounded-lg bg-muted/20">
-          <div className="flex items-center justify-between">
-            <Input
-              value={field.label}
-              onChange={(e) => updateField(stepId, field.id, { label: e.target.value })}
-              className="font-medium bg-transparent border-none p-0 h-auto"
-              placeholder="Field Label"
-            />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => deleteField(stepId, field.id)}
-              className="h-6 w-6 p-0 text-destructive"
-            >
-              <Trash2 className="w-3 h-3" />
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <Select 
-              value={field.type} 
-              onValueChange={(value) => updateField(stepId, field.id, { type: value as any })}
-            >
-              <SelectTrigger className="h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Text</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="phone">Phone</SelectItem>
-                <SelectItem value="number">Number</SelectItem>
-                <SelectItem value="textarea">Textarea</SelectItem>
-                <SelectItem value="select">Select</SelectItem>
-                <SelectItem value="checkbox">Checkbox</SelectItem>
-                <SelectItem value="radio">Radio</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={field.required}
-                onChange={(e) => updateField(stepId, field.id, { required: e.target.checked })}
-                className="rounded"
-              />
-              <span className="text-xs">Required</span>
-            </div>
-          </div>
-          
-          <Input
-            value={field.placeholder}
-            onChange={(e) => updateField(stepId, field.id, { placeholder: e.target.value })}
-            placeholder="Placeholder text"
-            className="h-8"
-          />
-          
-          {(field.type === 'select' || field.type === 'radio') && (
-            <Textarea
-              value={field.options?.join('\n') || ''}
-              onChange={(e) => updateField(stepId, field.id, { 
-                options: e.target.value.split('\n').filter(opt => opt.trim()) 
-              })}
-              placeholder="Enter options (one per line)"
-              rows={3}
-              className="text-sm"
-            />
-          )}
-        </div>
-      );
-    }
-
-    // Regular field rendering for preview/live mode
+  const renderField = (field: FormFieldType) => {
     const commonProps = {
       id: field.id,
       value: formData[field.id] || '',
       onChange: (e: any) => handleFieldChange(field.id, e.target.value),
       required: field.required,
-      className: "w-full"
+      className: "w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
     };
 
     switch (field.type) {
@@ -302,16 +104,12 @@ export const MultiStepFormRenderer = ({
         );
       case 'select':
         return (
-          <Select value={formData[field.id] || ''} onValueChange={(value) => handleFieldChange(field.id, value)}>
-            <SelectTrigger>
-              <SelectValue placeholder={field.placeholder} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map(option => (
-                <SelectItem key={option} value={option}>{option}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select {...commonProps}>
+            <option value="">{field.placeholder}</option>
+            {field.options?.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
         );
       case 'checkbox':
         return (
@@ -355,8 +153,7 @@ export const MultiStepFormRenderer = ({
     }
   };
 
-  // Success page rendering
-  if (isComplete && !isEditor) {
+  if (isComplete) {
     return (
       <div 
         className="p-6 rounded-lg text-center space-y-4"
@@ -395,11 +192,7 @@ export const MultiStepFormRenderer = ({
             <Button
               style={{ backgroundColor: element.buttonColor }}
               className="text-white flex items-center space-x-2"
-              onClick={() => {
-                if (element.successPage.redirectUrl) {
-                  window.open(element.successPage.redirectUrl, '_blank');
-                }
-              }}
+              onClick={handleRedirect}
             >
               <span>{element.successPage.redirectButtonText}</span>
               <ExternalLink className="w-4 h-4" />
@@ -410,118 +203,17 @@ export const MultiStepFormRenderer = ({
     );
   }
 
-  // Editor mode
-  if (isEditor) {
-    return (
-      <div 
-        className="p-6 rounded-lg space-y-6 w-full h-full overflow-auto"
-        style={{ backgroundColor: element.backgroundColor }}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Multi-Step Form Editor</h3>
-          <Button onClick={addNewStep} size="sm" variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Step
-          </Button>
-        </div>
-
-        {/* Steps Editor */}
-        <div className="space-y-4">
-          {element.steps.map((step, index) => (
-            <div key={step.id} className="border rounded-lg p-4 bg-background/50">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex-1 space-y-2">
-                  <Input
-                    value={step.title}
-                    onChange={(e) => updateStep(step.id, { title: e.target.value })}
-                    className="font-semibold"
-                    placeholder="Step title"
-                  />
-                  <Input
-                    value={step.description || ''}
-                    onChange={(e) => updateStep(step.id, { description: e.target.value })}
-                    placeholder="Step description (optional)"
-                    className="text-sm"
-                  />
-                </div>
-                <div className="flex items-center space-x-2 ml-4">
-                  <span className="text-sm text-muted-foreground">Step {index + 1}</span>
-                  {element.steps.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteStep(step.id)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {step.fields.map(field => (
-                  <div key={field.id}>
-                    {renderField(field, step.id)}
-                  </div>
-                ))}
-                
-                <Button
-                  onClick={() => addFieldToStep(step.id)}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Field
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Success Page Editor */}
-        <div className="border rounded-lg p-4 bg-background/50">
-          <h4 className="font-semibold mb-3">Success Page</h4>
-          <div className="space-y-3">
-            <Input
-              value={element.successPage.title}
-              onChange={(e) => onUpdate?.({ 
-                successPage: { ...element.successPage, title: e.target.value }
-              })}
-              placeholder="Success page title"
-            />
-            <Textarea
-              value={element.successPage.message}
-              onChange={(e) => onUpdate?.({ 
-                successPage: { ...element.successPage, message: e.target.value }
-              })}
-              placeholder="Success page message"
-              rows={2}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Regular form display
   const currentStepData = element.steps[currentStep];
   if (!currentStepData) return null;
 
   return (
     <div 
-      className="p-6 rounded-lg space-y-4 w-full h-full"
+      className="p-6 rounded-lg space-y-4"
       style={{ backgroundColor: element.backgroundColor }}
     >
       {/* Progress indicator */}
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold">{currentStepData.title}</h3>
-          {currentStepData.description && (
-            <p className="text-sm text-gray-600">{currentStepData.description}</p>
-          )}
-        </div>
+        <h3 className="text-lg font-semibold">{currentStepData.title}</h3>
         <span className="text-sm text-gray-500">
           {currentStep + 1} of {element.steps.length}
         </span>
