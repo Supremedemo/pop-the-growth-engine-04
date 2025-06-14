@@ -16,93 +16,26 @@ import {
   TrendingUp,
   Eye,
   MousePointer,
-  DollarSign
+  DollarSign,
+  Loader2
 } from "lucide-react";
+import { useCampaigns } from "@/hooks/useCampaigns";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 export const CampaignManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  const campaigns = [
-    {
-      id: 1,
-      name: "Welcome New Visitors",
-      type: "Modal",
-      status: "Active",
-      created: "2024-01-15",
-      impressions: 45632,
-      conversions: 1247,
-      rate: "2.73%",
-      revenue: "$8,950",
-      lastModified: "2 hours ago",
-      template: "Welcome Discount"
-    },
-    {
-      id: 2,
-      name: "Cart Abandonment Recovery",
-      type: "Slide-in",
-      status: "Active",
-      created: "2024-01-12",
-      impressions: 23456,
-      conversions: 892,
-      rate: "3.80%",
-      revenue: "$6,840",
-      lastModified: "1 day ago",
-      template: "Cart Abandonment"
-    },
-    {
-      id: 3,
-      name: "Exit Intent Discount",
-      type: "Modal",
-      status: "Paused",
-      created: "2024-01-10",
-      impressions: 18743,
-      conversions: 456,
-      rate: "2.43%",
-      revenue: "$3,420",
-      lastModified: "3 days ago",
-      template: "Exit Intent Offer"
-    },
-    {
-      id: 4,
-      name: "Newsletter Signup",
-      type: "Banner",
-      status: "Active",
-      created: "2024-01-08",
-      impressions: 56789,
-      conversions: 1234,
-      rate: "2.17%",
-      revenue: "$0",
-      lastModified: "5 days ago",
-      template: "Newsletter Signup"
-    },
-    {
-      id: 5,
-      name: "Holiday Sale Promotion",
-      type: "Fullscreen",
-      status: "Draft",
-      created: "2024-01-20",
-      impressions: 0,
-      conversions: 0,
-      rate: "-",
-      revenue: "$0",
-      lastModified: "1 hour ago",
-      template: "Black Friday Sale"
-    },
-    {
-      id: 6,
-      name: "Product Quiz Campaign",
-      type: "Modal",
-      status: "Scheduled",
-      created: "2024-01-18",
-      impressions: 0,
-      conversions: 0,
-      rate: "-",
-      revenue: "$0",
-      lastModified: "6 hours ago",
-      template: "Product Quiz"
-    }
-  ];
+  
+  const { 
+    campaigns, 
+    isLoading, 
+    toggleCampaignStatus, 
+    deleteCampaign,
+    isUpdating,
+    isDeleting 
+  } = useCampaigns();
+  
+  const { dashboardStats } = useAnalytics();
 
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = campaign.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -140,6 +73,16 @@ export const CampaignManager = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-background min-h-screen">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-background min-h-screen">
       {/* Header */}
@@ -161,7 +104,7 @@ export const CampaignManager = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Campaigns</p>
-                <p className="text-2xl font-bold">{campaigns.length}</p>
+                <p className="text-2xl font-bold">{dashboardStats.totalCampaigns}</p>
               </div>
               <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                 <Eye className="w-5 h-5 text-blue-600" />
@@ -175,7 +118,7 @@ export const CampaignManager = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Active Campaigns</p>
-                <p className="text-2xl font-bold">{campaigns.filter(c => c.status === "Active").length}</p>
+                <p className="text-2xl font-bold">{dashboardStats.activeCampaigns}</p>
               </div>
               <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
                 <Play className="w-5 h-5 text-green-600" />
@@ -189,9 +132,7 @@ export const CampaignManager = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Conversions</p>
-                <p className="text-2xl font-bold">
-                  {campaigns.reduce((sum, c) => sum + c.conversions, 0).toLocaleString()}
-                </p>
+                <p className="text-2xl font-bold">{dashboardStats.totalConversions.toLocaleString()}</p>
               </div>
               <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
                 <MousePointer className="w-5 h-5 text-purple-600" />
@@ -205,7 +146,7 @@ export const CampaignManager = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold">$19,210</p>
+                <p className="text-2xl font-bold">${dashboardStats.totalRevenue.toLocaleString()}</p>
               </div>
               <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-orange-600" />
@@ -269,11 +210,11 @@ export const CampaignManager = () => {
                       </Badge>
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <span>Template: {campaign.template}</span>
+                      <span>Template: {campaign.template || 'Custom'}</span>
                       <span>•</span>
-                      <span>Created: {campaign.created}</span>
+                      <span>Created: {new Date(campaign.created_at).toLocaleDateString()}</span>
                       <span>•</span>
-                      <span>Modified: {campaign.lastModified}</span>
+                      <span>Modified: {new Date(campaign.updated_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
@@ -290,11 +231,13 @@ export const CampaignManager = () => {
                       <div className="text-xs text-muted-foreground">Conversions</div>
                     </div>
                     <div className="text-center">
-                      <div className="font-medium text-foreground">{campaign.rate}</div>
+                      <div className="font-medium text-foreground">
+                        {campaign.impressions > 0 ? ((campaign.conversions / campaign.impressions) * 100).toFixed(2) : '0.00'}%
+                      </div>
                       <div className="text-xs text-muted-foreground">CVR</div>
                     </div>
                     <div className="text-center">
-                      <div className="font-medium text-foreground">{campaign.revenue}</div>
+                      <div className="font-medium text-foreground">${Number(campaign.revenue).toLocaleString()}</div>
                       <div className="text-xs text-muted-foreground">Revenue</div>
                     </div>
                   </div>
@@ -307,7 +250,12 @@ export const CampaignManager = () => {
                     <Button variant="ghost" size="sm">
                       <Settings className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => toggleCampaignStatus(campaign.id, campaign.status)}
+                      disabled={isUpdating}
+                    >
                       {campaign.status === "Active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                     </Button>
                     <Button variant="ghost" size="sm">
@@ -319,13 +267,15 @@ export const CampaignManager = () => {
             ))}
           </div>
 
-          {filteredCampaigns.length === 0 && (
+          {filteredCampaigns.length === 0 && !isLoading && (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-medium mb-2">No campaigns found</h3>
-              <p className="text-muted-foreground mb-4">Try adjusting your search or filter criteria</p>
+              <p className="text-muted-foreground mb-4">
+                {campaigns.length === 0 ? "Create your first campaign to get started" : "Try adjusting your search or filter criteria"}
+              </p>
               <Button variant="outline" onClick={() => {
                 setSearchTerm("");
                 setStatusFilter("all");

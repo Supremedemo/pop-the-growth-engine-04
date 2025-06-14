@@ -14,85 +14,49 @@ import {
   Settings,
   MoreHorizontal
 } from "lucide-react";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useCampaigns } from "@/hooks/useCampaigns";
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
 }
 
 export const Dashboard = ({ onNavigate }: DashboardProps) => {
+  const { dashboardStats } = useAnalytics();
+  const { campaigns, toggleCampaignStatus } = useCampaigns();
+
   const stats = [
     {
       title: "Total Impressions",
-      value: "127,432",
-      change: "+12.5%",
+      value: dashboardStats.totalImpressions.toLocaleString(),
+      change: "+12.5%", // This could be calculated from historical data
       icon: Eye,
       color: "text-blue-600"
     },
     {
       title: "Conversions",
-      value: "3,847",
+      value: dashboardStats.totalConversions.toLocaleString(),
       change: "+8.2%",
       icon: MousePointer,
       color: "text-green-600"
     },
     {
       title: "Conversion Rate",
-      value: "3.02%",
+      value: `${dashboardStats.conversionRate.toFixed(2)}%`,
       change: "+0.4%",
       icon: TrendingUp,
       color: "text-purple-600"
     },
     {
       title: "Revenue Attributed",
-      value: "$23,156",
+      value: `$${dashboardStats.totalRevenue.toLocaleString()}`,
       change: "+15.7%",
       icon: DollarSign,
       color: "text-orange-600"
     }
   ];
 
-  const campaigns = [
-    {
-      id: 1,
-      name: "Welcome New Visitors",
-      type: "Modal",
-      status: "Active",
-      impressions: 45632,
-      conversions: 1247,
-      rate: "2.73%",
-      revenue: "$8,950"
-    },
-    {
-      id: 2,
-      name: "Cart Abandonment Recovery",
-      type: "Slide-in",
-      status: "Active",
-      impressions: 23456,
-      conversions: 892,
-      rate: "3.80%",
-      revenue: "$6,840"
-    },
-    {
-      id: 3,
-      name: "Exit Intent Discount",
-      type: "Modal",
-      status: "Paused",
-      impressions: 18743,
-      conversions: 456,
-      rate: "2.43%",
-      revenue: "$3,420"
-    },
-    {
-      id: 4,
-      name: "Newsletter Signup",
-      type: "Banner",
-      status: "Active",
-      impressions: 56789,
-      conversions: 1234,
-      rate: "2.17%",
-      revenue: "$0"
-    }
-  ];
+  const recentCampaigns = campaigns.slice(0, 4);
 
   return (
     <div className="p-6 space-y-6 bg-background min-h-screen">
@@ -102,7 +66,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
           <div>
             <h2 className="text-2xl font-bold mb-2">Welcome back! 👋</h2>
             <p className="text-blue-100 mb-4">
-              Your campaigns have generated <strong>$23,156</strong> in attributed revenue this month.
+              Your campaigns have generated <strong>${dashboardStats.totalRevenue.toLocaleString()}</strong> in attributed revenue this month.
             </p>
             <Button 
               onClick={() => onNavigate("builder")}
@@ -212,53 +176,76 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {campaigns.map((campaign) => (
-              <div key={campaign.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    {campaign.status === "Active" ? (
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    ) : (
-                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    )}
-                    <span className="font-medium">{campaign.name}</span>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {campaign.type}
-                  </Badge>
-                  <Badge 
-                    variant={campaign.status === "Active" ? "default" : "secondary"}
-                    className={campaign.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-                  >
-                    {campaign.status}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{campaign.impressions.toLocaleString()}</div>
-                    <div className="text-xs">Impressions</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{campaign.conversions.toLocaleString()}</div>
-                    <div className="text-xs">Conversions</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{campaign.rate}</div>
-                    <div className="text-xs">CVR</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{campaign.revenue}</div>
-                    <div className="text-xs">Revenue</div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </div>
+          {recentCampaigns.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Plus className="w-8 h-8 text-muted-foreground" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-lg font-medium mb-2">No campaigns yet</h3>
+              <p className="text-muted-foreground mb-4">Create your first popup campaign to get started</p>
+              <Button onClick={() => onNavigate("builder")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Campaign
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentCampaigns.map((campaign) => (
+                <div key={campaign.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      {campaign.status === "Active" ? (
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      ) : (
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      )}
+                      <span className="font-medium">{campaign.name}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {campaign.type}
+                    </Badge>
+                    <Badge 
+                      variant={campaign.status === "Active" ? "default" : "secondary"}
+                      className={campaign.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
+                    >
+                      {campaign.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                    <div className="text-center">
+                      <div className="font-medium text-foreground">{campaign.impressions.toLocaleString()}</div>
+                      <div className="text-xs">Impressions</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium text-foreground">{campaign.conversions.toLocaleString()}</div>
+                      <div className="text-xs">Conversions</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium text-foreground">
+                        {campaign.impressions > 0 ? ((campaign.conversions / campaign.impressions) * 100).toFixed(2) : '0.00'}%
+                      </div>
+                      <div className="text-xs">CVR</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium text-foreground">${Number(campaign.revenue).toLocaleString()}</div>
+                      <div className="text-xs">Revenue</div>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => toggleCampaignStatus(campaign.id, campaign.status)}
+                    >
+                      {campaign.status === "Active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
