@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +48,11 @@ export interface CanvasState {
   showGrid: boolean;
   gridSize: number;
   layout: PopupLayout;
+  showOverlay: boolean;
+  overlayColor: string;
+  overlayOpacity: number;
+  showCloseButton: boolean;
+  closeButtonPosition: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 }
 
 export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
@@ -70,7 +74,12 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
     zoom: 1,
     showGrid: true,
     gridSize: 8,
-    layout: defaultLayout
+    layout: defaultLayout,
+    showOverlay: true,
+    overlayColor: "#000000",
+    overlayOpacity: 50,
+    showCloseButton: true,
+    closeButtonPosition: 'top-right'
   });
 
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
@@ -406,7 +415,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <TabsTrigger value="layout">Layout</TabsTrigger>
               <TabsTrigger value="properties">Properties</TabsTrigger>
               <TabsTrigger value="layers">Layers</TabsTrigger>
-              <TabsTrigger value="background">Background</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
             <TabsContent value="layout" className="p-4">
@@ -433,13 +442,89 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               />
             </TabsContent>
 
-            <TabsContent value="background" className="p-4">
-              <BackgroundControls
-                backgroundColor={canvasState.backgroundColor}
-                backgroundImage={canvasState.backgroundImage}
-                backgroundGradient={canvasState.backgroundGradient}
-                onBackgroundChange={handleBackgroundChange}
-              />
+            <TabsContent value="settings" className="p-4">
+              <div className="space-y-6">
+                <BackgroundControls
+                  backgroundColor={canvasState.backgroundColor}
+                  backgroundImage={canvasState.backgroundImage}
+                  backgroundGradient={canvasState.backgroundGradient}
+                  onBackgroundChange={handleBackgroundChange}
+                />
+                
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium mb-3">Overlay Settings</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="showOverlay">Show Overlay</Label>
+                      <input
+                        id="showOverlay"
+                        type="checkbox"
+                        checked={canvasState.showOverlay}
+                        onChange={(e) => updateCanvasState({ showOverlay: e.target.checked })}
+                        className="rounded"
+                      />
+                    </div>
+                    {canvasState.showOverlay && (
+                      <>
+                        <div>
+                          <Label htmlFor="overlayColor">Overlay Color</Label>
+                          <input
+                            id="overlayColor"
+                            type="color"
+                            value={canvasState.overlayColor}
+                            onChange={(e) => updateCanvasState({ overlayColor: e.target.value })}
+                            className="w-full h-8 rounded"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="overlayOpacity">Opacity: {canvasState.overlayOpacity}%</Label>
+                          <input
+                            id="overlayOpacity"
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={canvasState.overlayOpacity}
+                            onChange={(e) => updateCanvasState({ overlayOpacity: parseInt(e.target.value) })}
+                            className="w-full"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium mb-3">Close Button</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="showCloseButton">Show Close Button</Label>
+                      <input
+                        id="showCloseButton"
+                        type="checkbox"
+                        checked={canvasState.showCloseButton}
+                        onChange={(e) => updateCanvasState({ showCloseButton: e.target.checked })}
+                        className="rounded"
+                      />
+                    </div>
+                    {canvasState.showCloseButton && (
+                      <div>
+                        <Label htmlFor="closeButtonPosition">Position</Label>
+                        <select
+                          id="closeButtonPosition"
+                          value={canvasState.closeButtonPosition}
+                          onChange={(e) => updateCanvasState({ closeButtonPosition: e.target.value as any })}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="top-right">Top Right</option>
+                          <option value="top-left">Top Left</option>
+                          <option value="bottom-right">Bottom Right</option>
+                          <option value="bottom-left">Bottom Left</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

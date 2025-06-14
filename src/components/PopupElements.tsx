@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Clock, X, Pin, PinOff } from "lucide-react";
 import { CustomHtmlElement } from "./CustomHtmlElement";
+import { MultiStepFormRenderer, MultiStepFormElement } from "./MultiStepFormElement";
 
 export interface BaseElement {
   id: string;
@@ -60,7 +62,7 @@ export interface CustomHtmlElementType extends BaseElement {
   htmlContent: string;
 }
 
-export type PopupElement = TextElement | ImageElement | FormElement | TimerElement | CustomHtmlElementType;
+export type PopupElement = TextElement | ImageElement | FormElement | TimerElement | CustomHtmlElementType | MultiStepFormElement;
 
 interface ElementRendererProps {
   element: PopupElement;
@@ -97,6 +99,13 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
 
   const renderElement = () => {
     switch (element.type) {
+      case "multi-step-form":
+        return (
+          <div style={baseStyle} onClick={handleClick}>
+            <MultiStepFormRenderer element={element as MultiStepFormElement} />
+          </div>
+        );
+
       case "html":
         return (
           <CustomHtmlElement

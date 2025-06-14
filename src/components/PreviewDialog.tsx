@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -21,15 +22,14 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
   const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("desktop");
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Adjusted resolutions to fit better in the dialog
   const macbookAirResolution = {
-    width: 1000,
-    height: 600
+    width: 900,
+    height: 550
   };
 
   const mobileResolution = {
-    width: 320,
-    height: 568
+    width: 300,
+    height: 500
   };
 
   const currentResolution = deviceMode === "desktop" ? macbookAirResolution : mobileResolution;
@@ -47,10 +47,11 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
     setIsLoading(true);
     setShowPopup(false);
     
-    // Add timeout to show popup after iframe loads
     setTimeout(() => {
       setIsLoading(false);
-      setShowPopup(true);
+      if (canvasState.elements.length > 0) {
+        setShowPopup(true);
+      }
     }, 2000);
   };
 
@@ -63,7 +64,7 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
 
   const getPopupStyle = () => {
     const layout = canvasState.layout;
-    const scale = deviceMode === "mobile" ? 0.6 : 0.8; // Reduced scale to fit better
+    const scale = deviceMode === "mobile" ? 0.7 : 0.85;
     
     let backgroundStyle = {};
     if (canvasState.backgroundType === 'color') {
@@ -90,12 +91,12 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
           maxWidth: layout.dimensions?.maxWidth || '100%'
         };
         positionStyle = layout.position === 'top' 
-          ? { top: 40, left: 0, right: 0 } // Account for browser chrome
+          ? { top: 30, left: 0, right: 0 }
           : { bottom: 0, left: 0, right: 0 };
         break;
       case 'fullscreen':
         sizeStyle = { width: '100%', height: '100%' };
-        positionStyle = { top: 40, left: 0, right: 0, bottom: 0 }; // Account for browser chrome
+        positionStyle = { top: 30, left: 0, right: 0, bottom: 0 };
         break;
       case 'slide-in':
         sizeStyle = {
@@ -130,6 +131,34 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
       ...sizeStyle,
       ...positionStyle
     };
+  };
+
+  const getCloseButtonStyle = () => {
+    const baseStyle = {
+      position: 'absolute' as const,
+      width: '24px',
+      height: '24px',
+      backgroundColor: 'white',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+      cursor: 'pointer',
+      zIndex: 10000,
+      border: 'none'
+    };
+
+    switch (canvasState.closeButtonPosition) {
+      case 'top-left':
+        return { ...baseStyle, top: '8px', left: '8px' };
+      case 'bottom-right':
+        return { ...baseStyle, bottom: '8px', right: '8px' };
+      case 'bottom-left':
+        return { ...baseStyle, bottom: '8px', left: '8px' };
+      default: // top-right
+        return { ...baseStyle, top: '8px', right: '8px' };
+    }
   };
 
   const renderElement = (element: PopupElement) => {
@@ -206,7 +235,7 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '24px',
+              fontSize: '20px',
               fontWeight: 'bold',
               borderRadius: '8px'
             }}
@@ -296,8 +325,8 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
             <div 
               className="relative bg-gray-50 mx-auto"
               style={{
-                width: Math.min(currentResolution.width, window.innerWidth * 0.8),
-                height: Math.min(currentResolution.height, window.innerHeight * 0.6),
+                width: currentResolution.width,
+                height: currentResolution.height,
                 maxWidth: '100%',
                 maxHeight: '100%'
               }}
@@ -339,25 +368,33 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
                   </div>
                 )}
 
-                {/* Popup Overlay */}
-                {showPopup && (
+                {/* Popup Overlay and Content */}
+                {showPopup && canvasState.elements.length > 0 && (
                   <>
-                    {(canvasState.layout.type === 'modal' || canvasState.layout.type === 'slide-in') && (
+                    {/* Overlay */}
+                    {canvasState.showOverlay && (canvasState.layout.type === 'modal' || canvasState.layout.type === 'slide-in') && (
                       <div 
-                        className="absolute inset-0 bg-black bg-opacity-50"
-                        style={{ zIndex: 9998 }}
+                        className="absolute inset-0"
+                        style={{ 
+                          backgroundColor: canvasState.overlayColor,
+                          opacity: canvasState.overlayOpacity / 100,
+                          zIndex: 9998 
+                        }}
                       />
                     )}
                     
+                    {/* Popup */}
                     <div style={getPopupStyle()}>
                       {/* Close button */}
-                      <button
-                        onClick={() => setShowPopup(false)}
-                        className="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors z-10"
-                        style={{ zIndex: 10000 }}
-                      >
-                        <X className="w-3 h-3 text-gray-600" />
-                      </button>
+                      {canvasState.showCloseButton && (
+                        <button
+                          onClick={() => setShowPopup(false)}
+                          style={getCloseButtonStyle()}
+                          className="hover:bg-gray-100 transition-colors"
+                        >
+                          <X className="w-3 h-3 text-gray-600" />
+                        </button>
+                      )}
 
                       {/* Render popup elements */}
                       {canvasState.elements
@@ -370,7 +407,7 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
             </div>
           </div>
 
-          {!showPopup && !isLoading && previewUrl && (
+          {!showPopup && !isLoading && previewUrl && canvasState.elements.length > 0 && (
             <div className="text-center mt-3">
               <Button onClick={() => setShowPopup(true)} className="bg-blue-600 hover:bg-blue-700" size="sm">
                 Show Popup
