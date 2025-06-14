@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, Shield } from "lucide-react";
+import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, Shield, LogOut, User } from "lucide-react";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
 import { TemplateGallery } from "@/components/TemplateGallery";
@@ -12,7 +12,12 @@ import { Analytics } from "@/components/Analytics";
 import { CampaignManager } from "@/components/CampaignManager";
 import { Admin } from "@/components/Admin";
 
-const Index = () => {
+interface IndexProps {
+  username: string;
+  onLogout: () => void;
+}
+
+const Index = ({ username, onLogout }: IndexProps) => {
   const [activeView, setActiveView] = useState("dashboard");
 
   const renderActiveView = () => {
@@ -54,60 +59,79 @@ const Index = () => {
               </Badge>
             </div>
             
-            <nav className="flex items-center space-x-6">
-              <button
-                onClick={() => setActiveView("dashboard")}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeView === "dashboard" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>Dashboard</span>
-              </button>
-              <button
-                onClick={() => setActiveView("campaigns")}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeView === "campaigns" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Target className="w-4 h-4" />
-                <span>Campaigns</span>
-              </button>
-              <button
-                onClick={() => setActiveView("templates")}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeView === "templates" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Lightbulb className="w-4 h-4" />
-                <span>Templates</span>
-              </button>
-              <button
-                onClick={() => setActiveView("analytics")}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeView === "analytics" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span>Analytics</span>
-              </button>
-              <button
-                onClick={() => setActiveView("admin")}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  activeView === "admin" ? "bg-red-100 text-red-700" : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span>Admin</span>
-              </button>
-              <Button
-                onClick={() => setActiveView("builder")}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Popup
-              </Button>
-            </nav>
+            <div className="flex items-center space-x-6">
+              <nav className="flex items-center space-x-6">
+                <button
+                  onClick={() => setActiveView("dashboard")}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    activeView === "dashboard" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Dashboard</span>
+                </button>
+                <button
+                  onClick={() => setActiveView("campaigns")}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    activeView === "campaigns" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Target className="w-4 h-4" />
+                  <span>Campaigns</span>
+                </button>
+                <button
+                  onClick={() => setActiveView("templates")}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    activeView === "templates" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Lightbulb className="w-4 h-4" />
+                  <span>Templates</span>
+                </button>
+                <button
+                  onClick={() => setActiveView("analytics")}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    activeView === "analytics" ? "bg-blue-100 text-blue-700" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Analytics</span>
+                </button>
+                <button
+                  onClick={() => setActiveView("admin")}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                    activeView === "admin" ? "bg-red-100 text-red-700" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Shield className="w-4 h-4" />
+                  <span>Admin</span>
+                </button>
+                <Button
+                  onClick={() => setActiveView("builder")}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Popup
+                </Button>
+              </nav>
+              
+              {/* User section with logout */}
+              <div className="flex items-center space-x-3 border-l border-slate-200 pl-6">
+                <div className="flex items-center space-x-2 text-slate-700">
+                  <User className="w-4 h-4" />
+                  <span className="font-medium">{username}</span>
+                </div>
+                <Button
+                  onClick={onLogout}
+                  variant="outline"
+                  size="sm"
+                  className="text-slate-600 hover:text-red-600 hover:border-red-300"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
