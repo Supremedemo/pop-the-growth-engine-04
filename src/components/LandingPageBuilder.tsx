@@ -61,17 +61,7 @@ export const LandingPageBuilder = ({ onBack }: LandingPageBuilderProps) => {
 
   if (showBuilder) {
     return (
-      <PopupBuilder 
-        onBack={() => setShowBuilder(false)}
-        initialLayout={{
-          id: "fullscreen",
-          name: "Landing Page",
-          type: "fullscreen",
-          description: "Full screen landing page",
-          dimensions: { width: 1200, height: 800 },
-          position: "center"
-        }}
-      />
+      <PopupBuilder onBack={() => setShowBuilder(false)} />
     );
   }
 

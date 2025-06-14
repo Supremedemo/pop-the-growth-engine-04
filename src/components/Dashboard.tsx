@@ -1,266 +1,338 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Plus, 
-  TrendingUp, 
-  Users, 
-  MousePointer, 
-  DollarSign, 
-  Eye,
-  Play,
-  Pause,
-  Settings,
-  MoreHorizontal
-} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, ChevronRight, Folder } from "lucide-react";
+import { FileManager } from "./FileManager";
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
 }
 
 export const Dashboard = ({ onNavigate }: DashboardProps) => {
-  const stats = [
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Mock data for now - this will be replaced with real data from useTemplates hook
+  const [templates] = useState([
     {
-      title: "Total Impressions",
-      value: "127,432",
-      change: "+12.5%",
-      icon: Eye,
-      color: "text-blue-600"
+      id: "1",
+      name: "Newsletter Signup",
+      description: "A beautiful newsletter signup modal with gradient background",
+      folderId: undefined,
+      tags: ["email", "marketing", "modal"],
+      thumbnail: "bg-gradient-to-br from-blue-500 to-purple-600",
+      createdAt: new Date("2024-01-15"),
+      updatedAt: new Date("2024-01-20"),
+      canvasData: {}
     },
     {
-      title: "Conversions",
-      value: "3,847",
-      change: "+8.2%",
-      icon: MousePointer,
-      color: "text-green-600"
+      id: "2", 
+      name: "Exit Intent Popup",
+      description: "Catch users before they leave with this exit intent popup",
+      folderId: undefined,
+      tags: ["exit-intent", "conversion", "popup"],
+      thumbnail: "bg-gradient-to-br from-red-500 to-orange-600",
+      createdAt: new Date("2024-01-10"),
+      updatedAt: new Date("2024-01-18"),
+      canvasData: {}
+    }
+  ]);
+
+  const [folders] = useState([
+    {
+      id: "f1",
+      name: "Marketing Campaigns",
+      parentId: undefined,
+      createdAt: new Date("2024-01-01")
+    }
+  ]);
+
+  const handleSaveTemplate = (template: any) => {
+    console.log("Saving template:", template);
+    // This will be implemented with the real useTemplates hook
+  };
+
+  const handleCreateFolder = (folder: any) => {
+    console.log("Creating folder:", folder);
+    // This will be implemented with the real useTemplates hook
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    console.log("Deleting template:", id);
+    // This will be implemented with the real useTemplates hook
+  };
+
+  const handleDeleteFolder = (id: string) => {
+    console.log("Deleting folder:", id);
+    // This will be implemented with the real useTemplates hook
+  };
+
+  const quickActions = [
+    {
+      title: "Create Popup",
+      description: "Build a custom popup with our drag-and-drop editor",
+      icon: Plus,
+      action: () => onNavigate("builder"),
+      gradient: "from-blue-600 to-purple-600"
     },
     {
-      title: "Conversion Rate",
-      value: "3.02%",
-      change: "+0.4%",
-      icon: TrendingUp,
-      color: "text-purple-600"
+      title: "Landing Page", 
+      description: "Design beautiful landing pages for your campaigns",
+      icon: Lightbulb,
+      action: () => onNavigate("landing-builder"),
+      gradient: "from-green-600 to-blue-600"
     },
     {
-      title: "Revenue Attributed",
-      value: "$23,156",
-      change: "+15.7%",
-      icon: DollarSign,
-      color: "text-orange-600"
+      title: "AI Builder",
+      description: "Let AI create popups from your screenshots",
+      icon: Zap,
+      action: () => onNavigate("ai-builder"),
+      gradient: "from-purple-600 to-pink-600"
     }
   ];
 
-  const campaigns = [
+  const stats = [
     {
-      id: 1,
-      name: "Welcome New Visitors",
-      type: "Modal",
-      status: "Active",
-      impressions: 45632,
-      conversions: 1247,
-      rate: "2.73%",
-      revenue: "$8,950"
+      title: "Active Campaigns",
+      value: "12",
+      description: "Currently running",
+      icon: Target,
+      trend: "+2 this week"
     },
     {
-      id: 2,
-      name: "Cart Abandonment Recovery",
-      type: "Slide-in",
-      status: "Active",
-      impressions: 23456,
-      conversions: 892,
-      rate: "3.80%",
-      revenue: "$6,840"
+      title: "Total Views",
+      value: "24,563",
+      description: "Across all campaigns",
+      icon: BarChart3,
+      trend: "+15% from last month"
     },
     {
-      id: 3,
-      name: "Exit Intent Discount",
-      type: "Modal",
-      status: "Paused",
-      impressions: 18743,
-      conversions: 456,
-      rate: "2.43%",
-      revenue: "$3,420"
+      title: "Conversion Rate",
+      value: "3.2%",
+      description: "Average across campaigns",
+      icon: TrendingUp,
+      trend: "+0.5% improvement"
     },
     {
-      id: 4,
-      name: "Newsletter Signup",
-      type: "Banner",
-      status: "Active",
-      impressions: 56789,
-      conversions: 1234,
-      rate: "2.17%",
-      revenue: "$0"
+      title: "Templates",
+      value: templates.length.toString(),
+      description: "Saved templates",
+      icon: Folder,
+      trend: `${folders.length} folders`
     }
   ];
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Welcome back! 👋</h2>
-            <p className="text-blue-100 mb-4">
-              Your campaigns have generated <strong>$23,156</strong> in attributed revenue this month.
-            </p>
-            <Button 
-              onClick={() => onNavigate("builder")}
-              variant="secondary" 
-              className="bg-white text-blue-600 hover:bg-blue-50"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Campaign
-            </Button>
-          </div>
-          <div className="hidden md:block">
-            <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
-              <TrendingUp className="w-16 h-16 text-white/80" />
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Dashboard</h1>
+          <p className="text-slate-600">
+            Welcome back! Here's what's happening with your campaigns.
+          </p>
         </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index} className="bg-card border-border">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <Icon className={`w-5 h-5 ${stat.color}`} />
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs">
-                    {stat.change}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <Card key={index} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <stat.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {stat.trend}
                   </Badge>
                 </div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-1">{stat.value}</h3>
+                <p className="text-sm font-medium text-slate-700 mb-1">{stat.title}</p>
+                <p className="text-xs text-slate-500">{stat.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="quick-actions">Quick Actions</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="recent">Recent Activity</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            {/* Quick Actions */}
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {quickActions.map((action, index) => (
+                  <Card 
+                    key={index} 
+                    className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                    onClick={action.action}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className={`w-16 h-16 bg-gradient-to-br ${action.gradient} rounded-lg mx-auto mb-4 flex items-center justify-center`}>
+                        <action.icon className="w-8 h-8 text-white" />
+                      </div>
+                      <h3 className="font-semibold text-slate-900 mb-2">{action.title}</h3>
+                      <p className="text-sm text-slate-600 mb-4">{action.description}</p>
+                      <Button
+                        className={`bg-gradient-to-r ${action.gradient} hover:shadow-lg`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          action.action();
+                        }}
+                      >
+                        Get Started
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">Recent Activity</h2>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-900">New campaign "Summer Sale" launched</p>
+                        <p className="text-xs text-slate-500">2 hours ago</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-900">Template "Newsletter Signup" updated</p>
+                        <p className="text-xs text-slate-500">1 day ago</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-slate-900">Campaign "Holiday Promo" reached 1,000 views</p>
+                        <p className="text-xs text-slate-500">3 days ago</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="quick-actions">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {quickActions.map((action, index) => (
+                <Card 
+                  key={index} 
+                  className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+                  onClick={action.action}
+                >
+                  <CardContent className="p-6 text-center">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${action.gradient} rounded-lg mx-auto mb-4 flex items-center justify-center`}>
+                      <action.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-slate-900 mb-2">{action.title}</h3>
+                    <p className="text-sm text-slate-600 mb-4">{action.description}</p>
+                    <Button
+                      className={`bg-gradient-to-r ${action.gradient} hover:shadow-lg`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        action.action();
+                      }}
+                    >
+                      Get Started
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <FileManager
+              templates={templates}
+              folders={folders}
+              onSaveTemplate={handleSaveTemplate}
+              onCreateFolder={handleCreateFolder}
+              onDeleteTemplate={handleDeleteTemplate}
+              onDeleteFolder={handleDeleteFolder}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+            />
+          </TabsContent>
+
+          <TabsContent value="recent">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>
+                  Your latest actions and campaign updates
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">Campaign "Summer Sale" launched successfully</p>
+                      <p className="text-xs text-slate-500 mb-2">2 hours ago</p>
+                      <div className="text-xs text-slate-600">
+                        <span className="font-medium">Performance:</span> 156 views, 12 conversions (7.7% rate)
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">Template "Newsletter Signup" updated</p>
+                      <p className="text-xs text-slate-500 mb-2">1 day ago</p>
+                      <div className="text-xs text-slate-600">
+                        <span className="font-medium">Changes:</span> Updated styling and improved mobile responsiveness
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">Campaign "Holiday Promo" milestone reached</p>
+                      <p className="text-xs text-slate-500 mb-2">3 days ago</p>
+                      <div className="text-xs text-slate-600">
+                        <span className="font-medium">Achievement:</span> 1,000 total views with 4.2% conversion rate
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">New folder "Q1 Campaigns" created</p>
+                      <p className="text-xs text-slate-500 mb-2">5 days ago</p>
+                      <div className="text-xs text-slate-600">
+                        <span className="font-medium">Organization:</span> Better template management for quarterly campaigns
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card 
-          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onNavigate("builder")}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-blue-600">
-              <Plus className="w-5 h-5" />
-              <span>Create Popup</span>
-            </CardTitle>
-            <CardDescription>
-              Build a new popup from scratch or use a template
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card 
-          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onNavigate("templates")}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-purple-600">
-              <Eye className="w-5 h-5" />
-              <span>Browse Templates</span>
-            </CardTitle>
-            <CardDescription>
-              Choose from 50+ professional popup templates
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card 
-          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => onNavigate("analytics")}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-green-600">
-              <TrendingUp className="w-5 h-5" />
-              <span>View Analytics</span>
-            </CardTitle>
-            <CardDescription>
-              Deep dive into your campaign performance
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Recent Campaigns */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent Campaigns</CardTitle>
-              <CardDescription>Monitor your active and recent popup campaigns</CardDescription>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => onNavigate("campaigns")}
-              className="bg-background"
-            >
-              View All
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {campaigns.map((campaign) => (
-              <div key={campaign.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    {campaign.status === "Active" ? (
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    ) : (
-                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    )}
-                    <span className="font-medium">{campaign.name}</span>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {campaign.type}
-                  </Badge>
-                  <Badge 
-                    variant={campaign.status === "Active" ? "default" : "secondary"}
-                    className={campaign.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-                  >
-                    {campaign.status}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{campaign.impressions.toLocaleString()}</div>
-                    <div className="text-xs">Impressions</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{campaign.conversions.toLocaleString()}</div>
-                    <div className="text-xs">Conversions</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{campaign.rate}</div>
-                    <div className="text-xs">CVR</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-foreground">{campaign.revenue}</div>
-                    <div className="text-xs">Revenue</div>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
