@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,9 @@ import {
   Unlock,
   Copy,
   Trash2,
-  Settings
+  Settings,
+  Folder,
+  Tag
 } from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
 import { ElementRenderer, PopupElement, TextElement, ImageElement, FormElement, TimerElement, CustomHtmlElementType } from "./PopupElements";
@@ -34,6 +37,7 @@ import { TemplateGallery } from "./TemplateGallery";
 import { PreviewDialog } from "./PreviewDialog";
 import { PublishDialog } from "./PublishDialog";
 import { MultiStepFormElement } from "./MultiStepFormElement";
+import { SaveDialog } from "./SaveDialog";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -100,7 +104,7 @@ const layoutsConfig = {
 };
 
 // Helper function to create properly typed elements
-const createTypedElement = (el: any): PopupElement | null => {
+const createTypedElement = (el: any): PopupElement => {
   const baseProps = {
     id: el.id || uuidv4(),
     x: el.x || 0,
@@ -113,60 +117,55 @@ const createTypedElement = (el: any): PopupElement | null => {
 
   switch (el.type) {
     case 'text': {
-      const textElement: TextElement = {
+      return {
         ...baseProps,
-        type: 'text',
+        type: 'text' as const,
         content: el.content || 'Text',
         fontSize: el.fontSize || 16,
         fontWeight: el.fontWeight || 'normal',
         textAlign: el.textAlign || 'left',
         color: el.color || '#000000'
-      };
-      return textElement;
+      } as TextElement;
     }
     case 'image': {
-      const imageElement: ImageElement = {
+      return {
         ...baseProps,
-        type: 'image',
+        type: 'image' as const,
         src: el.src || '',
         alt: el.alt || 'Image',
         borderRadius: el.borderRadius || 0
-      };
-      return imageElement;
+      } as ImageElement;
     }
     case 'form': {
-      const formElement: FormElement = {
+      return {
         ...baseProps,
-        type: 'form',
+        type: 'form' as const,
         fields: el.fields || [],
         buttonText: el.buttonText || 'Submit',
         buttonColor: el.buttonColor || '#000000'
-      };
-      return formElement;
+      } as FormElement;
     }
     case 'timer': {
-      const timerElement: TimerElement = {
+      return {
         ...baseProps,
-        type: 'timer',
+        type: 'timer' as const,
         duration: el.duration || 60,
         format: el.format || 'mm:ss',
         backgroundColor: el.backgroundColor || '#000000',
         textColor: el.textColor || '#ffffff'
-      };
-      return timerElement;
+      } as TimerElement;
     }
     case 'html': {
-      const htmlElement: CustomHtmlElementType = {
+      return {
         ...baseProps,
-        type: 'html',
+        type: 'html' as const,
         htmlContent: el.htmlContent || ''
-      };
-      return htmlElement;
+      } as CustomHtmlElementType;
     }
     case 'multi-step-form': {
-      const multiStepFormElement: MultiStepFormElement = {
+      return {
         ...baseProps,
-        type: 'multi-step-form',
+        type: 'multi-step-form' as const,
         steps: el.steps || [],
         successPage: el.successPage || {
           title: 'Thank you!',
@@ -179,11 +178,10 @@ const createTypedElement = (el: any): PopupElement | null => {
         },
         buttonColor: el.buttonColor || '#3b82f6',
         backgroundColor: el.backgroundColor || '#ffffff'
-      };
-      return multiStepFormElement;
+      } as MultiStepFormElement;
     }
     default:
-      return null;
+      throw new Error(`Unknown element type: ${el.type}`);
   }
 };
 
@@ -193,6 +191,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
   const [showTemplateGallery, setShowTemplateGallery] = useState(startWithTemplates);
   const [showPreview, setShowPreview] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const [templateData, setTemplateData] = useState<any>(null);
   const [showModeSelector, setShowModeSelector] = useState(!startWithTemplates);
@@ -212,8 +211,15 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
       // Handle canvas templates (existing logic)
       if (templateData.elements) {
         const validElements: PopupElement[] = templateData.elements
-          .map(createTypedElement)
-          .filter((el): el is PopupElement => el !== null);
+          .map((el: any) => {
+            try {
+              return createTypedElement(el);
+            } catch (error) {
+              console.warn('Failed to create element:', el, error);
+              return null;
+            }
+          })
+          .filter((el: PopupElement | null): el is PopupElement => el !== null);
 
         setCanvasState(prev => ({
           ...prev,
@@ -344,17 +350,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
   };
 
   const handleSaveTemplate = () => {
-    const templateData = {
-      name: `Template ${Date.now()}`,
-      ...canvasState
-    };
-    
-    localStorage.setItem(`template_${Date.now()}`, JSON.stringify(templateData));
-    
-    toast({
-      title: "Template Saved",
-      description: "Your template has been saved locally.",
-    });
+    setShowSaveDialog(true);
   };
 
   const handleExportJSON = () => {
@@ -642,7 +638,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
           <ResizablePanel defaultSize={22} minSize={18} maxSize={35}>
             <div className="h-full bg-card border-r overflow-y-auto">
               {/* Layout Section */}
-              <div className="p-4 border-b bg-muted/50">
+              <div className="p-4 border-b bg-muted/30">
                 <h3 className="font-semibold mb-3 flex items-center text-sm">
                   <LayoutDashboard className="w-4 h-4 mr-2" />
                   Layout Settings
@@ -659,7 +655,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                   </SelectTrigger>
                   <SelectContent>
                     {defaultLayouts.map((layout) => (
-                      <SelectItem key={layout.type} value={layout.type}>
+                      <SelectItem key={`${layout.type}-${layout.position || 'default'}`} value={layout.type}>
                         {layout.name}
                       </SelectItem>
                     ))}
@@ -779,12 +775,13 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     {canvasState.elements.filter(el => selectedElementIds.includes(el.id)).map(element => {
                       switch (element.type) {
                         case "text":
+                          const textEl = element as TextElement;
                           return (
                             <div key={element.id} className="space-y-4">
                               <div>
                                 <Label className="text-xs">Content</Label>
                                 <Textarea
-                                  value={element.content}
+                                  value={textEl.content}
                                   onChange={(e) => handleUpdateElement(element.id, { content: e.target.value })}
                                   className="mt-1"
                                   rows={3}
@@ -796,7 +793,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                                   <Label className="text-xs">Font Size</Label>
                                   <Input
                                     type="number"
-                                    value={element.fontSize}
+                                    value={textEl.fontSize}
                                     onChange={(e) => handleUpdateElement(element.id, { fontSize: parseInt(e.target.value) })}
                                     className="mt-1"
                                   />
@@ -805,7 +802,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                                   <Label className="text-xs">Color</Label>
                                   <Input
                                     type="color"
-                                    value={element.color}
+                                    value={textEl.color}
                                     onChange={(e) => handleUpdateElement(element.id, { color: e.target.value })}
                                     className="mt-1 h-9"
                                   />
@@ -815,7 +812,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                               <div>
                                 <Label className="text-xs">Font Weight</Label>
                                 <Select 
-                                  value={element.fontWeight} 
+                                  value={textEl.fontWeight} 
                                   onValueChange={(value) => handleUpdateElement(element.id, { fontWeight: value })}
                                 >
                                   <SelectTrigger className="w-full mt-1">
@@ -832,7 +829,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                               <div>
                                 <Label className="text-xs">Text Align</Label>
                                 <Select 
-                                  value={element.textAlign} 
+                                  value={textEl.textAlign} 
                                   onValueChange={(value) => handleUpdateElement(element.id, { textAlign: value })}
                                 >
                                   <SelectTrigger className="w-full mt-1">
@@ -849,13 +846,14 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                           );
                           
                         case "image":
+                          const imgEl = element as ImageElement;
                           return (
                             <div key={element.id} className="space-y-4">
                               <div>
                                 <Label className="text-xs">Image URL</Label>
                                 <Input
                                   type="url"
-                                  value={element.src}
+                                  value={imgEl.src}
                                   onChange={(e) => handleUpdateElement(element.id, { src: e.target.value })}
                                   className="mt-1"
                                 />
@@ -865,7 +863,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                                 <Label className="text-xs">Alt Text</Label>
                                 <Input
                                   type="text"
-                                  value={element.alt}
+                                  value={imgEl.alt}
                                   onChange={(e) => handleUpdateElement(element.id, { alt: e.target.value })}
                                   className="mt-1"
                                 />
@@ -875,7 +873,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                                 <Label className="text-xs">Border Radius</Label>
                                 <Input
                                   type="number"
-                                  value={element.borderRadius}
+                                  value={imgEl.borderRadius}
                                   onChange={(e) => handleUpdateElement(element.id, { borderRadius: parseInt(e.target.value) })}
                                   className="mt-1"
                                 />
@@ -884,13 +882,14 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                           );
                           
                         case "form":
+                          const formEl = element as FormElement;
                           return (
                             <div key={element.id} className="space-y-4">
                               <div>
                                 <Label className="text-xs">Button Text</Label>
                                 <Input
                                   type="text"
-                                  value={element.buttonText}
+                                  value={formEl.buttonText}
                                   onChange={(e) => handleUpdateElement(element.id, { buttonText: e.target.value })}
                                   className="mt-1"
                                 />
@@ -900,7 +899,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                                 <Label className="text-xs">Button Color</Label>
                                 <Input
                                   type="color"
-                                  value={element.buttonColor}
+                                  value={formEl.buttonColor}
                                   onChange={(e) => handleUpdateElement(element.id, { buttonColor: e.target.value })}
                                   className="mt-1 h-9"
                                 />
@@ -909,13 +908,14 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                           );
                           
                         case "timer":
+                          const timerEl = element as TimerElement;
                           return (
                             <div key={element.id} className="space-y-4">
                               <div>
                                 <Label className="text-xs">Duration (seconds)</Label>
                                 <Input
                                   type="number"
-                                  value={element.duration}
+                                  value={timerEl.duration}
                                   onChange={(e) => handleUpdateElement(element.id, { duration: parseInt(e.target.value) })}
                                   className="mt-1"
                                 />
@@ -926,7 +926,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                                   <Label className="text-xs">Background</Label>
                                   <Input
                                     type="color"
-                                    value={element.backgroundColor}
+                                    value={timerEl.backgroundColor}
                                     onChange={(e) => handleUpdateElement(element.id, { backgroundColor: e.target.value })}
                                     className="mt-1 h-9"
                                   />
@@ -935,7 +935,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                                   <Label className="text-xs">Text Color</Label>
                                   <Input
                                     type="color"
-                                    value={element.textColor}
+                                    value={timerEl.textColor}
                                     onChange={(e) => handleUpdateElement(element.id, { textColor: e.target.value })}
                                     className="mt-1 h-9"
                                   />
@@ -945,12 +945,13 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                           );
                           
                         case "html":
+                          const htmlEl = element as CustomHtmlElementType;
                           return (
                             <div key={element.id} className="space-y-4">
                               <div>
                                 <Label className="text-xs">HTML Content</Label>
                                 <Textarea
-                                  value={element.htmlContent}
+                                  value={htmlEl.htmlContent}
                                   onChange={(e) => handleUpdateElement(element.id, { htmlContent: e.target.value })}
                                   className="mt-1 font-mono text-xs"
                                   rows={6}
@@ -960,13 +961,14 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                           );
                           
                         case "multi-step-form":
+                          const multiFormEl = element as MultiStepFormElement;
                           return (
                             <div key={element.id} className="space-y-4">
                               <div>
                                 <Label className="text-xs">Button Color</Label>
                                 <Input
                                   type="color"
-                                  value={element.buttonColor}
+                                  value={multiFormEl.buttonColor}
                                   onChange={(e) => handleUpdateElement(element.id, { buttonColor: e.target.value })}
                                   className="mt-1 h-9"
                                 />
@@ -976,7 +978,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                                 <Label className="text-xs">Background Color</Label>
                                 <Input
                                   type="color"
-                                  value={element.backgroundColor}
+                                  value={multiFormEl.backgroundColor}
                                   onChange={(e) => handleUpdateElement(element.id, { backgroundColor: e.target.value })}
                                   className="mt-1 h-9"
                                 />
@@ -1033,7 +1035,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
           {/* Right Sidebar - Elements & Layers */}
           <ResizablePanel defaultSize={22} minSize={18} maxSize={35}>
             <div className="h-full bg-card border-l">
-              <div className="p-4 border-b bg-muted/50">
+              <div className="p-4 border-b bg-muted/30">
                 <h3 className="font-semibold mb-3 flex items-center text-sm">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Elements
@@ -1044,7 +1046,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'text')}
-                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent/50 transition-colors border-dashed"
                   >
                     <span className="text-xl mb-1">T</span>
                     <span>Text</span>
@@ -1054,7 +1056,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'image')}
-                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent/50 transition-colors border-dashed"
                   >
                     <span className="text-xl mb-1">🖼️</span>
                     <span>Image</span>
@@ -1064,7 +1066,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'form')}
-                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent/50 transition-colors border-dashed"
                   >
                     <span className="text-xl mb-1">📝</span>
                     <span>Form</span>
@@ -1074,7 +1076,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'timer')}
-                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent/50 transition-colors border-dashed"
                   >
                     <span className="text-xl mb-1">⏰</span>
                     <span>Timer</span>
@@ -1084,7 +1086,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'html')}
-                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent/50 transition-colors border-dashed"
                   >
                     <span className="text-xl mb-1">⚡</span>
                     <span>HTML</span>
@@ -1094,7 +1096,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'multi-step-form')}
-                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent/50 transition-colors border-dashed"
                   >
                     <span className="text-xl mb-1">📋</span>
                     <span>Multi-Form</span>
@@ -1114,7 +1116,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     .map((element) => (
                       <div
                         key={element.id}
-                        className={`p-3 rounded-lg text-sm cursor-pointer flex items-center justify-between hover:bg-accent transition-colors ${
+                        className={`p-2 rounded-md text-sm cursor-pointer flex items-center justify-between hover:bg-accent/50 transition-colors ${
                           selectedElementIds.includes(element.id) ? 'bg-accent border border-primary/20' : 'border border-transparent'
                         }`}
                         onClick={() => handleSelectElements([element.id])}
@@ -1127,8 +1129,8 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                               <GripVertical className="w-3 h-3 text-muted-foreground" />
                             )}
                           </div>
-                          <span className="truncate font-medium">
-                            {element.type === 'text' ? element.content.slice(0, 20) : 
+                          <span className="truncate font-medium text-xs">
+                            {element.type === 'text' ? (element as TextElement).content.slice(0, 15) : 
                              element.type === 'multi-step-form' ? 'Multi-Step Form' :
                              `${element.type.charAt(0).toUpperCase() + element.type.slice(1)} ${element.id.slice(-4)}`}
                           </span>
@@ -1141,7 +1143,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                               e.stopPropagation();
                               handleUpdateElement(element.id, { isPinned: !element.isPinned });
                             }}
-                            className="h-6 w-6 p-0"
+                            className="h-5 w-5 p-0"
                           >
                             {element.isPinned ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                           </Button>
@@ -1168,6 +1170,14 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
         <PreviewDialog
           canvasState={canvasState}
           onClose={() => setShowPreview(false)}
+        />
+      )}
+
+      {showSaveDialog && (
+        <SaveDialog
+          open={showSaveDialog}
+          onOpenChange={setShowSaveDialog}
+          canvasData={canvasState}
         />
       )}
 

@@ -109,7 +109,11 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
         return (
           <div style={baseStyle} onClick={handleClick}>
             <div className="w-full h-full overflow-hidden">
-              <MultiStepFormRenderer element={element as MultiStepFormElement} />
+              <MultiStepFormRenderer 
+                element={element as MultiStepFormElement}
+                isEditor={isSelected}
+                onUpdate={(updates) => onUpdate(element.id, updates)}
+              />
             </div>
           </div>
         );
@@ -139,7 +143,8 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
               display: 'flex',
               alignItems: 'center',
               justifyContent: textEl.textAlign === 'center' ? 'center' : textEl.textAlign === 'right' ? 'flex-end' : 'flex-start',
-              backgroundColor: 'transparent',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(4px)',
             }}
             onClick={handleClick}
           >
@@ -168,7 +173,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
         const formEl = element as FormElement;
         return (
           <div style={baseStyle} onClick={handleClick}>
-            <div className="p-4 space-y-3 bg-white rounded shadow-lg h-full overflow-auto">
+            <div className="p-4 space-y-3 bg-white/90 backdrop-blur-sm rounded shadow-lg h-full overflow-auto">
               {formEl.fields.map((field) => (
                 <Input
                   key={field.id}
@@ -207,7 +212,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
         return (
           <div style={baseStyle} onClick={handleClick}>
             <div
-              className="flex items-center justify-center rounded p-4 h-full"
+              className="flex items-center justify-center rounded p-4 h-full backdrop-blur-sm"
               style={{
                 backgroundColor: timerEl.backgroundColor,
                 color: timerEl.textColor,
