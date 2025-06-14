@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useCallback } from "react";
 import { CanvasElement } from "./CanvasElement";
 import { CanvasGrid } from "./CanvasGrid";
@@ -33,10 +32,25 @@ export const CanvasEditor = ({
 
   const getCanvasStyle = () => {
     const scale = previewDevice === "mobile" ? 0.8 : 1;
+    let backgroundStyle = {};
+    
+    if (canvasState.backgroundType === 'color') {
+      backgroundStyle = { backgroundColor: canvasState.backgroundColor };
+    } else if (canvasState.backgroundType === 'image' && canvasState.backgroundImage) {
+      backgroundStyle = {
+        backgroundImage: `url(${canvasState.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      };
+    } else if (canvasState.backgroundType === 'gradient' && canvasState.backgroundGradient) {
+      backgroundStyle = { background: canvasState.backgroundGradient };
+    }
+    
     return {
       width: canvasState.width * scale,
       height: canvasState.height * scale,
-      backgroundColor: canvasState.backgroundColor,
+      ...backgroundStyle,
       position: 'relative' as const,
       margin: '40px auto',
       boxShadow: '0 12px 48px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1)',
@@ -220,7 +234,6 @@ export const CanvasEditor = ({
     const elementType = e.dataTransfer.getData('application/element-type');
     if (elementType) {
       const coords = getCanvasCoordinates(e as any);
-      // Handle element creation from drag and drop
       console.log('Dropped element:', elementType, 'at:', coords);
     }
   };
@@ -228,7 +241,6 @@ export const CanvasEditor = ({
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      // Zoom with mouse wheel
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
       const newZoom = Math.min(Math.max(canvasState.zoom * delta, 0.25), 3);
       console.log('Zoom requested:', newZoom);
@@ -307,6 +319,7 @@ export const CanvasEditor = ({
                 <p>💡 Hold Ctrl/Cmd + click to pan around</p>
                 <p>🔍 Hold Ctrl/Cmd + scroll to zoom</p>
                 <p>📦 Drag to select multiple elements</p>
+                <p>📌 Pin elements to lock them in place</p>
               </div>
             </div>
           </div>

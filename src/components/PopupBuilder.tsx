@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +19,7 @@ import { LayoutSelector, PopupLayout } from "./LayoutSelector";
 import { CanvasEditor } from "./CanvasEditor";
 import { LayerPanel } from "./LayerPanel";
 import { AlignmentTools } from "./AlignmentTools";
+import { BackgroundControls } from "./BackgroundControls";
 import { PopupElement } from "./PopupElements";
 
 interface PopupBuilderProps {
@@ -30,6 +30,9 @@ export interface CanvasState {
   width: number;
   height: number;
   backgroundColor: string;
+  backgroundImage?: string;
+  backgroundGradient?: string;
+  backgroundType: 'color' | 'image' | 'gradient';
   elements: PopupElement[];
   zoom: number;
   showGrid: boolean;
@@ -41,6 +44,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
     width: 500,
     height: 400,
     backgroundColor: "#ffffff",
+    backgroundType: 'color',
     elements: [],
     zoom: 1,
     showGrid: true,
@@ -79,6 +83,26 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
       return newState;
     });
   }, []);
+
+  const handleBackgroundChange = useCallback((type: 'color' | 'image' | 'gradient', value: string) => {
+    const updates: Partial<CanvasState> = { backgroundType: type };
+    
+    if (type === 'color') {
+      updates.backgroundColor = value;
+      updates.backgroundImage = undefined;
+      updates.backgroundGradient = undefined;
+    } else if (type === 'image') {
+      updates.backgroundImage = value;
+      updates.backgroundColor = "#ffffff";
+      updates.backgroundGradient = undefined;
+    } else if (type === 'gradient') {
+      updates.backgroundGradient = value;
+      updates.backgroundColor = "#ffffff";
+      updates.backgroundImage = undefined;
+    }
+    
+    updateCanvasState(updates);
+  }, [updateCanvasState]);
 
   const addElement = useCallback((element: PopupElement) => {
     const newElement = {
@@ -227,9 +251,10 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
           <ElementToolbar onAddElement={addElement} />
           
           <Tabs defaultValue="properties" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 m-4">
+            <TabsList className="grid w-full grid-cols-4 m-4">
               <TabsTrigger value="properties">Properties</TabsTrigger>
               <TabsTrigger value="layers">Layers</TabsTrigger>
+              <TabsTrigger value="background">Background</TabsTrigger>
               <TabsTrigger value="layout">Layout</TabsTrigger>
             </TabsList>
 
@@ -247,6 +272,15 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
                 onSelectElements={setSelectedElementIds}
                 onUpdateElement={updateElement}
                 onDeleteElements={deleteElements}
+              />
+            </TabsContent>
+
+            <TabsContent value="background" className="p-4">
+              <BackgroundControls
+                backgroundColor={canvasState.backgroundColor}
+                backgroundImage={canvasState.backgroundImage}
+                backgroundGradient={canvasState.backgroundGradient}
+                onBackgroundChange={handleBackgroundChange}
               />
             </TabsContent>
 

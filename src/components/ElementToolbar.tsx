@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { Type, Image as ImageIcon, Mail, Clock, Grip } from "lucide-react";
-import { PopupElement, TextElement, ImageElement, FormElement, TimerElement } from "./PopupElements";
+import { Type, Image as ImageIcon, Mail, Clock, Grip, Code } from "lucide-react";
+import { PopupElement, TextElement, ImageElement, FormElement, TimerElement, CustomHtmlElementType } from "./PopupElements";
 
 interface ElementToolbarProps {
   onAddElement: (element: PopupElement) => void;
@@ -89,6 +89,20 @@ export const ElementToolbar = ({ onAddElement }: ElementToolbarProps) => {
     onAddElement(element);
   };
 
+  const addCustomHtmlElement = () => {
+    const element: CustomHtmlElementType = {
+      id: generateId(),
+      type: "html",
+      x: 50,
+      y: 250,
+      width: 200,
+      height: 100,
+      zIndex: 1,
+      htmlContent: '<div style="padding: 16px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border-radius: 8px; text-align: center; font-weight: bold;">Custom HTML Block</div>',
+    };
+    onAddElement(element);
+  };
+
   const elements = [
     {
       type: "text",
@@ -121,6 +135,14 @@ export const ElementToolbar = ({ onAddElement }: ElementToolbarProps) => {
       description: "Add countdown urgency",
       onClick: addTimerElement,
       color: "bg-red-50 text-red-600 border-red-200"
+    },
+    {
+      type: "html",
+      icon: Code,
+      label: "Custom HTML",
+      description: "Add custom HTML blocks",
+      onClick: addCustomHtmlElement,
+      color: "bg-orange-50 text-orange-600 border-orange-200"
     }
   ];
 
@@ -169,7 +191,7 @@ export const ElementToolbar = ({ onAddElement }: ElementToolbarProps) => {
       
       <div className="mt-6 p-3 bg-slate-50 rounded-lg">
         <p className="text-xs text-slate-600 leading-relaxed">
-          💡 <strong>Pro tip:</strong> Drag elements directly onto the canvas or click to add them at default positions.
+          💡 <strong>Pro tip:</strong> Drag elements directly onto the canvas or click to add them. Use the pin button to lock elements in place.
         </p>
       </div>
     </div>

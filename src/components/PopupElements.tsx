@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Clock, X } from "lucide-react";
+import { Clock, X, Pin, PinOff } from "lucide-react";
+import { CustomHtmlElement } from "./CustomHtmlElement";
 
 export interface BaseElement {
   id: string;
@@ -14,6 +14,7 @@ export interface BaseElement {
   width: number;
   height: number;
   zIndex: number;
+  isPinned?: boolean;
 }
 
 export interface TextElement extends BaseElement {
@@ -54,7 +55,12 @@ export interface TimerElement extends BaseElement {
   textColor: string;
 }
 
-export type PopupElement = TextElement | ImageElement | FormElement | TimerElement;
+export interface CustomHtmlElementType extends BaseElement {
+  type: "html";
+  htmlContent: string;
+}
+
+export type PopupElement = TextElement | ImageElement | FormElement | TimerElement | CustomHtmlElementType;
 
 interface ElementRendererProps {
   element: PopupElement;
@@ -70,6 +76,8 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    if (element.isPinned) return; // Don't allow dragging pinned elements
+    
     setIsDragging(true);
     setDragStart({
       x: e.clientX - element.x,
@@ -79,7 +87,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
   };
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || element.isPinned) return;
     
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
@@ -89,6 +97,10 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
 
   const handleMouseUp = () => {
     setIsDragging(false);
+  };
+
+  const togglePin = () => {
+    onUpdate(element.id, { isPinned: !element.isPinned });
   };
 
   React.useEffect(() => {
@@ -109,12 +121,42 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
     width: element.width,
     height: element.height,
     zIndex: element.zIndex,
-    cursor: 'move',
+    cursor: element.isPinned ? 'default' : 'move',
     border: isSelected ? '2px solid #3b82f6' : '1px solid transparent',
   };
 
+  const renderPinButton = () => (
+    isSelected && (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          togglePin();
+        }}
+        className={`absolute -top-8 right-0 px-2 py-1 rounded text-xs flex items-center space-x-1 transition-colors ${
+          element.isPinned 
+            ? 'bg-orange-500 text-white hover:bg-orange-600' 
+            : 'bg-gray-500 text-white hover:bg-gray-600'
+        }`}
+      >
+        {element.isPinned ? <Pin className="w-3 h-3" /> : <PinOff className="w-3 h-3" />}
+        <span>{element.isPinned ? 'Pinned' : 'Pin'}</span>
+      </button>
+    )
+  );
+
   const renderElement = () => {
     switch (element.type) {
+      case "html":
+        return (
+          <CustomHtmlElement
+            element={element}
+            isSelected={isSelected}
+            onUpdate={onUpdate}
+            onSelect={onSelect}
+            onDelete={onDelete}
+          />
+        );
+
       case "text":
         const textEl = element as TextElement;
         return (
@@ -129,10 +171,12 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
               display: 'flex',
               alignItems: 'center',
               justifyContent: textEl.textAlign === 'center' ? 'center' : textEl.textAlign === 'right' ? 'flex-end' : 'flex-start',
+              opacity: element.isPinned ? 0.8 : 1,
             }}
             onMouseDown={handleMouseDown}
           >
             {textEl.content}
+            {renderPinButton()}
             {isSelected && (
               <button
                 onClick={(e) => {
@@ -150,7 +194,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
       case "image":
         const imgEl = element as ImageElement;
         return (
-          <div style={baseStyle} onMouseDown={handleMouseDown}>
+          <div style={{...baseStyle, opacity: element.isPinned ? 0.8 : 1}} onMouseDown={handleMouseDown}>
             <img
               src={imgEl.src}
               alt={imgEl.alt}
@@ -161,6 +205,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 borderRadius: imgEl.borderRadius,
               }}
             />
+            {renderPinButton()}
             {isSelected && (
               <button
                 onClick={(e) => {
@@ -178,7 +223,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
       case "form":
         const formEl = element as FormElement;
         return (
-          <div style={baseStyle} onMouseDown={handleMouseDown}>
+          <div style={{...baseStyle, opacity: element.isPinned ? 0.8 : 1}} onMouseDown={handleMouseDown}>
             <div className="p-4 space-y-3 bg-white rounded">
               {formEl.fields.map((field) => (
                 <Input
@@ -195,6 +240,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 {formEl.buttonText}
               </Button>
             </div>
+            {renderPinButton()}
             {isSelected && (
               <button
                 onClick={(e) => {
@@ -227,7 +273,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
         };
 
         return (
-          <div style={baseStyle} onMouseDown={handleMouseDown}>
+          <div style={{...baseStyle, opacity: element.isPinned ? 0.8 : 1}} onMouseDown={handleMouseDown}>
             <div
               className="flex items-center justify-center rounded p-4"
               style={{
@@ -242,6 +288,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 {formatTime(timeLeft)}
               </span>
             </div>
+            {renderPinButton()}
             {isSelected && (
               <button
                 onClick={(e) => {
