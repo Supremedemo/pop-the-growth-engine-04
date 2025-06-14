@@ -7,7 +7,7 @@ import {
   FileText,
   Loader2,
   Redo,
-  Reset,
+  RotateCcw,
   Rocket,
   Save,
   Undo,
@@ -153,7 +153,7 @@ export const EditorHeader = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="outline" size="sm" onClick={onResetZoom}>
-                    <Reset className="w-4 h-4" />
+                    <RotateCcw className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Reset Zoom</TooltipContent>
