@@ -556,7 +556,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
   return (
     <div className="h-screen bg-background flex flex-col">
       {/* Enhanced Header */}
-      <div className="border-b bg-card">
+      <div className="border-b bg-card shadow-sm">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center space-x-4">
             <Button variant="ghost" onClick={() => setShowModeSelector(true)}>
@@ -639,13 +639,13 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
       <div className="flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal">
           {/* Left Sidebar - Properties */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="h-full bg-secondary overflow-y-auto">
+          <ResizablePanel defaultSize={22} minSize={18} maxSize={35}>
+            <div className="h-full bg-card border-r overflow-y-auto">
               {/* Layout Section */}
-              <div className="p-4 border-b">
-                <h3 className="font-semibold mb-3 flex items-center">
+              <div className="p-4 border-b bg-muted/50">
+                <h3 className="font-semibold mb-3 flex items-center text-sm">
                   <LayoutDashboard className="w-4 h-4 mr-2" />
-                  Layout
+                  Layout Settings
                 </h3>
                 <Select 
                   value={canvasState.layout.type} 
@@ -669,7 +669,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
 
               {/* Background Section */}
               <div className="p-4 border-b">
-                <h3 className="font-semibold mb-3">Background</h3>
+                <h3 className="font-semibold mb-3 text-sm">Background</h3>
                 <div className="space-y-3">
                   <Select 
                     value={canvasState.backgroundType} 
@@ -725,7 +725,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
 
               {/* Canvas Settings */}
               <div className="p-4 border-b">
-                <h3 className="font-semibold mb-3">Canvas Settings</h3>
+                <h3 className="font-semibold mb-3 text-sm">Canvas Settings</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm">Show Grid</Label>
@@ -768,14 +768,14 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
               </div>
 
               {/* Element Properties */}
-              <div className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center">
+              <div className="p-4 flex-1">
+                <h3 className="font-semibold mb-3 flex items-center text-sm">
                   <Settings className="w-4 h-4 mr-2" />
-                  Properties
+                  Element Properties
                 </h3>
                 
                 {selectedElementIds.length === 1 ? (
-                  <>
+                  <div className="space-y-4">
                     {canvasState.elements.filter(el => selectedElementIds.includes(el.id)).map(element => {
                       switch (element.type) {
                         case "text":
@@ -988,7 +988,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                           return null;
                       }
                     })}
-                  </>
+                  </div>
                 ) : selectedElementIds.length > 1 ? (
                   <div className="text-sm text-muted-foreground space-y-3">
                     <p>{selectedElementIds.length} elements selected</p>
@@ -1004,9 +1004,10 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Select an element to edit its properties
-                  </p>
+                  <div className="text-center p-4 text-muted-foreground">
+                    <Settings className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Select an element to edit its properties</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -1015,7 +1016,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
           <ResizableHandle />
           
           {/* Canvas Area */}
-          <ResizablePanel defaultSize={60}>
+          <ResizablePanel defaultSize={56}>
             <CanvasEditor
               canvasState={canvasState}
               selectedElementIds={selectedElementIds}
@@ -1030,10 +1031,10 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
           <ResizableHandle />
           
           {/* Right Sidebar - Elements & Layers */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="h-full bg-secondary">
-              <div className="p-4 border-b">
-                <h3 className="font-semibold mb-3 flex items-center">
+          <ResizablePanel defaultSize={22} minSize={18} maxSize={35}>
+            <div className="h-full bg-card border-l">
+              <div className="p-4 border-b bg-muted/50">
+                <h3 className="font-semibold mb-3 flex items-center text-sm">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Elements
                 </h3>
@@ -1043,78 +1044,78 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'text')}
-                    className="h-12 flex flex-col items-center justify-center text-xs"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
                   >
-                    <span className="text-lg mb-1">T</span>
-                    Text
+                    <span className="text-xl mb-1">T</span>
+                    <span>Text</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'image')}
-                    className="h-12 flex flex-col items-center justify-center text-xs"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
                   >
-                    <span className="text-lg mb-1">🖼️</span>
-                    Image
+                    <span className="text-xl mb-1">🖼️</span>
+                    <span>Image</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'form')}
-                    className="h-12 flex flex-col items-center justify-center text-xs"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
                   >
-                    <span className="text-lg mb-1">📝</span>
-                    Form
+                    <span className="text-xl mb-1">📝</span>
+                    <span>Form</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'timer')}
-                    className="h-12 flex flex-col items-center justify-center text-xs"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
                   >
-                    <span className="text-lg mb-1">⏰</span>
-                    Timer
+                    <span className="text-xl mb-1">⏰</span>
+                    <span>Timer</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'html')}
-                    className="h-12 flex flex-col items-center justify-center text-xs"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
                   >
-                    <span className="text-lg mb-1">⚡</span>
-                    HTML
+                    <span className="text-xl mb-1">⚡</span>
+                    <span>HTML</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'multi-step-form')}
-                    className="h-12 flex flex-col items-center justify-center text-xs"
+                    className="h-16 flex flex-col items-center justify-center text-xs hover:bg-accent transition-colors"
                   >
-                    <span className="text-lg mb-1">📋</span>
-                    Multi-Form
+                    <span className="text-xl mb-1">📋</span>
+                    <span>Multi-Form</span>
                   </Button>
                 </div>
               </div>
 
               {/* Layers Panel */}
-              <div className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center">
+              <div className="p-4 flex-1 overflow-hidden">
+                <h3 className="font-semibold mb-3 flex items-center text-sm">
                   <Layers className="w-4 h-4 mr-2" />
                   Layers ({canvasState.elements.length})
                 </h3>
-                <div className="space-y-1 max-h-96 overflow-y-auto">
+                <div className="space-y-1 max-h-96 overflow-y-auto pr-2">
                   {canvasState.elements
                     .sort((a, b) => b.zIndex - a.zIndex)
                     .map((element) => (
                       <div
                         key={element.id}
-                        className={`p-2 rounded text-sm cursor-pointer flex items-center justify-between hover:bg-accent ${
-                          selectedElementIds.includes(element.id) ? 'bg-accent' : ''
+                        className={`p-3 rounded-lg text-sm cursor-pointer flex items-center justify-between hover:bg-accent transition-colors ${
+                          selectedElementIds.includes(element.id) ? 'bg-accent border border-primary/20' : 'border border-transparent'
                         }`}
                         onClick={() => handleSelectElements([element.id])}
                       >
@@ -1126,9 +1127,10 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                               <GripVertical className="w-3 h-3 text-muted-foreground" />
                             )}
                           </div>
-                          <span className="truncate">
+                          <span className="truncate font-medium">
                             {element.type === 'text' ? element.content.slice(0, 20) : 
-                             `${element.type} ${element.id.slice(-4)}`}
+                             element.type === 'multi-step-form' ? 'Multi-Step Form' :
+                             `${element.type.charAt(0).toUpperCase() + element.type.slice(1)} ${element.id.slice(-4)}`}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
@@ -1148,10 +1150,11 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                     ))}
                   
                   {canvasState.elements.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No elements yet.<br />
-                      Drag from the elements above.
-                    </p>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Layers className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No elements yet</p>
+                      <p className="text-xs">Drag elements from above to get started</p>
+                    </div>
                   )}
                 </div>
               </div>
