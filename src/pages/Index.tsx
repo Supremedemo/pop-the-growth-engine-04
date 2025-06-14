@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Zap, Lightbulb, Shield, LogOut, User, Moon, Sun, Menu, BarChart3, Target, TrendingUp } from "lucide-react";
+import { Plus, Zap, Lightbulb, Shield, LogOut, User, Moon, Sun, Menu, BarChart3, Target, TrendingUp, Globe } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { RealDashboard } from "@/components/RealDashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
@@ -10,6 +10,7 @@ import { TemplateGallery } from "@/components/TemplateGallery";
 import { Analytics } from "@/components/Analytics";
 import { CampaignManager } from "@/components/CampaignManager";
 import { Admin } from "@/components/Admin";
+import { Dashboard } from "@/components/Dashboard";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +45,8 @@ const Index = ({ username, onLogout }: IndexProps) => {
     switch (activeView) {
       case "dashboard":
         return <RealDashboard onNavigate={handleNavigate} />;
+      case "websites":
+        return <Dashboard onNavigateToBuilder={() => setActiveView("builder")} />;
       case "builder":
         return (
           <PopupBuilder 
@@ -99,6 +102,10 @@ const Index = ({ username, onLogout }: IndexProps) => {
                     <BarChart3 className="w-4 h-4 mr-2" />
                     Dashboard
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("websites")}>
+                    <Globe className="w-4 h-4 mr-2" />
+                    Website Management
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setActiveView("campaigns")}>
                     <Target className="w-4 h-4 mr-2" />
                     Campaigns
@@ -122,6 +129,15 @@ const Index = ({ username, onLogout }: IndexProps) => {
             <div className="flex items-center space-x-3">
               {/* Action Buttons */}
               <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => setActiveView("websites")}
+                  size="sm"
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-sm border-0"
+                >
+                  <Globe className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Websites</span>
+                  <span className="sm:hidden">Sites</span>
+                </Button>
                 <Button
                   onClick={() => setActiveView("builder")}
                   size="sm"
