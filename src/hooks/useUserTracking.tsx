@@ -44,7 +44,7 @@ export const useUserTracking = (websiteId?: string) => {
       
       try {
         const { data, error } = await supabase
-          .from('tracked_users' as any)
+          .from('tracked_users')
           .select('*')
           .eq('website_id', websiteId)
           .order('last_seen', { ascending: false });
@@ -73,7 +73,7 @@ export const useUserTracking = (websiteId?: string) => {
       
       try {
         const { data, error } = await supabase
-          .from('user_events' as any)
+          .from('user_events')
           .select('*')
           .eq('website_id', websiteId)
           .order('timestamp', { ascending: false })

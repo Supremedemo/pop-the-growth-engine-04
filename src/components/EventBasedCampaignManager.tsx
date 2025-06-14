@@ -99,7 +99,23 @@ export const EventBasedCampaignManager = () => {
     createCampaign({
       name: campaignName,
       description: campaignDescription || undefined,
-      canvasData: template?.canvas_data || {},
+      canvasData: template?.canvas_data || {
+        width: 400,
+        height: 300,
+        backgroundColor: '#ffffff',
+        backgroundType: 'color',
+        backgroundImage: '',
+        elements: [],
+        fonts: [],
+        colors: [],
+        images: [],
+        version: '1.0',
+        settings: {},
+        customCSS: '',
+        customJS: '',
+        metadata: {},
+        animations: []
+      },
       templateId: selectedTemplateId,
       targetingRules,
       displaySettings
