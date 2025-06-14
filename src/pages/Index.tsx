@@ -1,9 +1,7 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, Shield, LogOut, User, Moon, Sun, Menu } from "lucide-react";
+import { Plus, Zap, Lightbulb, Shield, LogOut, User, Moon, Sun, Menu, BarChart3, Target, TrendingUp } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
@@ -70,75 +68,37 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 </h1>
               </div>
               
-              {/* Primary Navigation */}
-              <nav className="hidden lg:flex items-center space-x-1">
-                <button
-                  onClick={() => setActiveView("dashboard")}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-                    activeView === "dashboard" 
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
-                >
-                  <BarChart3 className="w-4 h-4" />
-                  <span className="font-medium text-sm">Dashboard</span>
-                </button>
-                <button
-                  onClick={() => setActiveView("campaigns")}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-                    activeView === "campaigns" 
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
-                >
-                  <Target className="w-4 h-4" />
-                  <span className="font-medium text-sm">Campaigns</span>
-                </button>
-                <button
-                  onClick={() => setActiveView("analytics")}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-                    activeView === "analytics" 
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="font-medium text-sm">Analytics</span>
-                </button>
-              </nav>
-
-              {/* Mobile Menu */}
-              <div className="lg:hidden">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Menu className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => setActiveView("dashboard")}>
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setActiveView("campaigns")}>
-                      <Target className="w-4 h-4 mr-2" />
-                      Campaigns
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setActiveView("templates")}>
-                      <Lightbulb className="w-4 h-4 mr-2" />
-                      Templates
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setActiveView("analytics")}>
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Analytics
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setActiveView("admin")}>
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              {/* Navigation Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Menu className="w-4 h-4 mr-2" />
+                    Navigate
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-background">
+                  <DropdownMenuItem onClick={() => setActiveView("dashboard")}>
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("campaigns")}>
+                    <Target className="w-4 h-4 mr-2" />
+                    Campaigns
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("templates")}>
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    Templates
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("analytics")}>
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Analytics
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("admin")}>
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -183,18 +143,6 @@ const Index = ({ username, onLogout }: IndexProps) => {
                   className="text-muted-foreground hover:text-foreground border-0 ring-1 ring-border/30 hover:ring-border/50"
                 >
                   {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                </Button>
-                
-                {/* Admin button for desktop */}
-                <Button
-                  onClick={() => setActiveView("admin")}
-                  variant="outline"
-                  size="sm"
-                  className={`hidden lg:flex text-muted-foreground hover:text-destructive hover:ring-destructive/30 border-0 ring-1 ring-border/30 ${
-                    activeView === "admin" ? "text-destructive ring-destructive/30" : ""
-                  }`}
-                >
-                  <Shield className="w-4 h-4" />
                 </Button>
                 
                 <div className="flex items-center space-x-2 text-foreground px-2 py-1 rounded-lg bg-accent/30">
