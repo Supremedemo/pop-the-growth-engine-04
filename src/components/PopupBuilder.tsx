@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,7 +118,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
 
       // Handle canvas templates (existing logic)
       if (templateData.elements) {
-        const validElements = templateData.elements.map((el: any) => {
+        const validElements: PopupElement[] = templateData.elements.map((el: any) => {
           // Ensure each element has a proper type
           if (el.type === 'text') {
             return {
@@ -151,7 +150,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
             };
           }
           return null;
-        }).filter(Boolean);
+        }).filter((el): el is PopupElement => el !== null);
 
         setCanvasState(prev => ({
           ...prev,
