@@ -29,21 +29,21 @@ export const CanvasEditor = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollX: 0, scrollY: 0 });
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const getCanvasStyle = () => {
     const scale = previewDevice === "mobile" ? 0.8 : 1;
     return {
-      width: canvasState.width * canvasState.zoom * scale,
-      height: canvasState.height * canvasState.zoom * scale,
+      width: canvasState.width * scale,
+      height: canvasState.height * scale,
       backgroundColor: canvasState.backgroundColor,
-      transform: `scale(${canvasState.zoom})`,
-      transformOrigin: 'top left',
       position: 'relative' as const,
       margin: '40px auto',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-      borderRadius: '8px',
+      boxShadow: '0 12px 48px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1)',
+      borderRadius: '12px',
       overflow: 'hidden',
-      border: '1px solid #e2e8f0'
+      border: `2px solid ${isDragOver ? '#3b82f6' : '#e2e8f0'}`,
+      transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
     };
   };
 
@@ -51,8 +51,9 @@ export const CanvasEditor = ({
     if (!canvasRef.current) return { x: 0, y: 0 };
     
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvasState.zoom;
-    const y = (e.clientY - rect.top) / canvasState.zoom;
+    const scale = previewDevice === "mobile" ? 0.8 : 1;
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
     return { x, y };
   };
 
@@ -72,6 +73,7 @@ export const CanvasEditor = ({
           scrollX: containerRef.current?.scrollLeft || 0,
           scrollY: containerRef.current?.scrollTop || 0
         });
+        document.body.style.cursor = 'grabbing';
       } else {
         // Start selection
         setIsSelecting(true);
@@ -101,11 +103,12 @@ export const CanvasEditor = ({
       width: Math.abs(coords.x - dragStart.x),
       height: Math.abs(coords.y - dragStart.y)
     });
-  }, [isSelecting, isPanning, canvasState.zoom, dragStart, panStart]);
+  }, [isSelecting, isPanning, dragStart, panStart, previewDevice]);
 
   const handleMouseUp = useCallback(() => {
     if (isPanning) {
       setIsPanning(false);
+      document.body.style.cursor = 'default';
       return;
     }
 
@@ -140,12 +143,10 @@ export const CanvasEditor = ({
     if (isSelecting || isPanning) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = isPanning ? 'grabbing' : 'crosshair';
       
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
-        document.body.style.cursor = 'default';
       };
     }
   }, [isSelecting, isPanning, handleMouseMove, handleMouseUp]);
@@ -202,13 +203,34 @@ export const CanvasEditor = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const elementType = e.dataTransfer.getData('application/element-type');
+    if (elementType) {
+      const coords = getCanvasCoordinates(e as any);
+      // Handle element creation from drag and drop
+      console.log('Dropped element:', elementType, 'at:', coords);
+    }
+  };
+
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       // Zoom with mouse wheel
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
       const newZoom = Math.min(Math.max(canvasState.zoom * delta, 0.25), 3);
-      // Update zoom through parent component
       console.log('Zoom requested:', newZoom);
     }
   }, [canvasState.zoom]);
@@ -216,16 +238,19 @@ export const CanvasEditor = ({
   return (
     <div 
       ref={containerRef}
-      className="w-full h-full overflow-auto bg-slate-100 p-8"
+      className="w-full h-full overflow-auto bg-gradient-to-br from-slate-50 to-slate-100 p-8"
       onWheel={handleWheel}
     >
       <div
         ref={canvasRef}
         style={getCanvasStyle()}
         onMouseDown={handleCanvasMouseDown}
-        className={`relative select-none ${
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`relative select-none transition-all duration-200 ${
           isPanning ? 'cursor-grabbing' : isSelecting ? 'cursor-crosshair' : 'cursor-default'
-        }`}
+        } ${isDragOver ? 'ring-2 ring-blue-400 ring-opacity-50' : ''}`}
       >
         {/* Grid */}
         {canvasState.showGrid && (
@@ -255,7 +280,7 @@ export const CanvasEditor = ({
         {/* Selection Box */}
         {isSelecting && selectionBox.width > 0 && selectionBox.height > 0 && (
           <div
-            className="absolute border-2 border-blue-500 bg-blue-100 bg-opacity-20 pointer-events-none z-50"
+            className="absolute border-2 border-blue-500 bg-blue-100 bg-opacity-20 pointer-events-none z-50 rounded-sm"
             style={{
               left: selectionBox.x,
               top: selectionBox.y,
@@ -268,12 +293,35 @@ export const CanvasEditor = ({
         {/* Helper text */}
         {canvasState.elements.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center text-slate-400 pointer-events-none">
+            <div className="text-center max-w-md mx-auto">
+              <div className="mb-4">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-lg font-medium text-slate-600 mb-2">Start building your popup</p>
+              <p className="text-sm text-slate-500 mb-4">Drag elements from the toolbar to create your design</p>
+              <div className="text-xs text-slate-400 space-y-1">
+                <p>💡 Hold Ctrl/Cmd + click to pan around</p>
+                <p>🔍 Hold Ctrl/Cmd + scroll to zoom</p>
+                <p>📦 Drag to select multiple elements</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Drop zone indicator */}
+        {isDragOver && (
+          <div className="absolute inset-0 bg-blue-50 bg-opacity-80 flex items-center justify-center pointer-events-none z-40 rounded-lg">
             <div className="text-center">
-              <p className="text-lg font-medium">Start building your popup</p>
-              <p className="text-sm mt-1">Add elements from the toolbar on the left</p>
-              <p className="text-xs mt-2">
-                Tip: Hold Ctrl/Cmd + click to pan • Ctrl/Cmd + scroll to zoom
-              </p>
+              <div className="w-12 h-12 mx-auto mb-3 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <p className="text-blue-600 font-medium">Drop to add element</p>
             </div>
           </div>
         )}

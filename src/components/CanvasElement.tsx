@@ -188,7 +188,7 @@ export const CanvasElement = ({
   const ResizeHandle = ({ position, cursor }: { position: string; cursor: string }) => (
     <div
       data-resize-handle={position}
-      className="absolute w-3 h-3 bg-white border-2 border-blue-500 rounded-sm hover:bg-blue-50 transition-all duration-150 opacity-0 group-hover:opacity-100"
+      className="absolute w-3 h-3 bg-white border-2 border-blue-500 rounded-full hover:bg-blue-50 transition-all duration-150 shadow-sm opacity-0 group-hover:opacity-100"
       style={{
         cursor,
         ...(position.includes('n') && { top: -6 }),
@@ -206,13 +206,13 @@ export const CanvasElement = ({
   return (
     <div
       ref={elementRef}
-      className={`absolute group transition-all duration-150 ${
+      className={`absolute group transition-all duration-200 ${
         isSelected 
           ? isPrimarySelection 
-            ? 'ring-2 ring-blue-500 ring-opacity-100' 
-            : 'ring-2 ring-blue-400 ring-opacity-70'
+            ? 'ring-2 ring-blue-500 ring-opacity-100 shadow-lg' 
+            : 'ring-2 ring-blue-400 ring-opacity-70 shadow-md'
           : isHovered 
-            ? 'ring-1 ring-blue-300 ring-opacity-50' 
+            ? 'ring-1 ring-blue-300 ring-opacity-50 shadow-sm' 
             : ''
       }`}
       style={{
@@ -232,15 +232,15 @@ export const CanvasElement = ({
         isSelected={isSelected}
         onSelect={onSelect}
         onUpdate={onUpdate}
-        onDelete={() => {}} // Handled by parent
+        onDelete={() => {}}
       />
       
-      {/* Selection overlay */}
+      {/* Selection overlay with subtle animation */}
       {isSelected && (
-        <div className="absolute inset-0 bg-blue-500 bg-opacity-5 pointer-events-none" />
+        <div className="absolute inset-0 bg-blue-500 bg-opacity-5 pointer-events-none rounded-sm animate-pulse" />
       )}
       
-      {/* Resize handles - only show for selected elements */}
+      {/* Enhanced resize handles */}
       {isSelected && (
         <>
           <ResizeHandle position="nw" cursor="nw-resize" />
@@ -254,10 +254,14 @@ export const CanvasElement = ({
         </>
       )}
       
-      {/* Element info tooltip on hover */}
+      {/* Enhanced tooltip with better styling */}
       {isHovered && !isSelected && (
-        <div className="absolute -top-8 left-0 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50">
-          {element.type} • {element.width}×{element.height}
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-md whitespace-nowrap z-50 shadow-lg">
+          <div className="text-center">
+            <div className="font-medium">{element.type.toUpperCase()}</div>
+            <div className="text-gray-300">{element.width}×{element.height}px</div>
+          </div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-4 border-transparent border-t-gray-900"></div>
         </div>
       )}
     </div>
