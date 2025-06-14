@@ -12,7 +12,6 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ onNavigate }: DashboardProps) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Mock data for now - this will be replaced with real data from useTemplates hook
