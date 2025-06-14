@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Palette, Image as ImageIcon, Gradient } from "lucide-react";
+import { Palette, Image as ImageIcon, Layers } from "lucide-react";
 
 interface BackgroundControlsProps {
   backgroundColor: string;
