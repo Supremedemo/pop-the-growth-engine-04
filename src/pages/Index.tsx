@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Zap, Lightbulb, Shield, LogOut, User, Moon, Sun, Menu, BarChart3, Target, TrendingUp } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Dashboard } from "@/components/Dashboard";
+import { RealDashboard } from "@/components/RealDashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
 import { AiLandingPageBuilder } from "@/components/AiLandingPageBuilder";
 import { TemplateGallery } from "@/components/TemplateGallery";
@@ -25,14 +25,32 @@ interface IndexProps {
 
 const Index = ({ username, onLogout }: IndexProps) => {
   const [activeView, setActiveView] = useState("dashboard");
+  const [builderTemplateId, setBuilderTemplateId] = useState<string | undefined>();
   const { isDarkMode, toggleTheme } = useTheme();
+
+  const handleNavigate = (view: string) => {
+    // Parse template ID from builder navigation
+    if (view.startsWith("builder?template=")) {
+      const templateId = view.split("=")[1];
+      setBuilderTemplateId(templateId);
+      setActiveView("builder");
+    } else {
+      setBuilderTemplateId(undefined);
+      setActiveView(view);
+    }
+  };
 
   const renderActiveView = () => {
     switch (activeView) {
       case "dashboard":
-        return <Dashboard onNavigate={setActiveView} />;
+        return <RealDashboard onNavigate={handleNavigate} />;
       case "builder":
-        return <PopupBuilder onBack={() => setActiveView("dashboard")} />;
+        return (
+          <PopupBuilder 
+            onBack={() => setActiveView("dashboard")} 
+            templateId={builderTemplateId}
+          />
+        );
       case "landing-builder":
         return <LandingPageBuilder onBack={() => setActiveView("dashboard")} />;
       case "ai-builder":
@@ -46,7 +64,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
       case "admin":
         return <Admin />;
       default:
-        return <Dashboard onNavigate={setActiveView} />;
+        return <RealDashboard onNavigate={handleNavigate} />;
     }
   };
 

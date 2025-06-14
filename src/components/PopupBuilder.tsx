@@ -19,7 +19,9 @@ import {
   ZoomOut,
   Plus,
   X,
-  ExternalLink
+  ExternalLink,
+  FolderOpen,
+  Upload
 } from "lucide-react";
 import { ElementToolbar } from "./ElementToolbar";
 import { PropertyPanel } from "./PropertyPanel";
@@ -31,9 +33,14 @@ import { BackgroundControls } from "./BackgroundControls";
 import { PublishDialog } from "./PublishDialog";
 import { PreviewDialog } from "./PreviewDialog";
 import { PopupElement } from "./PopupElements";
+import { useTemplates } from "@/hooks/useTemplates";
+import { useCampaigns } from "@/hooks/useCampaigns";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { toast } from "sonner";
 
 interface PopupBuilderProps {
   onBack: () => void;
+  templateId?: string;
 }
 
 export interface CanvasState {
@@ -55,7 +62,11 @@ export interface CanvasState {
   closeButtonPosition: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 }
 
-export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
+export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
+  const { templates, saveTemplate, updateTemplate, isSaving } = useTemplates();
+  const { createCampaign, isCreating } = useCampaigns();
+  const { uploadFile, isUploading } = useFileUpload();
+
   const defaultLayout: PopupLayout = {
     id: "modal-center",
     name: "Modal - Center",
@@ -65,11 +76,13 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
     position: "center"
   };
 
-  const [canvasState, setCanvasState] = useState<CanvasState>({
+  // Load template if templateId is provided
+  const loadedTemplate = templateId ? templates.find(t => t.id === templateId) : null;
+  const initialCanvasState = loadedTemplate?.canvas_data || {
     width: 500,
     height: 400,
     backgroundColor: "#ffffff",
-    backgroundType: 'color',
+    backgroundType: 'color' as const,
     elements: [],
     zoom: 1,
     showGrid: true,
@@ -79,9 +92,10 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
     overlayColor: "#000000",
     overlayOpacity: 50,
     showCloseButton: true,
-    closeButtonPosition: 'top-right'
-  });
+    closeButtonPosition: 'top-right' as const
+  };
 
+  const [canvasState, setCanvasState] = useState<CanvasState>(initialCanvasState);
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [previewDevice, setPreviewDevice] = useState("desktop");
 
@@ -91,10 +105,12 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
-  const [templateName, setTemplateName] = useState("");
-  const [templateDescription, setTemplateDescription] = useState("");
-  const [templateTags, setTemplateTags] = useState<string[]>([]);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState(loadedTemplate?.name || "");
+  const [templateDescription, setTemplateDescription] = useState(loadedTemplate?.description || "");
+  const [templateTags, setTemplateTags] = useState<string[]>(loadedTemplate?.tags || []);
   const [newTag, setNewTag] = useState("");
+  const [currentTemplateId, setCurrentTemplateId] = useState(templateId);
 
   const updateCanvasState = useCallback((updates: Partial<CanvasState>) => {
     setCanvasState(prev => {
@@ -205,21 +221,74 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
   }, [canvasState.showGrid, updateCanvasState]);
 
   const handleSaveTemplate = () => {
-    if (templateName.trim()) {
-      const templateData = {
+    if (!templateName.trim()) {
+      toast.error('Please enter a template name');
+      return;
+    }
+
+    if (currentTemplateId) {
+      // Update existing template
+      updateTemplate({
+        id: currentTemplateId,
+        updates: {
+          name: templateName.trim(),
+          description: templateDescription.trim() || null,
+          canvas_data: canvasState,
+          tags: templateTags
+        }
+      });
+    } else {
+      // Create new template
+      saveTemplate({
         name: templateName.trim(),
-        description: templateDescription.trim(),
-        tags: templateTags,
+        description: templateDescription.trim() || undefined,
         canvasData: canvasState,
-        thumbnail: `bg-gradient-to-br ${canvasState.backgroundType === 'gradient' ? canvasState.backgroundGradient : 'from-blue-500 to-purple-600'}`
-      };
-      
-      console.log('Saving template:', templateData);
-      
-      setTemplateName("");
-      setTemplateDescription("");
-      setTemplateTags([]);
-      setIsSaveDialogOpen(false);
+        tags: templateTags
+      });
+    }
+    
+    setIsSaveDialogOpen(false);
+  };
+
+  const handleCreateCampaign = () => {
+    if (!templateName.trim()) {
+      toast.error('Please save the template first');
+      return;
+    }
+
+    createCampaign({
+      name: `${templateName} Campaign`,
+      description: `Campaign based on ${templateName} template`,
+      canvasData: canvasState,
+      templateId: currentTemplateId
+    });
+  };
+
+  const handleLoadTemplate = () => {
+    setIsTemplateDialogOpen(true);
+  };
+
+  const loadTemplate = (template: any) => {
+    setCanvasState(template.canvas_data);
+    setTemplateId(template.id);
+    setTemplateName(template.name);
+    setTemplateDescription(template.description || "");
+    setTemplateTags(template.tags || []);
+    setCurrentTemplateId(template.id);
+    setIsTemplateDialogOpen(false);
+    toast.success(`Template "${template.name}" loaded successfully!`);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const uploadedFile = await uploadFile(file, '/popup-assets/');
+      handleBackgroundChange('image', uploadedFile.url);
+      toast.success('Image uploaded and set as background!');
+    } catch (error) {
+      console.error('Error uploading file:', error);
     }
   };
 
@@ -249,7 +318,9 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Button>
-            <h1 className="text-xl font-semibold">Canvas Editor</h1>
+            <h1 className="text-xl font-semibold">
+              {currentTemplateId ? `Editing: ${templateName}` : 'Canvas Editor'}
+            </h1>
             <div className="text-sm text-slate-500">
               {selectedElements.length > 0 && (
                 <span>{selectedElements.length} element{selectedElements.length > 1 ? 's' : ''} selected</span>
@@ -262,6 +333,10 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
           
           {/* Enhanced Toolbar */}
           <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={handleLoadTemplate}>
+              <FolderOpen className="w-4 h-4 mr-1" />
+              Load
+            </Button>
             <Button 
               variant="outline" 
               size="sm" 
@@ -307,28 +382,70 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
-            <Button variant="outline" onClick={() => setIsSaveDialogOpen(true)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsSaveDialogOpen(true)}
+              disabled={isSaving}
+            >
               <Save className="w-4 h-4 mr-2" />
-              Save
+              {isSaving ? 'Saving...' : 'Save'}
             </Button>
             <Button 
               className="bg-gradient-to-r from-blue-600 to-purple-600"
-              onClick={() => setIsPublishDialogOpen(true)}
+              onClick={handleCreateCampaign}
+              disabled={isCreating}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              Publish
+              {isCreating ? 'Creating...' : 'Create Campaign'}
             </Button>
           </div>
         </div>
       </div>
 
+      {/* Template Selection Dialog */}
+      <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Load Template</DialogTitle>
+            <DialogDescription>
+              Choose a template to load into the editor
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                className="border rounded-lg p-4 hover:bg-slate-50 cursor-pointer"
+                onClick={() => loadTemplate(template)}
+              >
+                <div className="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 rounded mb-3"></div>
+                <h3 className="font-medium">{template.name}</h3>
+                <p className="text-sm text-slate-500 mt-1">{template.description}</p>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {template.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  Created: {new Date(template.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Save Template Dialog */}
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Save Template</DialogTitle>
+            <DialogTitle>
+              {currentTemplateId ? 'Update Template' : 'Save Template'}
+            </DialogTitle>
             <DialogDescription>
-              Save your current design as a reusable template
+              {currentTemplateId ? 'Update your template with the current design' : 'Save your current design as a reusable template'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -383,7 +500,9 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSaveTemplate}>Save Template</Button>
+              <Button onClick={handleSaveTemplate} disabled={isSaving}>
+                {isSaving ? 'Saving...' : (currentTemplateId ? 'Update' : 'Save Template')}
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -450,6 +569,28 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
                   backgroundGradient={canvasState.backgroundGradient}
                   onBackgroundChange={handleBackgroundChange}
                 />
+                
+                <div className="border-t pt-4">
+                  <h3 className="text-sm font-medium mb-3">Upload Image</h3>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => document.getElementById('image-upload')?.click()}
+                      disabled={isUploading}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {isUploading ? 'Uploading...' : 'Upload Image'}
+                    </Button>
+                  </div>
+                </div>
                 
                 <div className="border-t pt-4">
                   <h3 className="text-sm font-medium mb-3">Overlay Settings</h3>
@@ -583,6 +724,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <div className="text-sm text-slate-500">
                 {canvasState.elements.length} element{canvasState.elements.length !== 1 ? 's' : ''} • 
                 Canvas: {canvasState.width}×{canvasState.height}px • {canvasState.layout.type}
+                {currentTemplateId && ' • Template: ' + templateName}
               </div>
             </div>
           </div>
