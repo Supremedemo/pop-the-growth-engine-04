@@ -1,10 +1,10 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, ChevronLeft, ChevronRight, Copy, ExternalLink } from "lucide-react";
+import { BaseElement } from "./PopupElements";
 
 export interface FormStep {
   id: string;
@@ -33,14 +33,8 @@ export interface SuccessPageConfig {
   redirectUrl?: string;
 }
 
-export interface MultiStepFormElement {
-  id: string;
+export interface MultiStepFormElement extends BaseElement {
   type: "multi-step-form";
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  zIndex: number;
   steps: FormStep[];
   successPage: SuccessPageConfig;
   buttonColor: string;
