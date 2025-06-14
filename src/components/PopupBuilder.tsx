@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,7 +54,11 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
   };
 
   const updateElement = (id: string, updates: Partial<PopupElement>) => {
-    setElements(elements.map(el => el.id === id ? { ...el, ...updates } : el));
+    setElements(prevElements => 
+      prevElements.map(el => 
+        el.id === id ? { ...el, ...updates } as PopupElement : el
+      )
+    );
   };
 
   const deleteElement = (id: string) => {
