@@ -66,7 +66,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -99,25 +99,25 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card key={index} className="bg-slate-800 border-slate-700">
+            <Card key={index} className="bg-card border-border">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center">
-                    <stat.icon className="w-6 h-6 text-slate-300" />
+                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                    <stat.icon className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <Badge 
                     variant="secondary" 
                     className={`text-xs ${
                       stat.changeType === 'positive' 
-                        ? 'bg-green-900 text-green-300' 
-                        : 'bg-red-900 text-red-300'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                     }`}
                   >
                     {stat.change}
                   </Badge>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-1">{stat.value}</h3>
-                <p className="text-sm text-slate-400">{stat.title}</p>
+                <h3 className="text-2xl font-bold text-foreground mb-1">{stat.value}</h3>
+                <p className="text-sm text-muted-foreground">{stat.title}</p>
               </CardContent>
             </Card>
           ))}
@@ -128,7 +128,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
           {quickActions.map((action, index) => (
             <Card 
               key={index} 
-              className="bg-slate-800 border-slate-700 cursor-pointer hover:bg-slate-750 transition-colors"
+              className="bg-card border-border cursor-pointer hover:bg-accent/50 transition-colors"
               onClick={action.action}
             >
               <CardContent className="p-6">
@@ -141,8 +141,8 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
                     <action.icon className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white mb-2">{action.title}</h3>
-                    <p className="text-sm text-slate-400">{action.description}</p>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{action.title}</h3>
+                    <p className="text-sm text-muted-foreground">{action.description}</p>
                   </div>
                 </div>
               </CardContent>
@@ -151,18 +151,18 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
         </div>
 
         {/* Recent Campaigns Section */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-white">Recent Campaigns</CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardTitle className="text-foreground">Recent Campaigns</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 Monitor your active and recent popup campaigns
               </CardDescription>
             </div>
             <Button 
               variant="outline" 
               size="sm"
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              className="border-border text-muted-foreground hover:bg-accent"
               onClick={() => onNavigate("campaigns")}
             >
               View All
@@ -170,51 +170,51 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
                     <Target className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-white">Summer Sale Campaign</h4>
-                    <p className="text-sm text-slate-400">Active • 2,341 impressions today</p>
+                    <h4 className="font-medium text-foreground">Summer Sale Campaign</h4>
+                    <p className="text-sm text-muted-foreground">Active • 2,341 impressions today</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-green-400">4.2% CTR</p>
-                  <p className="text-xs text-slate-400">$1,234 revenue</p>
+                  <p className="text-sm font-medium text-green-600 dark:text-green-400">4.2% CTR</p>
+                  <p className="text-xs text-muted-foreground">$1,234 revenue</p>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-white">Newsletter Signup</h4>
-                    <p className="text-sm text-slate-400">Active • 1,823 impressions today</p>
+                    <h4 className="font-medium text-foreground">Newsletter Signup</h4>
+                    <p className="text-sm text-muted-foreground">Active • 1,823 impressions today</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-green-400">6.8% CTR</p>
-                  <p className="text-xs text-slate-400">234 signups</p>
+                  <p className="text-sm font-medium text-green-600 dark:text-green-400">6.8% CTR</p>
+                  <p className="text-xs text-muted-foreground">234 signups</p>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between p-4 bg-slate-700 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
                     <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-white">Exit Intent Offer</h4>
-                    <p className="text-sm text-slate-400">Paused • Last active 2 days ago</p>
+                    <h4 className="font-medium text-foreground">Exit Intent Offer</h4>
+                    <p className="text-sm text-muted-foreground">Paused • Last active 2 days ago</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-slate-400">2.1% CTR</p>
-                  <p className="text-xs text-slate-400">$567 revenue</p>
+                  <p className="text-sm font-medium text-muted-foreground">2.1% CTR</p>
+                  <p className="text-xs text-muted-foreground">$567 revenue</p>
                 </div>
               </div>
             </div>
