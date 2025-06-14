@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Zap, Lightbulb, Shield, LogOut, User, Moon, Sun, BarChart3, Target, TrendingUp } from "lucide-react";
+import { Plus, Zap, Lightbulb, Shield, LogOut, User, Moon, Sun, Menu, BarChart3, Target, TrendingUp } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
@@ -10,6 +10,12 @@ import { TemplateGallery } from "@/components/TemplateGallery";
 import { Analytics } from "@/components/Analytics";
 import { CampaignManager } from "@/components/CampaignManager";
 import { Admin } from "@/components/Admin";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { LandingPageBuilder } from "@/components/LandingPageBuilder";
 
 interface IndexProps {
@@ -62,54 +68,37 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 </h1>
               </div>
               
-              {/* Always Visible Navigation Menu */}
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => setActiveView("dashboard")}
-                  variant={activeView === "dashboard" ? "default" : "outline"}
-                  size="sm"
-                  className="text-sm"
-                >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-                <Button
-                  onClick={() => setActiveView("campaigns")}
-                  variant={activeView === "campaigns" ? "default" : "outline"}
-                  size="sm"
-                  className="text-sm"
-                >
-                  <Target className="w-4 h-4 mr-2" />
-                  Campaigns
-                </Button>
-                <Button
-                  onClick={() => setActiveView("templates")}
-                  variant={activeView === "templates" ? "default" : "outline"}
-                  size="sm"
-                  className="text-sm"
-                >
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Templates
-                </Button>
-                <Button
-                  onClick={() => setActiveView("analytics")}
-                  variant={activeView === "analytics" ? "default" : "outline"}
-                  size="sm"
-                  className="text-sm"
-                >
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Analytics
-                </Button>
-                <Button
-                  onClick={() => setActiveView("admin")}
-                  variant={activeView === "admin" ? "default" : "outline"}
-                  size="sm"
-                  className="text-sm"
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  Admin
-                </Button>
-              </div>
+              {/* Navigation Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Menu className="w-4 h-4 mr-2" />
+                    Navigate
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-background z-50">
+                  <DropdownMenuItem onClick={() => setActiveView("dashboard")}>
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("campaigns")}>
+                    <Target className="w-4 h-4 mr-2" />
+                    Campaigns
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("templates")}>
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    Templates
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("analytics")}>
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Analytics
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("admin")}>
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="flex items-center space-x-3">
