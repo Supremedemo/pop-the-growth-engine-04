@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   ArrowLeft,
   ArrowRight,
@@ -39,7 +40,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { SpinWheelGame } from "./SpinWheelGame";
 
 export interface CanvasState {
@@ -122,16 +123,22 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
       // Handle canvas templates (existing logic)
       if (templateData.elements) {
         const validElements: PopupElement[] = templateData.elements.map((el: any): PopupElement | null => {
-          // Ensure each element has a proper type
+          // Create base properties
+          const baseProps = {
+            id: el.id || uuidv4(),
+            x: el.x || 0,
+            y: el.y || 0,
+            width: el.width || 200,
+            height: el.height || 50,
+            zIndex: el.zIndex || 1,
+            isPinned: el.isPinned || false
+          };
+
+          // Create element based on type with proper typing
           if (el.type === 'text') {
             return {
+              ...baseProps,
               type: 'text' as const,
-              id: el.id || uuidv4(),
-              x: el.x || 0,
-              y: el.y || 0,
-              width: el.width || 200,
-              height: el.height || 50,
-              zIndex: el.zIndex || 1,
               content: el.content || 'Text',
               fontSize: el.fontSize || 16,
               fontWeight: el.fontWeight || 'normal',
@@ -140,16 +147,35 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
             };
           } else if (el.type === 'image') {
             return {
+              ...baseProps,
               type: 'image' as const,
-              id: el.id || uuidv4(),
-              x: el.x || 0,
-              y: el.y || 0,
-              width: el.width || 200,
               height: el.height || 150,
-              zIndex: el.zIndex || 1,
               src: el.src || '',
               alt: el.alt || 'Image',
               borderRadius: el.borderRadius || 0
+            };
+          } else if (el.type === 'form') {
+            return {
+              ...baseProps,
+              type: 'form' as const,
+              fields: el.fields || [],
+              buttonText: el.buttonText || 'Submit',
+              buttonColor: el.buttonColor || '#000000'
+            };
+          } else if (el.type === 'timer') {
+            return {
+              ...baseProps,
+              type: 'timer' as const,
+              duration: el.duration || 60,
+              format: el.format || 'mm:ss',
+              backgroundColor: el.backgroundColor || '#000000',
+              textColor: el.textColor || '#ffffff'
+            };
+          } else if (el.type === 'html') {
+            return {
+              ...baseProps,
+              type: 'html' as const,
+              htmlContent: el.htmlContent || ''
             };
           }
           return null;
