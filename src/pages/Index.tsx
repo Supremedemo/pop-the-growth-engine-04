@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, Shield, LogOut, User, Moon, Sun } from "lucide-react";
+import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, Shield, LogOut, User, Moon, Sun, Menu } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
@@ -13,6 +13,12 @@ import { TemplateGallery } from "@/components/TemplateGallery";
 import { Analytics } from "@/components/Analytics";
 import { CampaignManager } from "@/components/CampaignManager";
 import { Admin } from "@/components/Admin";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface IndexProps {
   username: string;
@@ -48,96 +54,127 @@ const Index = ({ username, onLogout }: IndexProps) => {
     <div className="min-h-screen bg-background">
       {/* Navigation Header */}
       <header className="glass-effect sticky top-0 z-50">
-        <div className="px-6 py-4">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-3">
                 <img 
                   src="/lovable-uploads/01b275f3-962e-49f3-bc04-9696b715d718.png" 
                   alt="Pop The Builder Logo" 
                   className="w-8 h-8 rounded-lg"
                 />
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
                   Pop The Builder
                 </h1>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-6">
-              <nav className="flex items-center space-x-2">
+              
+              {/* Primary Navigation */}
+              <nav className="hidden lg:flex items-center space-x-1">
                 <button
                   onClick={() => setActiveView("dashboard")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                     activeView === "dashboard" 
                       ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                   }`}
                 >
                   <BarChart3 className="w-4 h-4" />
-                  <span className="font-medium">Dashboard</span>
+                  <span className="font-medium text-sm">Dashboard</span>
                 </button>
                 <button
                   onClick={() => setActiveView("campaigns")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                     activeView === "campaigns" 
                       ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                   }`}
                 >
                   <Target className="w-4 h-4" />
-                  <span className="font-medium">Campaigns</span>
+                  <span className="font-medium text-sm">Campaigns</span>
                 </button>
                 <button
                   onClick={() => setActiveView("templates")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                     activeView === "templates" 
                       ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                   }`}
                 >
                   <Lightbulb className="w-4 h-4" />
-                  <span className="font-medium">Templates</span>
+                  <span className="font-medium text-sm">Templates</span>
                 </button>
                 <button
                   onClick={() => setActiveView("analytics")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                     activeView === "analytics" 
                       ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                   }`}
                 >
                   <TrendingUp className="w-4 h-4" />
-                  <span className="font-medium">Analytics</span>
+                  <span className="font-medium text-sm">Analytics</span>
                 </button>
-                <button
-                  onClick={() => setActiveView("admin")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                    activeView === "admin" 
-                      ? "bg-destructive/10 text-destructive ring-1 ring-destructive/20" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
-                >
-                  <Shield className="w-4 h-4" />
-                  <span className="font-medium">Admin</span>
-                </button>
+              </nav>
+
+              {/* Mobile Menu */}
+              <div className="lg:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Menu className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => setActiveView("dashboard")}>
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveView("campaigns")}>
+                      <Target className="w-4 h-4 mr-2" />
+                      Campaigns
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveView("templates")}>
+                      <Lightbulb className="w-4 h-4 mr-2" />
+                      Templates
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveView("analytics")}>
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Analytics
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setActiveView("admin")}>
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-2">
                 <Button
                   onClick={() => setActiveView("builder")}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-sm border-0 ml-4"
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-sm border-0"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Popup
+                  <Plus className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Create Popup</span>
+                  <span className="sm:hidden">Create</span>
                 </Button>
                 <Button
                   onClick={() => setActiveView("ai-builder")}
+                  size="sm"
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-sm border-0"
                 >
-                  <Zap className="w-4 h-4 mr-2" />
-                  AI Builder
+                  <Zap className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">AI Builder</span>
+                  <span className="sm:hidden">AI</span>
                 </Button>
-              </nav>
+              </div>
               
-              {/* User section with theme toggle and logout */}
-              <div className="flex items-center space-x-3 pl-6">
+              {/* User section */}
+              <div className="flex items-center space-x-2 pl-2">
                 <div className="w-px h-6 bg-border"></div>
                 <Button
                   onClick={toggleTheme}
@@ -147,9 +184,22 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 >
                   {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </Button>
-                <div className="flex items-center space-x-2 text-foreground px-3 py-1.5 rounded-lg bg-accent/30">
+                
+                {/* Admin button for desktop */}
+                <Button
+                  onClick={() => setActiveView("admin")}
+                  variant="outline"
+                  size="sm"
+                  className={`hidden lg:flex text-muted-foreground hover:text-destructive hover:ring-destructive/30 border-0 ring-1 ring-border/30 ${
+                    activeView === "admin" ? "text-destructive ring-destructive/30" : ""
+                  }`}
+                >
+                  <Shield className="w-4 h-4" />
+                </Button>
+                
+                <div className="flex items-center space-x-2 text-foreground px-2 py-1 rounded-lg bg-accent/30">
                   <User className="w-4 h-4" />
-                  <span className="font-medium text-sm">{username}</span>
+                  <span className="font-medium text-sm hidden sm:inline">{username}</span>
                 </div>
                 <Button
                   onClick={onLogout}
@@ -157,8 +207,8 @@ const Index = ({ username, onLogout }: IndexProps) => {
                   size="sm"
                   className="text-muted-foreground hover:text-destructive hover:ring-destructive/30 border-0 ring-1 ring-border/30"
                 >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  <LogOut className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline text-xs">Logout</span>
                 </Button>
               </div>
             </div>

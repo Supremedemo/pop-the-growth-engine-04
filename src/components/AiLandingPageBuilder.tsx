@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,6 +71,9 @@ const landingPageTypes = [
   }
 ];
 
+// Pre-configured API key
+const GEMINI_API_KEY = "AIzaSyDE6-9Ke-Cui4JEV6OhQ5Ju5UWdb4g0bow";
+
 export const AiLandingPageBuilder = ({ onBack }: AiLandingPageBuilderProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -88,7 +90,6 @@ export const AiLandingPageBuilder = ({ onBack }: AiLandingPageBuilderProps) => {
   const [generatedCanvas, setGeneratedCanvas] = useState<CanvasState | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPublishOpen, setIsPublishOpen] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState("");
 
   const handleScreenshotUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -103,7 +104,7 @@ export const AiLandingPageBuilder = ({ onBack }: AiLandingPageBuilderProps) => {
   };
 
   const handleGenerate = async () => {
-    if (!screenshot || !geminiApiKey) return;
+    if (!screenshot) return;
 
     setIsGenerating(true);
     
@@ -130,7 +131,7 @@ export const AiLandingPageBuilder = ({ onBack }: AiLandingPageBuilderProps) => {
         - Color scheme and typography suggestions
       `;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,6 +155,7 @@ export const AiLandingPageBuilder = ({ onBack }: AiLandingPageBuilderProps) => {
       
       if (data.candidates && data.candidates[0]) {
         const generatedContent = data.candidates[0].content.parts[0].text;
+        console.log('Generated content:', generatedContent);
         
         // Create a mock canvas state based on the generated content
         const mockCanvas: CanvasState = {
@@ -236,6 +238,11 @@ export const AiLandingPageBuilder = ({ onBack }: AiLandingPageBuilderProps) => {
         
         setGeneratedCanvas(mockCanvas);
         setCurrentStep(4);
+        
+        // Automatically open preview after generation
+        setTimeout(() => {
+          setIsPreviewOpen(true);
+        }, 500);
       }
     } catch (error) {
       console.error('Error generating landing page:', error);
@@ -310,21 +317,6 @@ export const AiLandingPageBuilder = ({ onBack }: AiLandingPageBuilderProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="gemini-api-key">Gemini API Key</Label>
-                <Input
-                  id="gemini-api-key"
-                  type="password"
-                  value={geminiApiKey}
-                  onChange={(e) => setGeminiApiKey(e.target.value)}
-                  placeholder="Enter your Gemini API key"
-                  className="mt-1"
-                />
-                <p className="text-sm text-slate-500 mt-1">
-                  Get your API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google AI Studio</a>
-                </p>
-              </div>
-
               <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
                 {screenshotPreview ? (
                   <div className="space-y-4">
@@ -364,7 +356,7 @@ export const AiLandingPageBuilder = ({ onBack }: AiLandingPageBuilderProps) => {
               <div className="flex justify-end">
                 <Button
                   onClick={() => setCurrentStep(2)}
-                  disabled={!screenshot || !geminiApiKey}
+                  disabled={!screenshot}
                 >
                   Next: Select Type
                   <ArrowRight className="w-4 h-4 ml-2" />
