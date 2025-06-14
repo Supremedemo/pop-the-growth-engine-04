@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +32,15 @@ import {
   Lock,
   Unlock,
   FolderOpen,
-  Files
+  Files,
+  Dice1,
+  Coins,
+  Timer,
+  RotateCcw,
+  Crosshair,
+  Puzzle,
+  Gamepad2,
+  Flame
 } from "lucide-react";
 
 interface TemplateGalleryProps {
@@ -41,30 +48,212 @@ interface TemplateGalleryProps {
 }
 
 export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("gamified");
   const [searchTerm, setSearchTerm] = useState("");
   const [userLevel] = useState(5);
   const [userPoints] = useState(2450);
-  const [unlockedTemplates] = useState(new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]));
+  const [unlockedTemplates] = useState(new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]));
 
   const categories = [
-    { id: "all", name: "All Templates", count: 24 },
+    { id: "gamified", name: "🎮 Gamified", count: 12, icon: GamepadIcon },
+    { id: "all", name: "All Templates", count: 36 },
     { id: "newsletter", name: "Newsletter", count: 4, icon: Mail },
     { id: "ecommerce", name: "E-commerce", count: 6, icon: ShoppingCart },
     { id: "discount", name: "Discounts", count: 5, icon: Gift },
     { id: "lead-gen", name: "Lead Generation", count: 4, icon: Users },
-    { id: "exit-intent", name: "Exit Intent", count: 3, icon: Eye },
-    { id: "gamified", name: "Gamified", count: 2, icon: GamepadIcon }
+    { id: "exit-intent", name: "Exit Intent", count: 3, icon: Eye }
   ];
 
   const achievements = [
-    { id: 1, name: "Template Explorer", description: "Use 5 different templates", icon: Eye, completed: true, points: 100 },
-    { id: 2, name: "Conversion Master", description: "Achieve 5%+ conversion rate", icon: Target, completed: true, points: 200 },
-    { id: 3, name: "Design Guru", description: "Customize 10 templates", icon: Sparkles, completed: false, points: 150 },
-    { id: 4, name: "Speed Demon", description: "Create popup in under 5 minutes", icon: Rocket, completed: true, points: 75 }
+    { id: 1, name: "Game Master", description: "Use 10 gamified templates", icon: GamepadIcon, completed: true, points: 200 },
+    { id: 2, name: "High Roller", description: "Create spin wheel popup", icon: RotateCcw, completed: true, points: 150 },
+    { id: 3, name: "Lucky Winner", description: "Generate 100+ leads with games", icon: Trophy, completed: false, points: 300 },
+    { id: 4, name: "Speed Gamer", description: "Setup game popup in 2 minutes", icon: Rocket, completed: true, points: 100 }
   ];
 
   const templates = [
+    // Gamified Templates (Featured)
+    {
+      id: 16,
+      name: "Spin-to-Win Fortune Wheel",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600",
+      rating: 4.9,
+      uses: 3247,
+      devices: ["desktop", "mobile"],
+      description: "Interactive spinning wheel with customizable prizes and sound effects",
+      level: 1,
+      premium: false,
+      conversionRate: "24.3%",
+      features: ["Animated Wheel", "Sound Effects", "Custom Prizes", "Mobile Touch"]
+    },
+    {
+      id: 17,
+      name: "Scratch Card Mystery Box",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-purple-600 via-pink-600 to-red-500",
+      rating: 4.8,
+      uses: 2156,
+      devices: ["desktop", "mobile", "tablet"],
+      description: "Digital scratch card revealing instant discounts and prizes",
+      level: 1,
+      premium: false,
+      conversionRate: "19.7%",
+      features: ["Touch Scratch", "Instant Reveal", "Prize Animation", "Haptic Feedback"]
+    },
+    {
+      id: 18,
+      name: "Memory Card Game",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600",
+      rating: 4.7,
+      uses: 1834,
+      devices: ["desktop", "mobile"],
+      description: "Match pairs to unlock exclusive discounts and offers",
+      level: 2,
+      premium: false,
+      conversionRate: "16.2%",
+      features: ["Card Flip Animation", "Timer Challenge", "Difficulty Levels", "Leaderboard"]
+    },
+    {
+      id: 19,
+      name: "Treasure Hunt Clicker",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-600",
+      rating: 4.9,
+      uses: 2945,
+      devices: ["desktop", "mobile"],
+      description: "Click to discover hidden treasures and unlock rewards",
+      level: 1,
+      premium: false,
+      conversionRate: "22.1%",
+      features: ["Click Animation", "Hidden Rewards", "Progress Bar", "Surprise Elements"]
+    },
+    {
+      id: 20,
+      name: "Slot Machine Jackpot",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600",
+      rating: 4.8,
+      uses: 2678,
+      devices: ["desktop", "mobile"],
+      description: "Classic slot machine with spinning reels and winning combinations",
+      level: 2,
+      premium: true,
+      conversionRate: "27.5%",
+      features: ["Spinning Reels", "Win Animations", "Jackpot Sound", "Auto-spin"]
+    },
+    {
+      id: 21,
+      name: "Quiz Challenge Popup",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500",
+      rating: 4.6,
+      uses: 1567,
+      devices: ["desktop", "mobile", "tablet"],
+      description: "Interactive quiz with rewards for correct answers",
+      level: 2,
+      premium: false,
+      conversionRate: "18.9%",
+      features: ["Multiple Choice", "Timer", "Score Tracking", "Reward System"]
+    },
+    {
+      id: 22,
+      name: "Dice Roll Fortune",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-red-500 via-pink-500 to-purple-600",
+      rating: 4.7,
+      uses: 1923,
+      devices: ["desktop", "mobile"],
+      description: "Roll virtual dice to determine discount percentage",
+      level: 1,
+      premium: false,
+      conversionRate: "20.3%",
+      features: ["3D Dice Animation", "Random Rewards", "Sound Effects", "Roll History"]
+    },
+    {
+      id: 23,
+      name: "Coin Flip Challenge",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-yellow-600 via-amber-500 to-orange-500",
+      rating: 4.5,
+      uses: 1245,
+      devices: ["desktop", "mobile"],
+      description: "Simple heads or tails game with instant rewards",
+      level: 1,
+      premium: false,
+      conversionRate: "15.8%",
+      features: ["Coin Animation", "50/50 Chance", "Quick Game", "Instant Result"]
+    },
+    {
+      id: 24,
+      name: "Puzzle Piece Collector",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500",
+      rating: 4.8,
+      uses: 2134,
+      devices: ["desktop", "mobile"],
+      description: "Collect puzzle pieces through actions to complete the picture",
+      level: 3,
+      premium: true,
+      conversionRate: "21.6%",
+      features: ["Drag & Drop", "Progress Tracking", "Completion Reward", "Visual Progress"]
+    },
+    {
+      id: 25,
+      name: "Balloon Pop Game",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-pink-400 via-red-400 to-orange-400",
+      rating: 4.7,
+      uses: 1876,
+      devices: ["desktop", "mobile"],
+      description: "Pop balloons to reveal hidden prizes and discounts",
+      level: 1,
+      premium: false,
+      conversionRate: "17.4%",
+      features: ["Pop Animation", "Hidden Prizes", "Sound Effects", "Floating Balloons"]
+    },
+    {
+      id: 26,
+      name: "Lucky Number Generator",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-violet-500 via-purple-500 to-indigo-500",
+      rating: 4.6,
+      uses: 1654,
+      devices: ["desktop", "mobile"],
+      description: "Generate lucky numbers to win instant discounts",
+      level: 1,
+      premium: false,
+      conversionRate: "14.9%",
+      features: ["Number Animation", "Lucky Draw", "Instant Win", "Number History"]
+    },
+    {
+      id: 27,
+      name: "Tic-Tac-Toe Challenge",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600",
+      rating: 4.8,
+      uses: 2087,
+      devices: ["desktop", "mobile"],
+      description: "Play tic-tac-toe against AI to win rewards",
+      level: 2,
+      premium: false,
+      conversionRate: "19.2%",
+      features: ["AI Opponent", "Win Detection", "Game Board", "Victory Animation"]
+    },
+    // ... keep existing code (other non-gamified templates)
     {
       id: 1,
       name: "Welcome Discount",
@@ -352,11 +541,11 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
 
   const getLevelColor = (level: number) => {
     switch (level) {
-      case 1: return "bg-green-100 text-green-800";
-      case 2: return "bg-blue-100 text-blue-800";
-      case 3: return "bg-purple-100 text-purple-800";
-      case 4: return "bg-orange-100 text-orange-800";
-      default: return "bg-gray-100 text-gray-800";
+      case 1: return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
+      case 2: return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
+      case 3: return "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400";
+      case 4: return "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400";
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400";
     }
   };
 
@@ -401,8 +590,11 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-foreground">Template Gallery</h1>
-            <p className="text-muted-foreground">Choose from our collection of high-converting popup templates</p>
+            <h1 className="text-3xl font-bold mb-2 text-foreground flex items-center gap-2">
+              <GamepadIcon className="w-8 h-8 text-purple-600" />
+              Gamified Templates Gallery
+            </h1>
+            <p className="text-muted-foreground">Boost engagement with interactive games and mini-challenges</p>
           </div>
           
           {/* User Progress */}
@@ -524,11 +716,20 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredTemplates.map((template) => {
                   const isLocked = !canUseTemplate(template);
+                  const isGameTemplate = template.category === "gamified";
                   return (
-                    <Card key={template.id} className={`hover:shadow-lg transition-all group relative ${isLocked ? 'opacity-75' : ''}`}>
+                    <Card key={template.id} className={`hover:shadow-lg transition-all group relative ${isLocked ? 'opacity-75' : ''} ${isGameTemplate ? 'ring-2 ring-purple-500/20 bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:from-purple-900/10 dark:to-pink-900/10' : ''}`}>
                       {isLocked && (
                         <div className="absolute top-2 right-2 z-10">
                           <Lock className="w-4 h-4 text-red-500" />
+                        </div>
+                      )}
+                      
+                      {isGameTemplate && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs">
+                            🎮 Game
+                          </Badge>
                         </div>
                       )}
                       
@@ -556,11 +757,20 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                             </Button>
                           </div>
                           
-                          {/* Mock popup preview */}
+                          {/* Mock popup preview with game elements */}
                           <div className="absolute inset-4 bg-white/90 rounded shadow-lg p-2">
-                            <div className="h-2 bg-slate-300 rounded mb-1"></div>
-                            <div className="h-1 bg-slate-200 rounded mb-2"></div>
-                            <div className="h-4 bg-blue-500 rounded"></div>
+                            {isGameTemplate ? (
+                              <div className="flex flex-col items-center justify-center h-full">
+                                <div className="w-6 h-6 bg-purple-500 rounded-full mb-1 animate-pulse"></div>
+                                <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-400 rounded w-full"></div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="h-2 bg-slate-300 rounded mb-1"></div>
+                                <div className="h-1 bg-slate-200 rounded mb-2"></div>
+                                <div className="h-4 bg-blue-500 rounded"></div>
+                              </>
+                            )}
                           </div>
                         </div>
                       </CardHeader>
@@ -573,7 +783,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                               {template.type}
                             </Badge>
                             {template.premium && (
-                              <Badge className="text-xs bg-gradient-to-r from-yellow-500 to-orange-500">
+                              <Badge className="text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
                                 Pro
                               </Badge>
                             )}
@@ -605,7 +815,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                             {template.conversionRate && (
                               <div className="flex items-center space-x-1">
                                 <TrendingUp className="w-3 h-3 text-green-500" />
-                                <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                                <span className={`text-xs font-medium ${isGameTemplate ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400'}`}>
                                   {template.conversionRate}
                                 </span>
                               </div>
@@ -627,7 +837,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                           </Badge>
                           
                           <Button 
-                            className="flex-1 ml-3" 
+                            className={`flex-1 ml-3 ${isGameTemplate && !isLocked ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : ''}`}
                             onClick={onSelectTemplate}
                             disabled={isLocked}
                           >
@@ -638,8 +848,8 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                               </>
                             ) : (
                               <>
-                                <Unlock className="w-4 h-4 mr-2" />
-                                Use Template
+                                {isGameTemplate ? <Gamepad2 className="w-4 h-4 mr-2" /> : <Unlock className="w-4 h-4 mr-2" />}
+                                {isGameTemplate ? 'Play Game' : 'Use Template'}
                               </>
                             )}
                           </Button>
