@@ -1,0 +1,266 @@
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Plus, 
+  TrendingUp, 
+  Users, 
+  MousePointer, 
+  DollarSign, 
+  Eye,
+  Play,
+  Pause,
+  Settings,
+  MoreHorizontal
+} from "lucide-react";
+
+interface DashboardProps {
+  onNavigate: (view: string) => void;
+}
+
+export const Dashboard = ({ onNavigate }: DashboardProps) => {
+  const stats = [
+    {
+      title: "Total Impressions",
+      value: "127,432",
+      change: "+12.5%",
+      icon: Eye,
+      color: "text-blue-600"
+    },
+    {
+      title: "Conversions",
+      value: "3,847",
+      change: "+8.2%",
+      icon: MousePointer,
+      color: "text-green-600"
+    },
+    {
+      title: "Conversion Rate",
+      value: "3.02%",
+      change: "+0.4%",
+      icon: TrendingUp,
+      color: "text-purple-600"
+    },
+    {
+      title: "Revenue Attributed",
+      value: "$23,156",
+      change: "+15.7%",
+      icon: DollarSign,
+      color: "text-orange-600"
+    }
+  ];
+
+  const campaigns = [
+    {
+      id: 1,
+      name: "Welcome New Visitors",
+      type: "Modal",
+      status: "Active",
+      impressions: 45632,
+      conversions: 1247,
+      rate: "2.73%",
+      revenue: "$8,950"
+    },
+    {
+      id: 2,
+      name: "Cart Abandonment Recovery",
+      type: "Slide-in",
+      status: "Active",
+      impressions: 23456,
+      conversions: 892,
+      rate: "3.80%",
+      revenue: "$6,840"
+    },
+    {
+      id: 3,
+      name: "Exit Intent Discount",
+      type: "Modal",
+      status: "Paused",
+      impressions: 18743,
+      conversions: 456,
+      rate: "2.43%",
+      revenue: "$3,420"
+    },
+    {
+      id: 4,
+      name: "Newsletter Signup",
+      type: "Banner",
+      status: "Active",
+      impressions: 56789,
+      conversions: 1234,
+      rate: "2.17%",
+      revenue: "$0"
+    }
+  ];
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Welcome back! 👋</h2>
+            <p className="text-blue-100 mb-4">
+              Your campaigns have generated <strong>$23,156</strong> in attributed revenue this month.
+            </p>
+            <Button 
+              onClick={() => onNavigate("builder")}
+              variant="secondary" 
+              className="bg-white text-blue-600 hover:bg-blue-50"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Campaign
+            </Button>
+          </div>
+          <div className="hidden md:block">
+            <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-16 h-16 text-white/80" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={index} className="bg-white/60 backdrop-blur-sm border-slate-200">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <Icon className={`w-5 h-5 ${stat.color}`} />
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                    {stat.change}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <p className="text-sm text-slate-600">{stat.title}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card 
+          className="bg-white/60 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate("builder")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-blue-600">
+              <Plus className="w-5 h-5" />
+              <span>Create Popup</span>
+            </CardTitle>
+            <CardDescription>
+              Build a new popup from scratch or use a template
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card 
+          className="bg-white/60 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate("templates")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-purple-600">
+              <Eye className="w-5 h-5" />
+              <span>Browse Templates</span>
+            </CardTitle>
+            <CardDescription>
+              Choose from 50+ professional popup templates
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card 
+          className="bg-white/60 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate("analytics")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-green-600">
+              <TrendingUp className="w-5 h-5" />
+              <span>View Analytics</span>
+            </CardTitle>
+            <CardDescription>
+              Deep dive into your campaign performance
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Recent Campaigns */}
+      <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Campaigns</CardTitle>
+              <CardDescription>Monitor your active and recent popup campaigns</CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => onNavigate("campaigns")}
+              className="bg-white/80"
+            >
+              View All
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {campaigns.map((campaign) => (
+              <div key={campaign.id} className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-slate-100">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    {campaign.status === "Active" ? (
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    ) : (
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    )}
+                    <span className="font-medium">{campaign.name}</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {campaign.type}
+                  </Badge>
+                  <Badge 
+                    variant={campaign.status === "Active" ? "default" : "secondary"}
+                    className={campaign.status === "Active" ? "bg-green-100 text-green-800" : ""}
+                  >
+                    {campaign.status}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center space-x-6 text-sm text-slate-600">
+                  <div className="text-center">
+                    <div className="font-medium text-slate-900">{campaign.impressions.toLocaleString()}</div>
+                    <div className="text-xs">Impressions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-slate-900">{campaign.conversions.toLocaleString()}</div>
+                    <div className="text-xs">Conversions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-slate-900">{campaign.rate}</div>
+                    <div className="text-xs">CVR</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-slate-900">{campaign.revenue}</div>
+                    <div className="text-xs">Revenue</div>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
