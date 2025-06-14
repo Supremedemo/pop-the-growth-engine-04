@@ -1,184 +1,266 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, 
-  Eye, 
-  Settings, 
-  BarChart3, 
-  FileText, 
-  Zap,
-  Users,
-  DollarSign,
-  TrendingUp,
-  Activity,
-  Calendar,
-  Download
+  TrendingUp, 
+  Users, 
+  MousePointer, 
+  DollarSign, 
+  Eye,
+  Play,
+  Pause,
+  Settings,
+  MoreHorizontal
 } from "lucide-react";
-import { Analytics } from "./Analytics";
-import { CampaignManager } from "./CampaignManager";
-import { PopupBuilder } from "./PopupBuilder";
-import { FileManager } from "./FileManager";
-import { TemplateGallery } from "./TemplateGallery";
-import { useCampaigns } from "@/hooks/useCampaigns";
-import { useAnalytics } from "@/hooks/useAnalytics";
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
 }
 
 export const Dashboard = ({ onNavigate }: DashboardProps) => {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [showBuilder, setShowBuilder] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  
-  const { dashboardStats } = useAnalytics();
+  const stats = [
+    {
+      title: "Total Impressions",
+      value: "127,432",
+      change: "+12.5%",
+      icon: Eye,
+      color: "text-blue-600"
+    },
+    {
+      title: "Conversions",
+      value: "3,847",
+      change: "+8.2%",
+      icon: MousePointer,
+      color: "text-green-600"
+    },
+    {
+      title: "Conversion Rate",
+      value: "3.02%",
+      change: "+0.4%",
+      icon: TrendingUp,
+      color: "text-purple-600"
+    },
+    {
+      title: "Revenue Attributed",
+      value: "$23,156",
+      change: "+15.7%",
+      icon: DollarSign,
+      color: "text-orange-600"
+    }
+  ];
 
-  if (showBuilder) {
-    return <PopupBuilder onBack={() => setShowBuilder(false)} />;
-  }
-
-  const StatCard = ({ title, value, description, icon: Icon, trend }: any) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground flex items-center">
-          {trend && <TrendingUp className="h-3 w-3 mr-1" />}
-          {description}
-        </p>
-      </CardContent>
-    </Card>
-  );
+  const campaigns = [
+    {
+      id: 1,
+      name: "Welcome New Visitors",
+      type: "Modal",
+      status: "Active",
+      impressions: 45632,
+      conversions: 1247,
+      rate: "2.73%",
+      revenue: "$8,950"
+    },
+    {
+      id: 2,
+      name: "Cart Abandonment Recovery",
+      type: "Slide-in",
+      status: "Active",
+      impressions: 23456,
+      conversions: 892,
+      rate: "3.80%",
+      revenue: "$6,840"
+    },
+    {
+      id: 3,
+      name: "Exit Intent Discount",
+      type: "Modal",
+      status: "Paused",
+      impressions: 18743,
+      conversions: 456,
+      rate: "2.43%",
+      revenue: "$3,420"
+    },
+    {
+      id: 4,
+      name: "Newsletter Signup",
+      type: "Banner",
+      status: "Active",
+      impressions: 56789,
+      conversions: 1234,
+      rate: "2.17%",
+      revenue: "$0"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+    <div className="p-6 space-y-6 bg-background min-h-screen">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-slate-600">Manage your popup campaigns and templates</p>
+            <h2 className="text-2xl font-bold mb-2">Welcome back! 👋</h2>
+            <p className="text-blue-100 mb-4">
+              Your campaigns have generated <strong>$23,156</strong> in attributed revenue this month.
+            </p>
+            <Button 
+              onClick={() => onNavigate("builder")}
+              variant="secondary" 
+              className="bg-white text-blue-600 hover:bg-blue-50"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Campaign
+            </Button>
           </div>
-          <Button 
-            onClick={() => setShowBuilder(true)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Campaign
-          </Button>
+          <div className="hidden md:block">
+            <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-16 h-16 text-white/80" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="p-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
-            <TabsTrigger value="gallery">Gallery</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                title="Total Impressions"
-                value={dashboardStats.totalImpressions.toLocaleString()}
-                description="Total popup views"
-                icon={Eye}
-                trend={true}
-              />
-              <StatCard
-                title="Conversions"
-                value={dashboardStats.totalConversions.toLocaleString()}
-                description={`${dashboardStats.conversionRate.toFixed(1)}% conversion rate`}
-                icon={Users}
-                trend={true}
-              />
-              <StatCard
-                title="Revenue"
-                value={`$${dashboardStats.totalRevenue.toLocaleString()}`}
-                description="Total revenue generated"
-                icon={DollarSign}
-                trend={true}
-              />
-              <StatCard
-                title="Active Campaigns"
-                value={`${dashboardStats.activeCampaigns}/${dashboardStats.totalCampaigns}`}
-                description="Currently running"
-                icon={Activity}
-              />
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setShowBuilder(true)}>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Plus className="w-5 h-5 mr-2" />
-                    Create New Campaign
-                  </CardTitle>
-                  <CardDescription>
-                    Build a new popup campaign from scratch or use a template
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("templates")}>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <FileText className="w-5 h-5 mr-2" />
-                    Manage Templates
-                  </CardTitle>
-                  <CardDescription>
-                    Organize and edit your saved popup templates
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("analytics")}>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BarChart3 className="w-5 h-5 mr-2" />
-                    View Analytics
-                  </CardTitle>
-                  <CardDescription>
-                    Track performance and campaign metrics
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="campaigns">
-            <CampaignManager />
-          </TabsContent>
-
-          <TabsContent value="templates">
-            <FileManager 
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-            />
-          </TabsContent>
-
-          <TabsContent value="gallery">
-            <TemplateGallery onSelectTemplate={() => setShowBuilder(true)} />
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <Analytics />
-          </TabsContent>
-        </Tabs>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={index} className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <Icon className={`w-5 h-5 ${stat.color}`} />
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs">
+                    {stat.change}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <p className="text-sm text-muted-foreground">{stat.title}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card 
+          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate("builder")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-blue-600">
+              <Plus className="w-5 h-5" />
+              <span>Create Popup</span>
+            </CardTitle>
+            <CardDescription>
+              Build a new popup from scratch or use a template
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card 
+          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate("templates")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-purple-600">
+              <Eye className="w-5 h-5" />
+              <span>Browse Templates</span>
+            </CardTitle>
+            <CardDescription>
+              Choose from 50+ professional popup templates
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card 
+          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => onNavigate("analytics")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-green-600">
+              <TrendingUp className="w-5 h-5" />
+              <span>View Analytics</span>
+            </CardTitle>
+            <CardDescription>
+              Deep dive into your campaign performance
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Recent Campaigns */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Campaigns</CardTitle>
+              <CardDescription>Monitor your active and recent popup campaigns</CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => onNavigate("campaigns")}
+              className="bg-background"
+            >
+              View All
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {campaigns.map((campaign) => (
+              <div key={campaign.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    {campaign.status === "Active" ? (
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    ) : (
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    )}
+                    <span className="font-medium">{campaign.name}</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {campaign.type}
+                  </Badge>
+                  <Badge 
+                    variant={campaign.status === "Active" ? "default" : "secondary"}
+                    className={campaign.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
+                  >
+                    {campaign.status}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">{campaign.impressions.toLocaleString()}</div>
+                    <div className="text-xs">Impressions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">{campaign.conversions.toLocaleString()}</div>
+                    <div className="text-xs">Conversions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">{campaign.rate}</div>
+                    <div className="text-xs">CVR</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-foreground">{campaign.revenue}</div>
+                    <div className="text-xs">Revenue</div>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

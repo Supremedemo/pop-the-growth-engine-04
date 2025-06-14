@@ -17,34 +17,49 @@ import {
   Tag,
   X,
   FolderPlus,
-  FilePlus,
-  Loader2
+  FilePlus
 } from "lucide-react";
-import { useTemplates } from "@/hooks/useTemplates";
-import { useToast } from "@/hooks/use-toast";
+
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  folderId?: string;
+  tags: string[];
+  thumbnail: string;
+  createdAt: Date;
+  updatedAt: Date;
+  canvasData: any;
+}
+
+interface Folder {
+  id: string;
+  name: string;
+  parentId?: string;
+  createdAt: Date;
+}
 
 interface FileManagerProps {
+  templates: Template[];
+  folders: Folder[];
+  onSaveTemplate: (template: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onCreateFolder: (folder: Omit<Folder, 'id' | 'createdAt'>) => void;
+  onDeleteTemplate: (id: string) => void;
+  onDeleteFolder: (id: string) => void;
   selectedTags: string[];
   onTagsChange: (tags: string[]) => void;
-  onLoadTemplate?: (template: any) => void;
 }
 
 export const FileManager = ({
+  templates,
+  folders,
+  onSaveTemplate,
+  onCreateFolder,
+  onDeleteTemplate,
+  onDeleteFolder,
   selectedTags,
-  onTagsChange,
-  onLoadTemplate
+  onTagsChange
 }: FileManagerProps) => {
-  const { toast } = useToast();
-  const {
-    templates,
-    folders,
-    isLoading,
-    createTemplate,
-    deleteTemplate,
-    createFolder,
-    deleteFolder,
-  } = useTemplates();
-
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
   const [currentFolder, setCurrentFolder] = useState<string | undefined>();
@@ -55,90 +70,33 @@ export const FileManager = ({
   const [newTag, setNewTag] = useState("");
 
   // Get all unique tags from templates
-  const allTags = Array.from(new Set(templates.flatMap(t => t.tags || [])));
+  const allTags = Array.from(new Set(templates.flatMap(t => t.tags)));
 
-  const handleCreateFolder = async () => {
+  const handleCreateFolder = () => {
     if (folderName.trim()) {
-      try {
-        await createFolder.mutateAsync({
-          name: folderName.trim(),
-          parent_id: currentFolder || null
-        });
-        setFolderName("");
-        setIsCreateFolderOpen(false);
-        toast({
-          title: "Folder created",
-          description: "Your folder has been created successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to create folder. Please try again.",
-          variant: "destructive",
-        });
-      }
+      onCreateFolder({
+        name: folderName.trim(),
+        parentId: currentFolder
+      });
+      setFolderName("");
+      setIsCreateFolderOpen(false);
     }
   };
 
-  const handleSaveTemplate = async () => {
+  const handleSaveTemplate = () => {
     if (templateName.trim()) {
-      try {
-        await createTemplate.mutateAsync({
-          name: templateName.trim(),
-          description: templateDescription.trim() || null,
-          folder_id: currentFolder || null,
-          tags: templateTags,
-          thumbnail: "bg-gradient-to-br from-blue-500 to-purple-600",
-          canvas_data: {}, // This would be the actual canvas data
-          type: 'Modal', // Default type
-        });
-        setTemplateName("");
-        setTemplateDescription("");
-        setTemplateTags([]);
-        setIsSaveTemplateOpen(false);
-        toast({
-          title: "Template saved",
-          description: "Your template has been saved successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to save template. Please try again.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-  const handleDeleteTemplate = async (id: string) => {
-    try {
-      await deleteTemplate.mutateAsync(id);
-      toast({
-        title: "Template deleted",
-        description: "Your template has been deleted successfully.",
+      onSaveTemplate({
+        name: templateName.trim(),
+        description: templateDescription.trim(),
+        folderId: currentFolder,
+        tags: templateTags,
+        thumbnail: "bg-gradient-to-br from-blue-500 to-purple-600",
+        canvasData: {} // This would be the actual canvas data
       });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete template. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteFolder = async (id: string) => {
-    try {
-      await deleteFolder.mutateAsync(id);
-      toast({
-        title: "Folder deleted",
-        description: "Your folder has been deleted successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete folder. Please try again.",
-        variant: "destructive",
-      });
+      setTemplateName("");
+      setTemplateDescription("");
+      setTemplateTags([]);
+      setIsSaveTemplateOpen(false);
     }
   };
 
@@ -162,19 +120,11 @@ export const FileManager = ({
   };
 
   const getCurrentFolderTemplates = () => {
-    let filteredTemplates = templates.filter(t => t.folder_id === currentFolder);
-    
-    if (selectedTags.length > 0) {
-      filteredTemplates = filteredTemplates.filter(t => 
-        t.tags?.some(tag => selectedTags.includes(tag))
-      );
-    }
-    
-    return filteredTemplates;
+    return templates.filter(t => t.folderId === currentFolder);
   };
 
   const getCurrentSubfolders = () => {
-    return folders.filter(f => f.parent_id === currentFolder);
+    return folders.filter(f => f.parentId === currentFolder);
   };
 
   const getBreadcrumb = () => {
@@ -186,19 +136,11 @@ export const FileManager = ({
     
     while (folder) {
       path.unshift(folder);
-      folder = folder.parent_id ? folders.find(f => f.id === folder.parent_id) : undefined;
+      folder = folder.parentId ? folders.find(f => f.id === folder.parentId) : undefined;
     }
     
     return [...breadcrumb, ...path.map(f => f.name)];
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -253,13 +195,7 @@ export const FileManager = ({
                   <Button variant="outline" onClick={() => setIsCreateFolderOpen(false)}>
                     Cancel
                   </Button>
-                  <Button 
-                    onClick={handleCreateFolder}
-                    disabled={createFolder.isPending}
-                  >
-                    {createFolder.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Create Folder
-                  </Button>
+                  <Button onClick={handleCreateFolder}>Create Folder</Button>
                 </div>
               </div>
             </DialogContent>
@@ -331,13 +267,7 @@ export const FileManager = ({
                   <Button variant="outline" onClick={() => setIsSaveTemplateOpen(false)}>
                     Cancel
                   </Button>
-                  <Button 
-                    onClick={handleSaveTemplate}
-                    disabled={createTemplate.isPending}
-                  >
-                    {createTemplate.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Save Template
-                  </Button>
+                  <Button onClick={handleSaveTemplate}>Save Template</Button>
                 </div>
               </div>
             </DialogContent>
@@ -382,8 +312,8 @@ export const FileManager = ({
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => {
-              const parent = folders.find(f => f.id === currentFolder)?.parent_id;
-              setCurrentFolder(parent || undefined);
+              const parent = folders.find(f => f.id === currentFolder)?.parentId;
+              setCurrentFolder(parent);
             }}
           >
             <CardContent className="p-4 flex items-center space-x-3">
@@ -407,7 +337,7 @@ export const FileManager = ({
                   <div>
                     <h3 className="font-medium">{folder.name}</h3>
                     <p className="text-xs text-slate-500">
-                      {templates.filter(t => t.folder_id === folder.id).length} templates
+                      {templates.filter(t => t.folderId === folder.id).length} templates
                     </p>
                   </div>
                 </div>
@@ -416,7 +346,7 @@ export const FileManager = ({
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteFolder(folder.id);
+                    onDeleteFolder(folder.id);
                   }}
                   className="text-red-500 hover:text-red-700"
                 >
@@ -429,13 +359,9 @@ export const FileManager = ({
 
         {/* Templates */}
         {getCurrentFolderTemplates().map((template) => (
-          <Card 
-            key={template.id} 
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => onLoadTemplate?.(template)}
-          >
+          <Card key={template.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
-              <div className={`w-full h-24 rounded-lg ${template.thumbnail || 'bg-gradient-to-br from-blue-500 to-purple-600'} relative`}>
+              <div className={`w-full h-24 rounded-lg ${template.thumbnail} relative`}>
                 <div className="absolute inset-2 bg-white/90 rounded shadow-sm p-1">
                   <div className="h-1 bg-slate-300 rounded mb-1"></div>
                   <div className="h-1 bg-slate-200 rounded mb-1"></div>
@@ -450,10 +376,7 @@ export const FileManager = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteTemplate(template.id);
-                    }}
+                    onClick={() => onDeleteTemplate(template.id)}
                     className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -461,19 +384,19 @@ export const FileManager = ({
                 </div>
                 <p className="text-xs text-slate-600 line-clamp-2">{template.description}</p>
                 <div className="flex flex-wrap gap-1">
-                  {(template.tags || []).slice(0, 2).map((tag) => (
+                  {template.tags.slice(0, 2).map((tag) => (
                     <Badge key={tag} variant="secondary" className="text-xs">
                       {tag}
                     </Badge>
                   ))}
-                  {(template.tags || []).length > 2 && (
+                  {template.tags.length > 2 && (
                     <Badge variant="outline" className="text-xs">
-                      +{(template.tags || []).length - 2}
+                      +{template.tags.length - 2}
                     </Badge>
                   )}
                 </div>
                 <p className="text-xs text-slate-400">
-                  {new Date(template.updated_at).toLocaleDateString()}
+                  {template.updatedAt.toLocaleDateString()}
                 </p>
               </div>
             </CardContent>

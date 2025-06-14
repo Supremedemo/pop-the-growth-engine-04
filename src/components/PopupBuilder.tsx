@@ -19,8 +19,7 @@ import {
   ZoomOut,
   Plus,
   X,
-  ExternalLink,
-  Loader2
+  ExternalLink
 } from "lucide-react";
 import { ElementToolbar } from "./ElementToolbar";
 import { PropertyPanel } from "./PropertyPanel";
@@ -32,8 +31,6 @@ import { BackgroundControls } from "./BackgroundControls";
 import { PublishDialog } from "./PublishDialog";
 import { PreviewDialog } from "./PreviewDialog";
 import { PopupElement } from "./PopupElements";
-import { useTemplates } from "@/hooks/useTemplates";
-import { useToast } from "@/hooks/use-toast";
 
 interface PopupBuilderProps {
   onBack: () => void;
@@ -59,9 +56,6 @@ export interface CanvasState {
 }
 
 export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
-  const { toast } = useToast();
-  const { createTemplate } = useTemplates();
-
   const defaultLayout: PopupLayout = {
     id: "modal-center",
     name: "Modal - Center",
@@ -210,34 +204,22 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
     updateCanvasState({ showGrid: !canvasState.showGrid });
   }, [canvasState.showGrid, updateCanvasState]);
 
-  const handleSaveTemplate = async () => {
+  const handleSaveTemplate = () => {
     if (templateName.trim()) {
-      try {
-        await createTemplate.mutateAsync({
-          name: templateName.trim(),
-          description: templateDescription.trim() || null,
-          tags: templateTags,
-          canvas_data: canvasState,
-          thumbnail: `bg-gradient-to-br ${canvasState.backgroundType === 'gradient' ? canvasState.backgroundGradient : 'from-blue-500 to-purple-600'}`,
-          type: canvasState.layout.type as 'Modal' | 'Slide-in' | 'Banner' | 'Fullscreen',
-        });
-        
-        setTemplateName("");
-        setTemplateDescription("");
-        setTemplateTags([]);
-        setIsSaveDialogOpen(false);
-        
-        toast({
-          title: "Template saved",
-          description: "Your template has been saved successfully.",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to save template. Please try again.",
-          variant: "destructive",
-        });
-      }
+      const templateData = {
+        name: templateName.trim(),
+        description: templateDescription.trim(),
+        tags: templateTags,
+        canvasData: canvasState,
+        thumbnail: `bg-gradient-to-br ${canvasState.backgroundType === 'gradient' ? canvasState.backgroundGradient : 'from-blue-500 to-purple-600'}`
+      };
+      
+      console.log('Saving template:', templateData);
+      
+      setTemplateName("");
+      setTemplateDescription("");
+      setTemplateTags([]);
+      setIsSaveDialogOpen(false);
     }
   };
 
@@ -401,13 +383,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button 
-                onClick={handleSaveTemplate}
-                disabled={createTemplate.isPending}
-              >
-                {createTemplate.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Save Template
-              </Button>
+              <Button onClick={handleSaveTemplate}>Save Template</Button>
             </div>
           </div>
         </DialogContent>

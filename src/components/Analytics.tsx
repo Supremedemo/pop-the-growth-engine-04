@@ -26,13 +26,26 @@ import {
   Eye,
   Calendar,
   Download,
-  Filter,
-  Loader2
+  Filter
 } from "lucide-react";
-import { useAnalytics } from "@/hooks/useAnalytics";
 
 export const Analytics = () => {
-  const { dashboardStats, performanceData, campaigns } = useAnalytics();
+  const performanceData = [
+    { date: "Jan 1", impressions: 4200, conversions: 120, revenue: 2400 },
+    { date: "Jan 2", impressions: 3800, conversions: 98, revenue: 1890 },
+    { date: "Jan 3", impressions: 5100, conversions: 145, revenue: 3200 },
+    { date: "Jan 4", impressions: 4650, conversions: 132, revenue: 2950 },
+    { date: "Jan 5", impressions: 5890, conversions: 168, revenue: 4100 },
+    { date: "Jan 6", impressions: 6200, conversions: 175, revenue: 4500 },
+    { date: "Jan 7", impressions: 5700, conversions: 156, revenue: 3800 },
+  ];
+
+  const campaignData = [
+    { name: "Welcome Discount", conversions: 1247, revenue: 8950, rate: 2.73 },
+    { name: "Cart Abandonment", conversions: 892, revenue: 6840, rate: 3.80 },
+    { name: "Exit Intent", conversions: 456, revenue: 3420, rate: 2.43 },
+    { name: "Newsletter", conversions: 1234, revenue: 0, rate: 2.17 },
+  ];
 
   const deviceData = [
     { name: "Desktop", value: 45.2, color: "#3b82f6" },
@@ -43,7 +56,7 @@ export const Analytics = () => {
   const stats = [
     {
       title: "Total Revenue",
-      value: `$${dashboardStats.totalRevenue.toLocaleString()}`,
+      value: "$23,156",
       change: "+15.7%",
       trend: "up",
       icon: DollarSign,
@@ -51,7 +64,7 @@ export const Analytics = () => {
     },
     {
       title: "Conversion Rate",
-      value: `${dashboardStats.conversionRate.toFixed(2)}%`,
+      value: "3.02%",
       change: "+0.4%",
       trend: "up",
       icon: MousePointer,
@@ -59,28 +72,21 @@ export const Analytics = () => {
     },
     {
       title: "Total Impressions",
-      value: dashboardStats.totalImpressions.toLocaleString(),
+      value: "127,432",
       change: "+12.5%",
       trend: "up",
       icon: Eye,
       color: "text-purple-600"
     },
     {
-      title: "Active Campaigns",
-      value: dashboardStats.activeCampaigns.toString(),
-      change: campaigns.length > 0 ? "+2.1%" : "0%",
-      trend: "up",
+      title: "Avg. Session Value",
+      value: "$6.02",
+      change: "-2.1%",
+      trend: "down",
       icon: Users,
       color: "text-orange-600"
     }
   ];
-
-  const campaignData = campaigns.map(campaign => ({
-    name: campaign.name,
-    conversions: campaign.conversions,
-    revenue: Number(campaign.revenue),
-    rate: campaign.impressions > 0 ? (campaign.conversions / campaign.impressions) * 100 : 0
-  }));
 
   return (
     <div className="p-6 bg-background min-h-screen">
@@ -270,46 +276,36 @@ export const Analytics = () => {
               <CardDescription>Detailed metrics for each campaign</CardDescription>
             </CardHeader>
             <CardContent>
-              {campaignData.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                    <TrendingUp className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">No campaign data</h3>
-                  <p className="text-muted-foreground">Create some campaigns to see performance data here</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {campaignData.map((campaign, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-2 h-8 bg-blue-500 rounded"></div>
-                        <div>
-                          <h4 className="font-medium">{campaign.name}</h4>
-                          <p className="text-sm text-muted-foreground">Campaign</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-8 text-sm">
-                        <div className="text-center">
-                          <div className="font-medium">{campaign.conversions.toLocaleString()}</div>
-                          <div className="text-muted-foreground">Conversions</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-medium">{campaign.rate.toFixed(2)}%</div>
-                          <div className="text-muted-foreground">CVR</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-medium">${campaign.revenue.toLocaleString()}</div>
-                          <div className="text-muted-foreground">Revenue</div>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
+              <div className="space-y-4">
+                {campaignData.map((campaign, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-8 bg-blue-500 rounded"></div>
+                      <div>
+                        <h4 className="font-medium">{campaign.name}</h4>
+                        <p className="text-sm text-muted-foreground">Active Campaign</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="flex items-center space-x-8 text-sm">
+                      <div className="text-center">
+                        <div className="font-medium">{campaign.conversions.toLocaleString()}</div>
+                        <div className="text-muted-foreground">Conversions</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium">{campaign.rate}%</div>
+                        <div className="text-muted-foreground">CVR</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium">${campaign.revenue.toLocaleString()}</div>
+                        <div className="text-muted-foreground">Revenue</div>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
