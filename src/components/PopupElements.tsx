@@ -71,78 +71,29 @@ interface ElementRendererProps {
 }
 
 export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDelete }: ElementRendererProps) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (element.isPinned) return; // Don't allow dragging pinned elements
-    
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - element.x,
-      y: e.clientY - element.y
-    });
-    onSelect(element.id);
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isSelected) {
+      onSelect(element.id);
+    }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || element.isPinned) return;
-    
-    const newX = e.clientX - dragStart.x;
-    const newY = e.clientY - dragStart.y;
-    
-    onUpdate(element.id, { x: newX, y: newY });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const togglePin = () => {
+  const togglePin = (e: React.MouseEvent) => {
+    e.stopPropagation();
     onUpdate(element.id, { isPinned: !element.isPinned });
   };
 
-  React.useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging]);
-
-  const baseStyle = {
-    position: 'absolute' as const,
-    left: element.x,
-    top: element.y,
-    width: element.width,
-    height: element.height,
-    zIndex: element.zIndex,
-    cursor: element.isPinned ? 'default' : 'move',
-    border: isSelected ? '2px solid #3b82f6' : '1px solid transparent',
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(element.id);
   };
 
-  const renderPinButton = () => (
-    isSelected && (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          togglePin();
-        }}
-        className={`absolute -top-8 right-0 px-2 py-1 rounded text-xs flex items-center space-x-1 transition-colors ${
-          element.isPinned 
-            ? 'bg-orange-500 text-white hover:bg-orange-600' 
-            : 'bg-gray-500 text-white hover:bg-gray-600'
-        }`}
-      >
-        {element.isPinned ? <Pin className="w-3 h-3" /> : <PinOff className="w-3 h-3" />}
-        <span>{element.isPinned ? 'Pinned' : 'Pin'}</span>
-      </button>
-    )
-  );
+  const baseStyle = {
+    width: '100%',
+    height: '100%',
+    cursor: element.isPinned ? 'default' : 'move',
+    opacity: element.isPinned ? 0.8 : 1,
+  };
 
   const renderElement = () => {
     switch (element.type) {
@@ -171,30 +122,17 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
               display: 'flex',
               alignItems: 'center',
               justifyContent: textEl.textAlign === 'center' ? 'center' : textEl.textAlign === 'right' ? 'flex-end' : 'flex-start',
-              opacity: element.isPinned ? 0.8 : 1,
             }}
-            onMouseDown={handleMouseDown}
+            onClick={handleClick}
           >
             {textEl.content}
-            {renderPinButton()}
-            {isSelected && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(element.id);
-                }}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
           </div>
         );
 
       case "image":
         const imgEl = element as ImageElement;
         return (
-          <div style={{...baseStyle, opacity: element.isPinned ? 0.8 : 1}} onMouseDown={handleMouseDown}>
+          <div style={baseStyle} onClick={handleClick}>
             <img
               src={imgEl.src}
               alt={imgEl.alt}
@@ -205,25 +143,13 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 borderRadius: imgEl.borderRadius,
               }}
             />
-            {renderPinButton()}
-            {isSelected && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(element.id);
-                }}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
           </div>
         );
 
       case "form":
         const formEl = element as FormElement;
         return (
-          <div style={{...baseStyle, opacity: element.isPinned ? 0.8 : 1}} onMouseDown={handleMouseDown}>
+          <div style={baseStyle} onClick={handleClick}>
             <div className="p-4 space-y-3 bg-white rounded">
               {formEl.fields.map((field) => (
                 <Input
@@ -240,18 +166,6 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 {formEl.buttonText}
               </Button>
             </div>
-            {renderPinButton()}
-            {isSelected && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(element.id);
-                }}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
           </div>
         );
 
@@ -273,7 +187,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
         };
 
         return (
-          <div style={{...baseStyle, opacity: element.isPinned ? 0.8 : 1}} onMouseDown={handleMouseDown}>
+          <div style={baseStyle} onClick={handleClick}>
             <div
               className="flex items-center justify-center rounded p-4"
               style={{
@@ -288,18 +202,6 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 {formatTime(timeLeft)}
               </span>
             </div>
-            {renderPinButton()}
-            {isSelected && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(element.id);
-                }}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
           </div>
         );
 

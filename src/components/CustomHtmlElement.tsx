@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Code, Edit, Save, X } from "lucide-react";
+import { Code, Edit, Save } from "lucide-react";
 
 interface CustomHtmlElementProps {
   element: any;
@@ -63,6 +63,13 @@ export const CustomHtmlElement = ({
   const handleCancel = () => {
     setHtmlContent(element.htmlContent || '<div style="padding: 16px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border-radius: 8px; text-align: center; font-weight: bold;">Custom HTML Block</div>');
     setIsEditing(false);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isSelected) {
+      onSelect(element.id);
+    }
   };
 
   if (isEditing) {
@@ -131,20 +138,8 @@ export const CustomHtmlElement = ({
 
   return (
     <div
-      className={`absolute cursor-pointer transition-all duration-200 ${
-        isSelected ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:ring-1 hover:ring-blue-300'
-      }`}
-      style={{
-        left: element.x,
-        top: element.y,
-        width: element.width,
-        height: element.height,
-        zIndex: element.zIndex
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect(element.id);
-      }}
+      className="w-full h-full cursor-pointer"
+      onClick={handleClick}
     >
       <iframe
         ref={iframeRef}
@@ -154,28 +149,16 @@ export const CustomHtmlElement = ({
       />
       
       {isSelected && (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsEditing(true);
-            }}
-            className="absolute -top-8 left-0 bg-blue-500 text-white px-3 py-1 rounded text-xs flex items-center space-x-1 hover:bg-blue-600 transition-colors shadow-md"
-          >
-            <Edit className="w-3 h-3" />
-            <span>Edit HTML</span>
-          </button>
-          
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(element.id);
-            }}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        </>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsEditing(true);
+          }}
+          className="absolute -top-8 right-8 bg-blue-500 text-white px-3 py-1 rounded text-xs flex items-center space-x-1 hover:bg-blue-600 transition-colors shadow-md"
+        >
+          <Edit className="w-3 h-3" />
+          <span>Edit HTML</span>
+        </button>
       )}
     </div>
   );

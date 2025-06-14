@@ -1,6 +1,6 @@
-
 import React, { useState, useRef, useCallback } from "react";
 import { PopupElement, ElementRenderer } from "./PopupElements";
+import { X, Pin, PinOff } from "lucide-react";
 
 interface CanvasElementProps {
   element: PopupElement;
@@ -45,6 +45,8 @@ export const CanvasElement = ({
       return;
     }
 
+    if (element.isPinned) return;
+
     const target = e.target as HTMLElement;
     const handle = target.getAttribute('data-resize-handle');
     
@@ -86,6 +88,16 @@ export const CanvasElement = ({
       'se': 'se-resize'
     };
     return cursors[handle] || 'default';
+  };
+
+  const togglePin = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onUpdate(element.id, { isPinned: !element.isPinned });
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onUpdate(element.id, { x: -9999 }); // Move offscreen to "delete"
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -221,7 +233,7 @@ export const CanvasElement = ({
         width: element.width,
         height: element.height,
         zIndex: element.zIndex + (isSelected ? 1000 : 0),
-        cursor: isDragging ? 'grabbing' : 'grab'
+        cursor: element.isPinned ? 'default' : isDragging ? 'grabbing' : 'grab'
       }}
       onMouseDown={handleMouseDown}
       onMouseEnter={() => setIsHovered(true)}
@@ -235,13 +247,32 @@ export const CanvasElement = ({
         onDelete={() => {}}
       />
       
-      {/* Selection overlay with subtle animation */}
+      {/* Action buttons - only show when selected */}
       {isSelected && (
-        <div className="absolute inset-0 bg-blue-500 bg-opacity-5 pointer-events-none rounded-sm animate-pulse" />
+        <>
+          <button
+            onClick={togglePin}
+            className={`absolute -top-8 left-0 px-2 py-1 rounded text-xs flex items-center space-x-1 transition-colors shadow-md ${
+              element.isPinned 
+                ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                : 'bg-gray-500 text-white hover:bg-gray-600'
+            }`}
+          >
+            {element.isPinned ? <Pin className="w-3 h-3" /> : <PinOff className="w-3 h-3" />}
+            <span>{element.isPinned ? 'Pinned' : 'Pin'}</span>
+          </button>
+          
+          <button
+            onClick={handleDelete}
+            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </>
       )}
       
       {/* Enhanced resize handles */}
-      {isSelected && (
+      {isSelected && !element.isPinned && (
         <>
           <ResizeHandle position="nw" cursor="nw-resize" />
           <ResizeHandle position="n" cursor="n-resize" />
