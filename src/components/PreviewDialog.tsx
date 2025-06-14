@@ -24,13 +24,13 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const macbookAirResolution = {
-    width: isFullscreen ? 1200 : 900,
-    height: isFullscreen ? 700 : 550
+    width: isFullscreen ? window.innerWidth : 900,
+    height: isFullscreen ? window.innerHeight : 550
   };
 
   const mobileResolution = {
-    width: isFullscreen ? 400 : 300,
-    height: isFullscreen ? 700 : 500
+    width: isFullscreen ? Math.min(400, window.innerWidth) : 300,
+    height: isFullscreen ? window.innerHeight : 500
   };
 
   const currentResolution = deviceMode === "desktop" ? macbookAirResolution : mobileResolution;
@@ -41,6 +41,26 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
       setIsLoading(false);
     }
   }, [open]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    if (isFullscreen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isFullscreen]);
 
   const handleLoadPreview = () => {
     if (!previewUrl.trim()) return;
@@ -65,7 +85,9 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
 
   const getPopupStyle = () => {
     const layout = canvasState.layout;
-    const scale = deviceMode === "mobile" ? (isFullscreen ? 0.9 : 0.7) : (isFullscreen ? 1 : 0.85);
+    const scale = deviceMode === "mobile" 
+      ? (isFullscreen ? Math.min(1, window.innerWidth / 400) : 0.7) 
+      : (isFullscreen ? Math.min(1, window.innerWidth / canvasState.width) : 0.85);
     
     let backgroundStyle = {};
     if (canvasState.backgroundType === 'color') {
@@ -92,12 +114,12 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
           maxWidth: layout.dimensions?.maxWidth || '100%'
         };
         positionStyle = layout.position === 'top' 
-          ? { top: 30, left: 0, right: 0 }
+          ? { top: isFullscreen ? 0 : 30, left: 0, right: 0 }
           : { bottom: 0, left: 0, right: 0 };
         break;
       case 'fullscreen':
         sizeStyle = { width: '100%', height: '100%' };
-        positionStyle = { top: 30, left: 0, right: 0, bottom: 0 };
+        positionStyle = { top: isFullscreen ? 0 : 30, left: 0, right: 0, bottom: 0 };
         break;
       case 'slide-in':
         sizeStyle = {
@@ -257,9 +279,112 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
     }
   };
 
+  // Fullscreen overlay component
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-black">
+        {/* Exit fullscreen button */}
+        <button
+          onClick={() => setIsFullscreen(false)}
+          className="fixed top-4 right-4 z-[10001] bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition-colors"
+        >
+          <Minimize className="w-5 h-5" />
+        </button>
+        
+        {/* Fullscreen preview content */}
+        <div className="relative w-full h-full bg-gray-50">
+          <div 
+            className="relative bg-gray-50 w-full h-full"
+            style={{
+              width: currentResolution.width,
+              height: currentResolution.height,
+              maxWidth: '100%',
+              maxHeight: '100%',
+              margin: '0 auto'
+            }}
+          >
+            {/* Browser Chrome - smaller in fullscreen */}
+            <div className="bg-gray-200 border-b flex items-center px-3 py-1 space-x-2">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              </div>
+              <div className="flex-1 bg-white rounded px-2 py-0.5 text-xs text-gray-600 truncate">
+                {formatUrl(previewUrl)}
+              </div>
+            </div>
+
+            {/* Website Content */}
+            <div className="relative w-full h-full bg-white overflow-hidden" style={{ height: 'calc(100% - 24px)' }}>
+              {previewUrl && !isLoading ? (
+                <iframe
+                  ref={iframeRef}
+                  src={formatUrl(previewUrl)}
+                  className="w-full h-full border-0"
+                  onLoad={() => setIsLoading(false)}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                  {isLoading ? (
+                    <div className="text-center">
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
+                      <p>Loading website...</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Globe className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>Enter a URL and click Load to preview</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Popup Overlay and Content */}
+              {showPopup && canvasState.elements.length > 0 && (
+                <>
+                  {/* Overlay */}
+                  {canvasState.showOverlay && (canvasState.layout.type === 'modal' || canvasState.layout.type === 'slide-in') && (
+                    <div 
+                      className="absolute inset-0"
+                      style={{ 
+                        backgroundColor: canvasState.overlayColor,
+                        opacity: canvasState.overlayOpacity / 100,
+                        zIndex: 9998 
+                      }}
+                    />
+                  )}
+                  
+                  {/* Popup */}
+                  <div style={getPopupStyle()}>
+                    {/* Close button */}
+                    {canvasState.showCloseButton && (
+                      <button
+                        onClick={() => setShowPopup(false)}
+                        style={getCloseButtonStyle()}
+                        className="hover:bg-gray-100 transition-colors"
+                      >
+                        <X className="w-3 h-3 text-gray-600" />
+                      </button>
+                    )}
+
+                    {/* Render popup elements */}
+                    {canvasState.elements
+                      .sort((a, b) => a.zIndex - b.zIndex)
+                      .map(renderElement)}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${isFullscreen ? 'max-w-[95vw] w-[95vw] h-[95vh]' : 'max-w-6xl w-[90vw] h-[85vh]'} p-0 transition-all duration-300`}>
+      <DialogContent className="max-w-6xl w-[90vw] h-[85vh] p-0 transition-all duration-300">
         <DialogHeader className="p-4 pb-3 border-b">
           <div className="flex items-center justify-between">
             <div>
@@ -318,12 +443,12 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
                 <Smartphone className="w-4 h-4" />
               </Button>
               <Button
-                variant={isFullscreen ? "default" : "outline"}
+                variant="outline"
                 size="sm"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                onClick={() => setIsFullscreen(true)}
+                title="Enter fullscreen"
               >
-                {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                <Maximize className="w-4 h-4" />
               </Button>
             </div>
           </div>
