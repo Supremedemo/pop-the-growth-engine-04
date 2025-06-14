@@ -23,7 +23,11 @@ interface ThemeProviderProps {
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
-    return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (saved) {
+      return saved === 'dark';
+    }
+    // Default to light mode instead of system preference
+    return false;
   });
 
   useEffect(() => {
