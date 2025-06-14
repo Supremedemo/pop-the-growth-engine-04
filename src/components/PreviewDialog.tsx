@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { X, Globe, Smartphone, Monitor, RefreshCw } from "lucide-react";
+import { X, Globe, Smartphone, Monitor, RefreshCw, Maximize, Minimize } from "lucide-react";
 import { CanvasState } from "./PopupBuilder";
 import { PopupElement } from "./PopupElements";
 
@@ -20,16 +20,17 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
   const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("desktop");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const macbookAirResolution = {
-    width: 900,
-    height: 550
+    width: isFullscreen ? 1200 : 900,
+    height: isFullscreen ? 700 : 550
   };
 
   const mobileResolution = {
-    width: 300,
-    height: 500
+    width: isFullscreen ? 400 : 300,
+    height: isFullscreen ? 700 : 500
   };
 
   const currentResolution = deviceMode === "desktop" ? macbookAirResolution : mobileResolution;
@@ -64,7 +65,7 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
 
   const getPopupStyle = () => {
     const layout = canvasState.layout;
-    const scale = deviceMode === "mobile" ? 0.7 : 0.85;
+    const scale = deviceMode === "mobile" ? (isFullscreen ? 0.9 : 0.7) : (isFullscreen ? 1 : 0.85);
     
     let backgroundStyle = {};
     if (canvasState.backgroundType === 'color') {
@@ -258,7 +259,7 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl w-[90vw] h-[85vh] p-0">
+      <DialogContent className={`${isFullscreen ? 'max-w-[95vw] w-[95vw] h-[95vh]' : 'max-w-6xl w-[90vw] h-[85vh]'} p-0 transition-all duration-300`}>
         <DialogHeader className="p-4 pb-3 border-b">
           <div className="flex items-center justify-between">
             <div>
@@ -315,6 +316,14 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
                 onClick={() => setDeviceMode("mobile")}
               >
                 <Smartphone className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={isFullscreen ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              >
+                {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
               </Button>
             </div>
           </div>
