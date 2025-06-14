@@ -23,9 +23,12 @@ export const CanvasEditor = ({
   previewDevice
 }: CanvasEditorProps) => {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionBox, setSelectionBox] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollX: 0, scrollY: 0 });
 
   const getCanvasStyle = () => {
     const scale = previewDevice === "mobile" ? 0.8 : 1;
@@ -39,39 +42,73 @@ export const CanvasEditor = ({
       margin: '40px auto',
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
       borderRadius: '8px',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      border: '1px solid #e2e8f0'
     };
   };
 
+  const getCanvasCoordinates = (e: React.MouseEvent | MouseEvent) => {
+    if (!canvasRef.current) return { x: 0, y: 0 };
+    
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / canvasState.zoom;
+    const y = (e.clientY - rect.top) / canvasState.zoom;
+    return { x, y };
+  };
+
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Check if clicking on canvas background
     if (e.target === canvasRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / canvasState.zoom;
-      const y = (e.clientY - rect.top) / canvasState.zoom;
+      const coords = getCanvasCoordinates(e);
       
-      setIsSelecting(true);
-      setDragStart({ x, y });
-      setSelectionBox({ x, y, width: 0, height: 0 });
-      onSelectElements([]);
+      if (e.ctrlKey || e.metaKey) {
+        // Start panning with Ctrl/Cmd + click
+        setIsPanning(true);
+        setPanStart({
+          x: e.clientX,
+          y: e.clientY,
+          scrollX: containerRef.current?.scrollLeft || 0,
+          scrollY: containerRef.current?.scrollTop || 0
+        });
+      } else {
+        // Start selection
+        setIsSelecting(true);
+        setDragStart(coords);
+        setSelectionBox({ x: coords.x, y: coords.y, width: 0, height: 0 });
+        onSelectElements([]);
+      }
     }
   };
 
-  const handleCanvasMouseMove = useCallback((e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isPanning && containerRef.current) {
+      const deltaX = e.clientX - panStart.x;
+      const deltaY = e.clientY - panStart.y;
+      
+      containerRef.current.scrollLeft = panStart.scrollX - deltaX;
+      containerRef.current.scrollTop = panStart.scrollY - deltaY;
+      return;
+    }
+
     if (!isSelecting || !canvasRef.current) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const currentX = (e.clientX - rect.left) / canvasState.zoom;
-    const currentY = (e.clientY - rect.top) / canvasState.zoom;
-
+    const coords = getCanvasCoordinates(e);
     setSelectionBox({
-      x: Math.min(dragStart.x, currentX),
-      y: Math.min(dragStart.y, currentY),
-      width: Math.abs(currentX - dragStart.x),
-      height: Math.abs(currentY - dragStart.y)
+      x: Math.min(dragStart.x, coords.x),
+      y: Math.min(dragStart.y, coords.y),
+      width: Math.abs(coords.x - dragStart.x),
+      height: Math.abs(coords.y - dragStart.y)
     });
-  }, [isSelecting, canvasState.zoom, dragStart]);
+  }, [isSelecting, isPanning, canvasState.zoom, dragStart, panStart]);
 
-  const handleCanvasMouseUp = useCallback(() => {
+  const handleMouseUp = useCallback(() => {
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
+
     if (isSelecting) {
       // Find elements within selection box
       const selectedIds = canvasState.elements
@@ -97,18 +134,21 @@ export const CanvasEditor = ({
       setIsSelecting(false);
       setSelectionBox({ x: 0, y: 0, width: 0, height: 0 });
     }
-  }, [isSelecting, selectionBox, canvasState.elements, onSelectElements]);
+  }, [isSelecting, isPanning, selectionBox, canvasState.elements, onSelectElements]);
 
   React.useEffect(() => {
-    if (isSelecting) {
-      document.addEventListener('mousemove', handleCanvasMouseMove);
-      document.addEventListener('mouseup', handleCanvasMouseUp);
+    if (isSelecting || isPanning) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = isPanning ? 'grabbing' : 'crosshair';
+      
       return () => {
-        document.removeEventListener('mousemove', handleCanvasMouseMove);
-        document.removeEventListener('mouseup', handleCanvasMouseUp);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.cursor = 'default';
       };
     }
-  }, [isSelecting, handleCanvasMouseMove, handleCanvasMouseUp]);
+  }, [isSelecting, isPanning, handleMouseMove, handleMouseUp]);
 
   const handleElementSelect = (id: string, addToSelection: boolean = false) => {
     if (addToSelection) {
@@ -122,31 +162,70 @@ export const CanvasEditor = ({
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Delete' && selectedElementIds.length > 0) {
+      e.preventDefault();
       onDeleteElements(selectedElementIds);
     }
     if (e.key === 'Escape') {
+      e.preventDefault();
       onSelectElements([]);
     }
     if (e.ctrlKey && e.key === 'a') {
       e.preventDefault();
       onSelectElements(canvasState.elements.map(el => el.id));
     }
-  };
+    if (e.ctrlKey && e.key === 'd') {
+      e.preventDefault();
+      // Duplicate selected elements
+      if (selectedElementIds.length > 0) {
+        const elementsToClone = canvasState.elements.filter(el => selectedElementIds.includes(el.id));
+        const newElements = elementsToClone.map(el => ({
+          ...el,
+          id: Math.random().toString(36).substr(2, 9),
+          x: el.x + 20,
+          y: el.y + 20,
+          zIndex: Math.max(...canvasState.elements.map(e => e.zIndex), 0) + 1
+        }));
+        
+        newElements.forEach(el => {
+          canvasState.elements.push(el);
+        });
+        
+        onSelectElements(newElements.map(el => el.id));
+      }
+    }
+  }, [selectedElementIds, canvasState.elements, onDeleteElements, onSelectElements]);
 
   React.useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedElementIds, canvasState.elements]);
+  }, [handleKeyDown]);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      // Zoom with mouse wheel
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const newZoom = Math.min(Math.max(canvasState.zoom * delta, 0.25), 3);
+      // Update zoom through parent component
+      console.log('Zoom requested:', newZoom);
+    }
+  }, [canvasState.zoom]);
 
   return (
-    <div className="w-full h-full overflow-auto bg-slate-100 p-8">
+    <div 
+      ref={containerRef}
+      className="w-full h-full overflow-auto bg-slate-100 p-8"
+      onWheel={handleWheel}
+    >
       <div
         ref={canvasRef}
         style={getCanvasStyle()}
         onMouseDown={handleCanvasMouseDown}
-        className="relative cursor-default"
+        className={`relative select-none ${
+          isPanning ? 'cursor-grabbing' : isSelecting ? 'cursor-crosshair' : 'cursor-default'
+        }`}
       >
         {/* Grid */}
         {canvasState.showGrid && (
@@ -174,9 +253,9 @@ export const CanvasEditor = ({
           ))}
 
         {/* Selection Box */}
-        {isSelecting && (
+        {isSelecting && selectionBox.width > 0 && selectionBox.height > 0 && (
           <div
-            className="absolute border-2 border-blue-500 bg-blue-100 bg-opacity-20 pointer-events-none"
+            className="absolute border-2 border-blue-500 bg-blue-100 bg-opacity-20 pointer-events-none z-50"
             style={{
               left: selectionBox.x,
               top: selectionBox.y,
@@ -184,6 +263,19 @@ export const CanvasEditor = ({
               height: selectionBox.height
             }}
           />
+        )}
+
+        {/* Helper text */}
+        {canvasState.elements.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-slate-400 pointer-events-none">
+            <div className="text-center">
+              <p className="text-lg font-medium">Start building your popup</p>
+              <p className="text-sm mt-1">Add elements from the toolbar on the left</p>
+              <p className="text-xs mt-2">
+                Tip: Hold Ctrl/Cmd + click to pan • Ctrl/Cmd + scroll to zoom
+              </p>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -125,18 +125,25 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
   }, []);
 
   const zoomIn = useCallback(() => {
-    updateCanvasState({ zoom: Math.min(canvasState.zoom * 1.2, 3) });
+    updateCanvasState({ zoom: Math.min(canvasState.zoom * 1.25, 3) });
   }, [canvasState.zoom, updateCanvasState]);
 
   const zoomOut = useCallback(() => {
-    updateCanvasState({ zoom: Math.max(canvasState.zoom / 1.2, 0.25) });
+    updateCanvasState({ zoom: Math.max(canvasState.zoom / 1.25, 0.25) });
   }, [canvasState.zoom, updateCanvasState]);
+
+  const resetZoom = useCallback(() => {
+    updateCanvasState({ zoom: 1 });
+  }, [updateCanvasState]);
 
   const toggleGrid = useCallback(() => {
     updateCanvasState({ showGrid: !canvasState.showGrid });
   }, [canvasState.showGrid, updateCanvasState]);
 
   const selectedElements = canvasState.elements.filter(el => selectedElementIds.includes(el.id));
+
+  const canUndo = historyIndexRef.current > 0;
+  const canRedo = historyIndexRef.current < historyRef.current.length - 1;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -149,23 +156,45 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
               Back to Dashboard
             </Button>
             <h1 className="text-xl font-semibold">Canvas Editor</h1>
+            <div className="text-sm text-slate-500">
+              {selectedElements.length > 0 && (
+                <span>{selectedElements.length} element{selectedElements.length > 1 ? 's' : ''} selected</span>
+              )}
+            </div>
           </div>
           
-          {/* Toolbar */}
+          {/* Enhanced Toolbar */}
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={undo}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={undo}
+              disabled={!canUndo}
+              className="disabled:opacity-50"
+            >
               <Undo className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={redo}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={redo}
+              disabled={!canRedo}
+              className="disabled:opacity-50"
+            >
               <Redo className="w-4 h-4" />
             </Button>
             <div className="w-px h-6 bg-slate-300" />
             <Button variant="outline" size="sm" onClick={zoomOut}>
               <ZoomOut className="w-4 h-4" />
             </Button>
-            <span className="text-sm text-slate-600 min-w-[60px] text-center">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={resetZoom}
+              className="min-w-[60px] text-center"
+            >
               {Math.round(canvasState.zoom * 100)}%
-            </span>
+            </Button>
             <Button variant="outline" size="sm" onClick={zoomIn}>
               <ZoomIn className="w-4 h-4" />
             </Button>
@@ -247,7 +276,7 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
           )}
 
           {/* Canvas */}
-          <div className="flex-1 bg-slate-100 overflow-auto">
+          <div className="flex-1 bg-slate-100 overflow-hidden">
             <CanvasEditor
               canvasState={canvasState}
               selectedElementIds={selectedElementIds}
@@ -258,25 +287,32 @@ export const PopupBuilder = ({ onBack }: PopupBuilderProps) => {
             />
           </div>
 
-          {/* Device Toggle */}
+          {/* Device Toggle & Status Bar */}
           <div className="bg-white border-t border-slate-200 p-4">
-            <div className="flex justify-center space-x-2">
-              <Button
-                variant={previewDevice === "desktop" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPreviewDevice("desktop")}
-              >
-                <Monitor className="w-4 h-4 mr-2" />
-                Desktop
-              </Button>
-              <Button
-                variant={previewDevice === "mobile" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPreviewDevice("mobile")}
-              >
-                <Smartphone className="w-4 h-4 mr-2" />
-                Mobile
-              </Button>
+            <div className="flex justify-between items-center">
+              <div className="flex space-x-2">
+                <Button
+                  variant={previewDevice === "desktop" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPreviewDevice("desktop")}
+                >
+                  <Monitor className="w-4 h-4 mr-2" />
+                  Desktop
+                </Button>
+                <Button
+                  variant={previewDevice === "mobile" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPreviewDevice("mobile")}
+                >
+                  <Smartphone className="w-4 h-4 mr-2" />
+                  Mobile
+                </Button>
+              </div>
+              
+              <div className="text-sm text-slate-500">
+                {canvasState.elements.length} element{canvasState.elements.length !== 1 ? 's' : ''} • 
+                Canvas: {canvasState.width}×{canvasState.height}px
+              </div>
             </div>
           </div>
         </div>

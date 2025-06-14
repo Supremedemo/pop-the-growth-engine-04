@@ -28,11 +28,12 @@ export const CanvasElement = ({
   const [resizeStart, setResizeStart] = useState({ 
     x: 0, y: 0, width: 0, height: 0, elementX: 0, elementY: 0 
   });
+  const [isHovered, setIsHovered] = useState(false);
 
   const elementRef = useRef<HTMLDivElement>(null);
 
   const snapToGridValue = useCallback((value: number) => {
-    if (!snapToGrid) return value;
+    if (!snapToGrid) return Math.round(value);
     return Math.round(value / gridSize) * gridSize;
   }, [snapToGrid, gridSize]);
 
@@ -59,6 +60,7 @@ export const CanvasElement = ({
         elementX: element.x,
         elementY: element.y
       });
+      document.body.style.cursor = getResizeCursor(handle);
     } else {
       // Start dragging
       setIsDragging(true);
@@ -68,7 +70,22 @@ export const CanvasElement = ({
         elementX: element.x,
         elementY: element.y
       });
+      document.body.style.cursor = 'grabbing';
     }
+  };
+
+  const getResizeCursor = (handle: string) => {
+    const cursors: { [key: string]: string } = {
+      'nw': 'nw-resize',
+      'n': 'n-resize',
+      'ne': 'ne-resize',
+      'w': 'w-resize',
+      'e': 'e-resize',
+      'sw': 'sw-resize',
+      's': 's-resize',
+      'se': 'se-resize'
+    };
+    return cursors[handle] || 'default';
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -79,74 +96,82 @@ export const CanvasElement = ({
       const newX = snapToGridValue(dragStart.elementX + deltaX);
       const newY = snapToGridValue(dragStart.elementY + deltaY);
       
-      onUpdate(element.id, { x: newX, y: newY });
+      // Constrain to canvas bounds
+      const constrainedX = Math.max(0, Math.min(newX, 800 - element.width));
+      const constrainedY = Math.max(0, Math.min(newY, 600 - element.height));
+      
+      onUpdate(element.id, { x: constrainedX, y: constrainedY });
     } else if (isResizing) {
       const deltaX = e.clientX - resizeStart.x;
       const deltaY = e.clientY - resizeStart.y;
       
       let updates: Partial<PopupElement> = {};
+      const minSize = 20;
       
       switch (resizeHandle) {
         case 'nw':
+          const newWidth = Math.max(minSize, snapToGridValue(resizeStart.width - deltaX));
+          const newHeight = Math.max(minSize, snapToGridValue(resizeStart.height - deltaY));
           updates = {
-            x: snapToGridValue(resizeStart.elementX + deltaX),
-            y: snapToGridValue(resizeStart.elementY + deltaY),
-            width: Math.max(20, snapToGridValue(resizeStart.width - deltaX)),
-            height: Math.max(20, snapToGridValue(resizeStart.height - deltaY))
+            x: snapToGridValue(resizeStart.elementX + (resizeStart.width - newWidth)),
+            y: snapToGridValue(resizeStart.elementY + (resizeStart.height - newHeight)),
+            width: newWidth,
+            height: newHeight
           };
           break;
         case 'ne':
           updates = {
             y: snapToGridValue(resizeStart.elementY + deltaY),
-            width: Math.max(20, snapToGridValue(resizeStart.width + deltaX)),
-            height: Math.max(20, snapToGridValue(resizeStart.height - deltaY))
+            width: Math.max(minSize, snapToGridValue(resizeStart.width + deltaX)),
+            height: Math.max(minSize, snapToGridValue(resizeStart.height - deltaY))
           };
           break;
         case 'sw':
           updates = {
             x: snapToGridValue(resizeStart.elementX + deltaX),
-            width: Math.max(20, snapToGridValue(resizeStart.width - deltaX)),
-            height: Math.max(20, snapToGridValue(resizeStart.height + deltaY))
+            width: Math.max(minSize, snapToGridValue(resizeStart.width - deltaX)),
+            height: Math.max(minSize, snapToGridValue(resizeStart.height + deltaY))
           };
           break;
         case 'se':
           updates = {
-            width: Math.max(20, snapToGridValue(resizeStart.width + deltaX)),
-            height: Math.max(20, snapToGridValue(resizeStart.height + deltaY))
+            width: Math.max(minSize, snapToGridValue(resizeStart.width + deltaX)),
+            height: Math.max(minSize, snapToGridValue(resizeStart.height + deltaY))
           };
           break;
         case 'n':
           updates = {
             y: snapToGridValue(resizeStart.elementY + deltaY),
-            height: Math.max(20, snapToGridValue(resizeStart.height - deltaY))
+            height: Math.max(minSize, snapToGridValue(resizeStart.height - deltaY))
           };
           break;
         case 's':
           updates = {
-            height: Math.max(20, snapToGridValue(resizeStart.height + deltaY))
+            height: Math.max(minSize, snapToGridValue(resizeStart.height + deltaY))
           };
           break;
         case 'w':
           updates = {
             x: snapToGridValue(resizeStart.elementX + deltaX),
-            width: Math.max(20, snapToGridValue(resizeStart.width - deltaX))
+            width: Math.max(minSize, snapToGridValue(resizeStart.width - deltaX))
           };
           break;
         case 'e':
           updates = {
-            width: Math.max(20, snapToGridValue(resizeStart.width + deltaX))
+            width: Math.max(minSize, snapToGridValue(resizeStart.width + deltaX))
           };
           break;
       }
       
       onUpdate(element.id, updates);
     }
-  }, [isDragging, isResizing, dragStart, resizeStart, resizeHandle, element.id, onUpdate, snapToGridValue]);
+  }, [isDragging, isResizing, dragStart, resizeStart, resizeHandle, element.id, element.width, element.height, onUpdate, snapToGridValue]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
     setResizeHandle("");
+    document.body.style.cursor = 'default';
   }, []);
 
   React.useEffect(() => {
@@ -163,7 +188,7 @@ export const CanvasElement = ({
   const ResizeHandle = ({ position, cursor }: { position: string; cursor: string }) => (
     <div
       data-resize-handle={position}
-      className="absolute w-3 h-3 bg-blue-500 border border-white rounded-sm hover:bg-blue-600 transition-colors"
+      className="absolute w-3 h-3 bg-white border-2 border-blue-500 rounded-sm hover:bg-blue-50 transition-all duration-150 opacity-0 group-hover:opacity-100"
       style={{
         cursor,
         ...(position.includes('n') && { top: -6 }),
@@ -181,8 +206,14 @@ export const CanvasElement = ({
   return (
     <div
       ref={elementRef}
-      className={`absolute ${isSelected ? 'ring-2 ring-blue-500' : ''} ${
-        isPrimarySelection ? 'ring-blue-600' : 'ring-blue-400'
+      className={`absolute group transition-all duration-150 ${
+        isSelected 
+          ? isPrimarySelection 
+            ? 'ring-2 ring-blue-500 ring-opacity-100' 
+            : 'ring-2 ring-blue-400 ring-opacity-70'
+          : isHovered 
+            ? 'ring-1 ring-blue-300 ring-opacity-50' 
+            : ''
       }`}
       style={{
         left: element.x,
@@ -193,6 +224,8 @@ export const CanvasElement = ({
         cursor: isDragging ? 'grabbing' : 'grab'
       }}
       onMouseDown={handleMouseDown}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <ElementRenderer
         element={element}
@@ -202,6 +235,12 @@ export const CanvasElement = ({
         onDelete={() => {}} // Handled by parent
       />
       
+      {/* Selection overlay */}
+      {isSelected && (
+        <div className="absolute inset-0 bg-blue-500 bg-opacity-5 pointer-events-none" />
+      )}
+      
+      {/* Resize handles - only show for selected elements */}
       {isSelected && (
         <>
           <ResizeHandle position="nw" cursor="nw-resize" />
@@ -213,6 +252,13 @@ export const CanvasElement = ({
           <ResizeHandle position="s" cursor="s-resize" />
           <ResizeHandle position="se" cursor="se-resize" />
         </>
+      )}
+      
+      {/* Element info tooltip on hover */}
+      {isHovered && !isSelected && (
+        <div className="absolute -top-8 left-0 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50">
+          {element.type} • {element.width}×{element.height}
+        </div>
       )}
     </div>
   );
