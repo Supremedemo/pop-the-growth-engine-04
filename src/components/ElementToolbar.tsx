@@ -86,43 +86,43 @@ export const ElementToolbar = ({ onAddElement }: ElementToolbarProps) => {
 
   return (
     <div className="bg-white border-b border-slate-200 p-4">
-      <h3 className="text-sm font-medium mb-3">Add Elements</h3>
-      <div className="flex flex-wrap gap-2">
+      <h3 className="text-sm font-medium mb-3">Elements</h3>
+      <div className="grid grid-cols-2 gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={addTextElement}
-          className="flex items-center space-x-2"
+          className="flex flex-col items-center space-y-1 h-16"
         >
-          <Type className="w-4 h-4" />
-          <span>Text</span>
+          <Type className="w-5 h-5" />
+          <span className="text-xs">Text</span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={addImageElement}
-          className="flex items-center space-x-2"
+          className="flex flex-col items-center space-y-1 h-16"
         >
-          <ImageIcon className="w-4 h-4" />
-          <span>Image</span>
+          <ImageIcon className="w-5 h-5" />
+          <span className="text-xs">Image</span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={addFormElement}
-          className="flex items-center space-x-2"
+          className="flex flex-col items-center space-y-1 h-16"
         >
-          <Mail className="w-4 h-4" />
-          <span>Form</span>
+          <Mail className="w-5 h-5" />
+          <span className="text-xs">Form</span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={addTimerElement}
-          className="flex items-center space-x-2"
+          className="flex flex-col items-center space-y-1 h-16"
         >
-          <Clock className="w-4 h-4" />
-          <span>Timer</span>
+          <Clock className="w-5 h-5" />
+          <span className="text-xs">Timer</span>
         </Button>
       </div>
     </div>
