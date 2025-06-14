@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,9 +56,11 @@ export const Login = ({ onLogin }: LoginProps) => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
+            <img 
+              src="/lovable-uploads/01b275f3-962e-49f3-bc04-9696b715d718.png" 
+              alt="Pop The Builder Logo" 
+              className="w-10 h-10 rounded-lg"
+            />
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Pop The Builder
             </h1>

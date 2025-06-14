@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,9 +46,11 @@ const Index = ({ username, onLogout }: IndexProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-white" />
-                </div>
+                <img 
+                  src="/lovable-uploads/01b275f3-962e-49f3-bc04-9696b715d718.png" 
+                  alt="Pop The Builder Logo" 
+                  className="w-8 h-8 rounded-lg"
+                />
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Pop The Builder
                 </h1>
