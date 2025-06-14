@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, ChevronRight, Folder } from "lucide-react";
-import { FileManager } from "./FileManager";
+import { TemplateGallery } from "./TemplateGallery";
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -261,16 +261,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
           </TabsContent>
 
           <TabsContent value="templates">
-            <FileManager
-              templates={templates}
-              folders={folders}
-              onSaveTemplate={handleSaveTemplate}
-              onCreateFolder={handleCreateFolder}
-              onDeleteTemplate={handleDeleteTemplate}
-              onDeleteFolder={handleDeleteFolder}
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-            />
+            <TemplateGallery onSelectTemplate={() => onNavigate("builder")} />
           </TabsContent>
 
           <TabsContent value="recent">
