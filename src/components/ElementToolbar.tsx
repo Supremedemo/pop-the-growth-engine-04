@@ -1,7 +1,10 @@
 
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Type, Image as ImageIcon, Mail, Clock, Grip, Code } from "lucide-react";
-import { PopupElement, TextElement, ImageElement, FormElement, TimerElement, CustomHtmlElementType } from "./PopupElements";
+import { Separator } from "@/components/ui/separator";
+import { Type, Image, Mail, Clock, Code, FileText, List } from "lucide-react";
+import { PopupElement } from "./PopupElements";
+import { MultiStepFormElement } from "./MultiStepFormElement";
 
 interface ElementToolbarProps {
   onAddElement: (element: PopupElement) => void;
@@ -10,189 +13,168 @@ interface ElementToolbarProps {
 export const ElementToolbar = ({ onAddElement }: ElementToolbarProps) => {
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const handleDragStart = (e: React.DragEvent, elementType: string) => {
-    e.dataTransfer.setData('application/element-type', elementType);
-    e.dataTransfer.effectAllowed = 'copy';
-  };
-
-  const addTextElement = () => {
-    const element: TextElement = {
+  const createElement = (type: string) => {
+    const baseProps = {
       id: generateId(),
-      type: "text",
       x: 50,
       y: 50,
-      width: 200,
-      height: 40,
-      zIndex: 1,
-      content: "Click to edit text",
-      fontSize: 16,
-      fontWeight: "normal",
-      textAlign: "left",
-      color: "#000000",
+      zIndex: 1
     };
-    onAddElement(element);
+
+    switch (type) {
+      case 'text':
+        return {
+          ...baseProps,
+          type: "text" as const,
+          width: 200,
+          height: 40,
+          content: "Click to edit text",
+          fontSize: 16,
+          fontWeight: "normal",
+          textAlign: "left",
+          color: "#000000",
+        };
+      case 'image':
+        return {
+          ...baseProps,
+          type: "image" as const,
+          width: 150,
+          height: 100,
+          src: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=300&h=200&fit=crop",
+          alt: "Placeholder image",
+          borderRadius: 8,
+        };
+      case 'form':
+        return {
+          ...baseProps,
+          type: "form" as const,
+          width: 280,
+          height: 140,
+          fields: [
+            {
+              id: generateId(),
+              type: "email" as const,
+              placeholder: "Enter your email",
+              required: true,
+            },
+          ],
+          buttonText: "Subscribe",
+          buttonColor: "#3b82f6",
+        };
+      case 'multi-step-form':
+        return {
+          ...baseProps,
+          type: "multi-step-form" as const,
+          width: 400,
+          height: 300,
+          steps: [
+            {
+              id: generateId(),
+              title: "Step 1",
+              fields: [
+                {
+                  id: generateId(),
+                  type: "email" as const,
+                  label: "Email Address",
+                  placeholder: "Enter your email",
+                  required: true,
+                }
+              ]
+            }
+          ],
+          successPage: {
+            title: "Thank You!",
+            message: "Your form has been submitted successfully.",
+            showCoupon: false,
+            showDismissButton: true,
+            dismissButtonText: "Close",
+            showRedirectButton: false,
+            redirectButtonText: "Continue",
+          },
+          buttonColor: "#3b82f6",
+          backgroundColor: "#ffffff",
+        } as MultiStepFormElement;
+      case 'timer':
+        return {
+          ...baseProps,
+          type: "timer" as const,
+          width: 180,
+          height: 70,
+          duration: 300,
+          format: "mm:ss",
+          backgroundColor: "#ef4444",
+          textColor: "#ffffff",
+        };
+      case 'html':
+        return {
+          ...baseProps,
+          type: "html" as const,
+          width: 200,
+          height: 100,
+          htmlContent: '<div style="padding: 16px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border-radius: 8px; text-align: center; font-weight: bold;">Custom HTML Block</div>',
+        };
+      default:
+        return null;
+    }
   };
 
-  const addImageElement = () => {
-    const element: ImageElement = {
-      id: generateId(),
-      type: "image",
-      x: 50,
-      y: 100,
-      width: 150,
-      height: 100,
-      zIndex: 1,
-      src: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=300&h=200&fit=crop",
-      alt: "Placeholder image",
-      borderRadius: 8,
-    };
-    onAddElement(element);
+  const handleDragStart = (e: React.DragEvent, elementType: string) => {
+    e.dataTransfer.setData('application/element-type', elementType);
   };
 
-  const addFormElement = () => {
-    const element: FormElement = {
-      id: generateId(),
-      type: "form",
-      x: 50,
-      y: 150,
-      width: 280,
-      height: 140,
-      zIndex: 1,
-      fields: [
-        {
-          id: generateId(),
-          type: "email",
-          placeholder: "Enter your email",
-          required: true,
-        },
-      ],
-      buttonText: "Subscribe",
-      buttonColor: "#3b82f6",
-    };
-    onAddElement(element);
-  };
-
-  const addTimerElement = () => {
-    const element: TimerElement = {
-      id: generateId(),
-      type: "timer",
-      x: 50,
-      y: 200,
-      width: 180,
-      height: 70,
-      zIndex: 1,
-      duration: 300,
-      format: "mm:ss",
-      backgroundColor: "#ef4444",
-      textColor: "#ffffff",
-    };
-    onAddElement(element);
-  };
-
-  const addCustomHtmlElement = () => {
-    const element: CustomHtmlElementType = {
-      id: generateId(),
-      type: "html",
-      x: 50,
-      y: 250,
-      width: 200,
-      height: 100,
-      zIndex: 1,
-      htmlContent: '<div style="padding: 16px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4); color: white; border-radius: 8px; text-align: center; font-weight: bold;">Custom HTML Block</div>',
-    };
-    onAddElement(element);
+  const handleAddElement = (type: string) => {
+    const element = createElement(type);
+    if (element) {
+      onAddElement(element as PopupElement);
+    }
   };
 
   const elements = [
-    {
-      type: "text",
-      icon: Type,
-      label: "Text",
-      description: "Add headings and paragraphs",
-      onClick: addTextElement,
-      color: "bg-blue-50 text-blue-600 border-blue-200"
-    },
-    {
-      type: "image",
-      icon: ImageIcon,
-      label: "Image",
-      description: "Add photos and graphics",
-      onClick: addImageElement,
-      color: "bg-green-50 text-green-600 border-green-200"
-    },
-    {
-      type: "form",
-      icon: Mail,
-      label: "Form",
-      description: "Collect user information",
-      onClick: addFormElement,
-      color: "bg-purple-50 text-purple-600 border-purple-200"
-    },
-    {
-      type: "timer",
-      icon: Clock,
-      label: "Timer",
-      description: "Add countdown urgency",
-      onClick: addTimerElement,
-      color: "bg-red-50 text-red-600 border-red-200"
-    },
-    {
-      type: "html",
-      icon: Code,
-      label: "Custom HTML",
-      description: "Add custom HTML blocks",
-      onClick: addCustomHtmlElement,
-      color: "bg-orange-50 text-orange-600 border-orange-200"
-    }
+    { type: 'text', icon: Type, label: 'Text', description: 'Add text content' },
+    { type: 'image', icon: Image, label: 'Image', description: 'Add an image' },
+    { type: 'form', icon: Mail, label: 'Simple Form', description: 'Basic form with fields' },
+    { type: 'multi-step-form', icon: List, label: 'Multi-Step Form', description: 'Advanced multi-page form' },
+    { type: 'timer', icon: Clock, label: 'Timer', description: 'Countdown timer' },
+    { type: 'html', icon: Code, label: 'Custom HTML', description: 'Custom HTML content' },
   ];
 
   return (
-    <div className="bg-white border-b border-slate-200 p-4">
-      <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center">
-        <svg className="w-4 h-4 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a4 4 0 004-4V5z" />
-        </svg>
-        Elements
-      </h3>
-      <div className="space-y-3">
+    <div className="p-4">
+      <h3 className="text-sm font-medium mb-4">Elements</h3>
+      <div className="space-y-2">
         {elements.map((element) => {
           const IconComponent = element.icon;
           return (
-            <div
-              key={element.type}
-              draggable
-              onDragStart={(e) => handleDragStart(e, element.type)}
-              onClick={element.onClick}
-              className={`relative group cursor-pointer border-2 border-dashed rounded-xl p-4 transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${element.color}`}
-            >
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <IconComponent className="w-5 h-5" />
+            <div key={element.type} className="group">
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-auto p-3 hover:bg-blue-50 hover:border-blue-200 border border-transparent transition-all duration-200"
+                draggable
+                onDragStart={(e) => handleDragStart(e, element.type)}
+                onClick={() => handleAddElement(element.type)}
+              >
+                <div className="flex items-center space-x-3 w-full">
+                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:from-blue-600 group-hover:to-purple-700 transition-all duration-200">
+                    <IconComponent className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-medium text-sm">{element.label}</div>
+                    <div className="text-xs text-gray-500 group-hover:text-gray-600">
+                      {element.description}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium mb-1">{element.label}</h4>
-                  <p className="text-xs opacity-75">{element.description}</p>
-                </div>
-                <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Grip className="w-4 h-4" />
-                </div>
-              </div>
-              
-              {/* Drag indicator */}
-              <div className="absolute inset-0 bg-white bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl pointer-events-none">
-                <div className="absolute top-2 right-2 text-xs font-medium opacity-75">
-                  Drag to canvas
-                </div>
-              </div>
+              </Button>
             </div>
           );
         })}
       </div>
+
+      <Separator className="my-4" />
       
-      <div className="mt-6 p-3 bg-slate-50 rounded-lg">
-        <p className="text-xs text-slate-600 leading-relaxed">
-          💡 <strong>Pro tip:</strong> Drag elements directly onto the canvas or click to add them. Use the pin button to lock elements in place.
-        </p>
+      <div className="text-xs text-gray-500 space-y-1">
+        <p>💡 <strong>Tip:</strong> Drag elements onto the canvas or click to add at default position</p>
+        <p>🎯 Use multi-step forms for complex lead capture flows</p>
       </div>
     </div>
   );
