@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CanvasState } from "@/components/PopupBuilder";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useCampaigns } from "@/hooks/useCampaigns";
@@ -29,10 +29,26 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
   // Load template if templateId is provided
   const loadedTemplate = currentTemplateId ? templates.find(t => t.id === currentTemplateId) : null;
   
-  const [templateName, setTemplateName] = useState(loadedTemplate?.name || "");
-  const [templateDescription, setTemplateDescription] = useState(loadedTemplate?.description || "");
-  const [templateTags, setTemplateTags] = useState<string[]>(loadedTemplate?.tags || []);
+  const [templateName, setTemplateName] = useState("");
+  const [templateDescription, setTemplateDescription] = useState("");
+  const [templateTags, setTemplateTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+
+  // Update template details when a template is loaded
+  useEffect(() => {
+    if (loadedTemplate) {
+      console.log('Loading template details:', loadedTemplate);
+      setTemplateName(loadedTemplate.name);
+      setTemplateDescription(loadedTemplate.description || "");
+      setTemplateTags(loadedTemplate.tags || []);
+      
+      // Load the canvas data
+      if (loadedTemplate.canvas_data) {
+        console.log('Loading canvas data:', loadedTemplate.canvas_data);
+        onLoadTemplate(loadedTemplate);
+      }
+    }
+  }, [loadedTemplate, onLoadTemplate]);
 
   const handleSaveTemplate = useCallback(() => {
     if (!templateName.trim()) {
@@ -41,30 +57,35 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
     }
 
     console.log('Saving template with canvas state:', canvasState);
+    console.log('Current template ID:', currentTemplateId);
 
-    if (currentTemplateId) {
+    if (currentTemplateId && loadedTemplate) {
       // Update existing template
+      console.log('Updating existing template:', currentTemplateId);
       updateTemplate({
         id: currentTemplateId,
         updates: {
           name: templateName.trim(),
           description: templateDescription.trim() || null,
-          canvas_data: canvasState, // Make sure canvas state is included
+          canvas_data: canvasState,
           tags: templateTags
         }
       });
     } else {
       // Create new template
+      console.log('Creating new template');
       saveTemplate({
         name: templateName.trim(),
         description: templateDescription.trim() || undefined,
-        canvasData: canvasState, // Make sure canvas state is included
+        canvasData: canvasState,
         tags: templateTags
       });
+      
+      // Set the current template ID after saving (this will be handled by the mutation success)
     }
     
     setIsSaveDialogOpen(false);
-  }, [templateName, currentTemplateId, updateTemplate, templateDescription, canvasState, templateTags, saveTemplate]);
+  }, [templateName, currentTemplateId, loadedTemplate, updateTemplate, templateDescription, canvasState, templateTags, saveTemplate]);
 
   const handleCreateCampaign = useCallback(() => {
     if (!templateName.trim()) {
@@ -86,11 +107,17 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
 
   const loadTemplate = useCallback((template: any) => {
     console.log('Loading template:', template);
-    onLoadTemplate(template);
     setCurrentTemplateId(template.id);
     setTemplateName(template.name);
     setTemplateDescription(template.description || "");
     setTemplateTags(template.tags || []);
+    
+    // Load canvas data
+    if (template.canvas_data) {
+      console.log('Loading canvas data from template:', template.canvas_data);
+      onLoadTemplate(template);
+    }
+    
     setIsTemplateDialogOpen(false);
     toast.success(`Template "${template.name}" loaded successfully!`);
   }, [onLoadTemplate]);

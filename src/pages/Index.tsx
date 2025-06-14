@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Zap, Lightbulb, Shield, LogOut, User, Moon, Sun, Menu, BarChart3, Target, TrendingUp, Globe } from "lucide-react";
@@ -11,6 +10,7 @@ import { Analytics } from "@/components/Analytics";
 import { CampaignManager } from "@/components/CampaignManager";
 import { Admin } from "@/components/Admin";
 import { Dashboard } from "@/components/Dashboard";
+import { EventBasedCampaignManager } from "@/components/EventBasedCampaignManager";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,7 +61,7 @@ const Index = ({ username, onLogout }: IndexProps) => {
       case "templates":
         return <TemplateGallery onSelectTemplate={() => setActiveView("builder")} />;
       case "campaigns":
-        return <CampaignManager />;
+        return <EventBasedCampaignManager />;
       case "analytics":
         return <Analytics />;
       case "admin":
