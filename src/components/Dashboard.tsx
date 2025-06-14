@@ -95,7 +95,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-background min-h-screen">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between">
@@ -126,11 +126,11 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="bg-white/60 backdrop-blur-sm border-slate-200">
+            <Card key={index} className="bg-card border-border">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <Icon className={`w-5 h-5 ${stat.color}`} />
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs">
                     {stat.change}
                   </Badge>
                 </div>
@@ -138,7 +138,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
               <CardContent>
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-sm text-slate-600">{stat.title}</p>
+                  <p className="text-sm text-muted-foreground">{stat.title}</p>
                 </div>
               </CardContent>
             </Card>
@@ -149,7 +149,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card 
-          className="bg-white/60 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg transition-shadow"
+          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => onNavigate("builder")}
         >
           <CardHeader>
@@ -164,7 +164,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
         </Card>
 
         <Card 
-          className="bg-white/60 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg transition-shadow"
+          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => onNavigate("templates")}
         >
           <CardHeader>
@@ -179,7 +179,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
         </Card>
 
         <Card 
-          className="bg-white/60 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg transition-shadow"
+          className="bg-card border-border cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => onNavigate("analytics")}
         >
           <CardHeader>
@@ -195,7 +195,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
       </div>
 
       {/* Recent Campaigns */}
-      <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+      <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -205,7 +205,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
             <Button 
               variant="outline" 
               onClick={() => onNavigate("campaigns")}
-              className="bg-white/80"
+              className="bg-background"
             >
               View All
             </Button>
@@ -214,7 +214,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
         <CardContent>
           <div className="space-y-4">
             {campaigns.map((campaign) => (
-              <div key={campaign.id} className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-slate-100">
+              <div key={campaign.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     {campaign.status === "Active" ? (
@@ -229,27 +229,27 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
                   </Badge>
                   <Badge 
                     variant={campaign.status === "Active" ? "default" : "secondary"}
-                    className={campaign.status === "Active" ? "bg-green-100 text-green-800" : ""}
+                    className={campaign.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
                   >
                     {campaign.status}
                   </Badge>
                 </div>
                 
-                <div className="flex items-center space-x-6 text-sm text-slate-600">
+                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
                   <div className="text-center">
-                    <div className="font-medium text-slate-900">{campaign.impressions.toLocaleString()}</div>
+                    <div className="font-medium text-foreground">{campaign.impressions.toLocaleString()}</div>
                     <div className="text-xs">Impressions</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-medium text-slate-900">{campaign.conversions.toLocaleString()}</div>
+                    <div className="font-medium text-foreground">{campaign.conversions.toLocaleString()}</div>
                     <div className="text-xs">Conversions</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-medium text-slate-900">{campaign.rate}</div>
+                    <div className="font-medium text-foreground">{campaign.rate}</div>
                     <div className="text-xs">CVR</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-medium text-slate-900">{campaign.revenue}</div>
+                    <div className="font-medium text-foreground">{campaign.revenue}</div>
                     <div className="text-xs">Revenue</div>
                   </div>
                   <Button variant="ghost" size="sm">

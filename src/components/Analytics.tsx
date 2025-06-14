@@ -89,23 +89,23 @@ export const Analytics = () => {
   ];
 
   return (
-    <div className="p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
+    <div className="p-6 bg-background min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Analytics Dashboard</h1>
-          <p className="text-slate-600">Track your popup performance and revenue attribution</p>
+          <p className="text-muted-foreground">Track your popup performance and revenue attribution</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="outline" className="bg-white/80">
+          <Button variant="outline" className="bg-background">
             <Calendar className="w-4 h-4 mr-2" />
             Last 30 Days
           </Button>
-          <Button variant="outline" className="bg-white/80">
+          <Button variant="outline" className="bg-background">
             <Filter className="w-4 h-4 mr-2" />
             Filter
           </Button>
-          <Button variant="outline" className="bg-white/80">
+          <Button variant="outline" className="bg-background">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
@@ -118,14 +118,14 @@ export const Analytics = () => {
           const Icon = stat.icon;
           const TrendIcon = stat.trend === "up" ? TrendingUp : TrendingDown;
           return (
-            <Card key={index} className="bg-white/60 backdrop-blur-sm border-slate-200">
+            <Card key={index} className="bg-card border-border">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <Icon className={`w-5 h-5 ${stat.color}`} />
                   <Badge 
                     variant="secondary" 
                     className={`${
-                      stat.trend === "up" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      stat.trend === "up" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
                     } text-xs flex items-center`}
                   >
                     <TrendIcon className="w-3 h-3 mr-1" />
@@ -136,7 +136,7 @@ export const Analytics = () => {
               <CardContent>
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-sm text-slate-600">{stat.title}</p>
+                  <p className="text-sm text-muted-foreground">{stat.title}</p>
                 </div>
               </CardContent>
             </Card>
@@ -145,7 +145,7 @@ export const Analytics = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-white/60">
+        <TabsList className="bg-card">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="audience">Audience</TabsTrigger>
@@ -154,7 +154,7 @@ export const Analytics = () => {
 
         <TabsContent value="overview" className="space-y-6">
           {/* Performance Chart */}
-          <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+          <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle>Performance Overview</CardTitle>
               <CardDescription>Track impressions, conversions, and revenue over time</CardDescription>
@@ -200,7 +200,7 @@ export const Analytics = () => {
 
           {/* Device Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+            <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle>Device Breakdown</CardTitle>
                 <CardDescription>Traffic distribution by device type</CardDescription>
@@ -240,7 +240,7 @@ export const Analytics = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+            <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle>Top Performing Hours</CardTitle>
                 <CardDescription>Conversion rates by hour of day</CardDescription>
@@ -270,7 +270,7 @@ export const Analytics = () => {
         </TabsContent>
 
         <TabsContent value="campaigns" className="space-y-6">
-          <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+          <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle>Campaign Performance</CardTitle>
               <CardDescription>Detailed metrics for each campaign</CardDescription>
@@ -278,26 +278,26 @@ export const Analytics = () => {
             <CardContent>
               <div className="space-y-4">
                 {campaignData.map((campaign, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-slate-100">
+                  <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
                     <div className="flex items-center space-x-4">
                       <div className="w-2 h-8 bg-blue-500 rounded"></div>
                       <div>
                         <h4 className="font-medium">{campaign.name}</h4>
-                        <p className="text-sm text-slate-600">Active Campaign</p>
+                        <p className="text-sm text-muted-foreground">Active Campaign</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-8 text-sm">
                       <div className="text-center">
                         <div className="font-medium">{campaign.conversions.toLocaleString()}</div>
-                        <div className="text-slate-600">Conversions</div>
+                        <div className="text-muted-foreground">Conversions</div>
                       </div>
                       <div className="text-center">
                         <div className="font-medium">{campaign.rate}%</div>
-                        <div className="text-slate-600">CVR</div>
+                        <div className="text-muted-foreground">CVR</div>
                       </div>
                       <div className="text-center">
                         <div className="font-medium">${campaign.revenue.toLocaleString()}</div>
-                        <div className="text-slate-600">Revenue</div>
+                        <div className="text-muted-foreground">Revenue</div>
                       </div>
                       <Button variant="outline" size="sm">
                         View Details
@@ -311,32 +311,32 @@ export const Analytics = () => {
         </TabsContent>
 
         <TabsContent value="audience">
-          <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+          <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle>Audience Insights</CardTitle>
               <CardDescription>Understand your visitors and their behavior</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12">
-                <Users className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">Audience Analytics</h3>
-                <p className="text-slate-600">Detailed audience insights coming soon</p>
+                <p className="text-muted-foreground">Detailed audience insights coming soon</p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="revenue">
-          <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+          <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle>Revenue Attribution</CardTitle>
               <CardDescription>Track revenue generated by your popups</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12">
-                <DollarSign className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <DollarSign className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">Revenue Tracking</h3>
-                <p className="text-slate-600">Advanced revenue attribution features coming soon</p>
+                <p className="text-muted-foreground">Advanced revenue attribution features coming soon</p>
               </div>
             </CardContent>
           </Card>

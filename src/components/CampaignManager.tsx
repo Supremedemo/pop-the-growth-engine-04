@@ -113,15 +113,15 @@ export const CampaignManager = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100";
       case "Paused":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
       case "Draft":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
       case "Scheduled":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
     }
   };
 
@@ -141,12 +141,12 @@ export const CampaignManager = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
+    <div className="p-6 bg-background min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Campaign Manager</h1>
-          <p className="text-slate-600">Manage and monitor all your popup campaigns</p>
+          <p className="text-muted-foreground">Manage and monitor all your popup campaigns</p>
         </div>
         <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
           <Plus className="w-4 h-4 mr-2" />
@@ -156,58 +156,58 @@ export const CampaignManager = () => {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Total Campaigns</p>
+                <p className="text-sm text-muted-foreground">Total Campaigns</p>
                 <p className="text-2xl font-bold">{campaigns.length}</p>
               </div>
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                 <Eye className="w-5 h-5 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Active Campaigns</p>
+                <p className="text-sm text-muted-foreground">Active Campaigns</p>
                 <p className="text-2xl font-bold">{campaigns.filter(c => c.status === "Active").length}</p>
               </div>
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
                 <Play className="w-5 h-5 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Total Conversions</p>
+                <p className="text-sm text-muted-foreground">Total Conversions</p>
                 <p className="text-2xl font-bold">
                   {campaigns.reduce((sum, c) => sum + c.conversions, 0).toLocaleString()}
                 </p>
               </div>
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
                 <MousePointer className="w-5 h-5 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+        <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Total Revenue</p>
+                <p className="text-sm text-muted-foreground">Total Revenue</p>
                 <p className="text-2xl font-bold">$19,210</p>
               </div>
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-orange-600" />
               </div>
             </div>
@@ -216,11 +216,11 @@ export const CampaignManager = () => {
       </div>
 
       {/* Filters and Search */}
-      <Card className="bg-white/60 backdrop-blur-sm border-slate-200 mb-6">
+      <Card className="bg-card border-border mb-6">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search campaigns..."
                 value={searchTerm}
@@ -245,7 +245,7 @@ export const CampaignManager = () => {
       </Card>
 
       {/* Campaigns List */}
-      <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>All Campaigns</CardTitle>
           <CardDescription>
@@ -255,7 +255,7 @@ export const CampaignManager = () => {
         <CardContent>
           <div className="space-y-4">
             {filteredCampaigns.map((campaign) => (
-              <div key={campaign.id} className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-slate-100 hover:shadow-md transition-shadow">
+              <div key={campaign.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-4">
                   {getStatusIcon(campaign.status)}
                   <div>
@@ -268,7 +268,7 @@ export const CampaignManager = () => {
                         {campaign.status}
                       </Badge>
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-slate-600">
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <span>Template: {campaign.template}</span>
                       <span>•</span>
                       <span>Created: {campaign.created}</span>
@@ -282,20 +282,20 @@ export const CampaignManager = () => {
                   {/* Stats */}
                   <div className="flex items-center space-x-6 text-sm">
                     <div className="text-center">
-                      <div className="font-medium text-slate-900">{campaign.impressions.toLocaleString()}</div>
-                      <div className="text-xs text-slate-600">Impressions</div>
+                      <div className="font-medium text-foreground">{campaign.impressions.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">Impressions</div>
                     </div>
                     <div className="text-center">
-                      <div className="font-medium text-slate-900">{campaign.conversions.toLocaleString()}</div>
-                      <div className="text-xs text-slate-600">Conversions</div>
+                      <div className="font-medium text-foreground">{campaign.conversions.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">Conversions</div>
                     </div>
                     <div className="text-center">
-                      <div className="font-medium text-slate-900">{campaign.rate}</div>
-                      <div className="text-xs text-slate-600">CVR</div>
+                      <div className="font-medium text-foreground">{campaign.rate}</div>
+                      <div className="text-xs text-muted-foreground">CVR</div>
                     </div>
                     <div className="text-center">
-                      <div className="font-medium text-slate-900">{campaign.revenue}</div>
-                      <div className="text-xs text-slate-600">Revenue</div>
+                      <div className="font-medium text-foreground">{campaign.revenue}</div>
+                      <div className="text-xs text-muted-foreground">Revenue</div>
                     </div>
                   </div>
                   
@@ -321,11 +321,11 @@ export const CampaignManager = () => {
 
           {filteredCampaigns.length === 0 && (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-slate-400" />
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-medium mb-2">No campaigns found</h3>
-              <p className="text-slate-600 mb-4">Try adjusting your search or filter criteria</p>
+              <p className="text-muted-foreground mb-4">Try adjusting your search or filter criteria</p>
               <Button variant="outline" onClick={() => {
                 setSearchTerm("");
                 setStatusFilter("all");
