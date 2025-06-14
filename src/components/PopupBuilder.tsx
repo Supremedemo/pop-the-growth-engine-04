@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,7 +145,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                 fontWeight: el.fontWeight || 'normal',
                 textAlign: el.textAlign || 'left',
                 color: el.color || '#000000'
-              } as TextElement;
+              };
             } else if (el.type === 'image') {
               return {
                 ...baseElement,
@@ -154,7 +153,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                 src: el.src || '',
                 alt: el.alt || 'Image',
                 borderRadius: el.borderRadius || 0
-              } as ImageElement;
+              };
             } else if (el.type === 'form') {
               return {
                 ...baseElement,
@@ -162,7 +161,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                 fields: el.fields || [],
                 buttonText: el.buttonText || 'Submit',
                 buttonColor: el.buttonColor || '#000000'
-              } as FormElement;
+              };
             } else if (el.type === 'timer') {
               return {
                 ...baseElement,
@@ -171,13 +170,13 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                 format: el.format || 'mm:ss',
                 backgroundColor: el.backgroundColor || '#000000',
                 textColor: el.textColor || '#ffffff'
-              } as TimerElement;
+              };
             } else if (el.type === 'html') {
               return {
                 ...baseElement,
                 type: 'html' as const,
                 htmlContent: el.htmlContent || ''
-              } as CustomHtmlElementType;
+              };
             } else if (el.type === 'multi-step-form') {
               return {
                 ...baseElement,
@@ -194,7 +193,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
                 },
                 buttonColor: el.buttonColor || '#3b82f6',
                 backgroundColor: el.backgroundColor || '#ffffff'
-              } as MultiStepFormElement;
+              };
             }
             return null;
           })
