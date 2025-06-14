@@ -24,7 +24,7 @@ export const CanvasElement = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState<string>("");
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, elementX: 0, elementY: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
   const [resizeStart, setResizeStart] = useState({ 
     x: 0, y: 0, width: 0, height: 0, elementX: 0, elementY: 0 
   });
@@ -64,14 +64,20 @@ export const CanvasElement = ({
       });
       document.body.style.cursor = getResizeCursor(handle);
     } else {
-      // Start dragging
-      setIsDragging(true);
-      setDragStart({
-        x: e.clientX,
-        y: e.clientY,
-        elementX: element.x,
-        elementY: element.y
-      });
+      // Start dragging - calculate offset from mouse to element origin
+      const rect = elementRef.current?.getBoundingClientRect();
+      if (rect) {
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+        
+        setIsDragging(true);
+        setDragStart({
+          x: e.clientX,
+          y: e.clientY,
+          offsetX: offsetX,
+          offsetY: offsetY
+        });
+      }
       document.body.style.cursor = 'grabbing';
     }
   };
@@ -102,17 +108,21 @@ export const CanvasElement = ({
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging) {
-      const deltaX = e.clientX - dragStart.x;
-      const deltaY = e.clientY - dragStart.y;
-      
-      const newX = snapToGridValue(dragStart.elementX + deltaX);
-      const newY = snapToGridValue(dragStart.elementY + deltaY);
-      
-      // Constrain to canvas bounds
-      const constrainedX = Math.max(0, Math.min(newX, 800 - element.width));
-      const constrainedY = Math.max(0, Math.min(newY, 600 - element.height));
-      
-      onUpdate(element.id, { x: constrainedX, y: constrainedY });
+      // Get the canvas element to calculate relative position
+      const canvas = elementRef.current?.parentElement;
+      if (canvas) {
+        const canvasRect = canvas.getBoundingClientRect();
+        
+        // Calculate new position based on mouse position minus the initial offset
+        const newX = snapToGridValue((e.clientX - canvasRect.left) - dragStart.offsetX);
+        const newY = snapToGridValue((e.clientY - canvasRect.top) - dragStart.offsetY);
+        
+        // Constrain to canvas bounds
+        const constrainedX = Math.max(0, Math.min(newX, canvas.clientWidth - element.width));
+        const constrainedY = Math.max(0, Math.min(newY, canvas.clientHeight - element.height));
+        
+        onUpdate(element.id, { x: constrainedX, y: constrainedY });
+      }
     } else if (isResizing) {
       const deltaX = e.clientX - resizeStart.x;
       const deltaY = e.clientY - resizeStart.y;
