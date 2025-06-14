@@ -56,6 +56,8 @@ export const useTemplates = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
+      console.log('Saving template with canvas data:', canvasData);
+
       const { data, error } = await supabase
         .from('user_templates')
         .insert({
@@ -69,16 +71,22 @@ export const useTemplates = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving template:', error);
+        throw error;
+      }
+      
+      console.log('Template saved successfully:', data);
       
       return {
         ...data,
         canvas_data: data.canvas_data as unknown as CanvasState
       } as UserTemplate;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
       toast.success('Template saved successfully!');
+      console.log('Template save success:', data);
     },
     onError: (error) => {
       console.error('Error saving template:', error);
@@ -91,6 +99,8 @@ export const useTemplates = () => {
       id: string;
       updates: Partial<Omit<UserTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>>;
     }) => {
+      console.log('Updating template with data:', updates);
+      
       // Cast CanvasState to Json for database storage
       const dbUpdates = {
         ...updates,
@@ -105,16 +115,22 @@ export const useTemplates = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating template:', error);
+        throw error;
+      }
+      
+      console.log('Template updated successfully:', data);
       
       return {
         ...data,
         canvas_data: data.canvas_data as unknown as CanvasState
       } as UserTemplate;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['templates'] });
       toast.success('Template updated successfully!');
+      console.log('Template update success:', data);
     },
     onError: (error) => {
       console.error('Error updating template:', error);

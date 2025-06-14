@@ -3,223 +3,232 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, BarChart3, Users, Zap, Eye, MousePointer, TrendingUp, DollarSign, Target, Lightbulb } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PopupBuilder } from "./PopupBuilder";
+import { TemplateGallery } from "./TemplateGallery";
+import { CampaignManager } from "./CampaignManager";
+import { Analytics } from "./Analytics";
+import { WebsiteManager } from "./WebsiteManager";
+import { useTemplates } from "@/hooks/useTemplates";
+import { useCampaigns } from "@/hooks/useCampaigns";
+import { useWebsiteManagement } from "@/hooks/useWebsiteManagement";
+import { 
+  Plus, 
+  Template, 
+  Rocket, 
+  BarChart3, 
+  Globe,
+  Zap,
+  ArrowRight 
+} from "lucide-react";
 
 interface DashboardProps {
-  onNavigate: (view: string) => void;
+  onNavigateToBuilder: () => void;
 }
 
-export const Dashboard = ({ onNavigate }: DashboardProps) => {
-  const stats = [
-    {
-      title: "Total Impressions",
-      value: "127,432",
-      change: "+12.5%",
-      icon: Eye,
-      changeType: "positive" as const
-    },
-    {
-      title: "Conversions", 
-      value: "3,847",
-      change: "+8.2%",
-      icon: MousePointer,
-      changeType: "positive" as const
-    },
-    {
-      title: "Conversion Rate",
-      value: "3.02%",
-      change: "+0.4%",
-      icon: TrendingUp,
-      changeType: "positive" as const
-    },
-    {
-      title: "Revenue Attributed",
-      value: "$23,156",
-      change: "+15.7%",
-      icon: DollarSign,
-      changeType: "positive" as const
-    }
-  ];
+export const Dashboard = ({ onNavigateToBuilder }: DashboardProps) => {
+  const [activeTab, setActiveTab] = useState("overview");
+  const { templates, isLoading: templatesLoading } = useTemplates();
+  const { campaigns, isLoading: campaignsLoading } = useCampaigns();
+  const { websites, isLoading: websitesLoading } = useWebsiteManagement();
 
-  const quickActions = [
-    {
-      title: "Create Popup",
-      description: "Build a new popup from scratch or use a template",
-      icon: Plus,
-      action: () => onNavigate("builder"),
-      color: "blue"
-    },
-    {
-      title: "Browse Templates",
-      description: "Choose from 50+ professional popup templates",
-      icon: Lightbulb,
-      action: () => onNavigate("templates"),
-      color: "purple"
-    },
-    {
-      title: "View Analytics",
-      description: "Deep dive into your campaign performance",
-      icon: BarChart3,
-      action: () => onNavigate("analytics"),
-      color: "green"
-    }
-  ];
+  const stats = {
+    templates: templates.length,
+    campaigns: campaigns.length,
+    websites: websites.length,
+    activeWebsites: websites.filter(w => w.tracking_enabled).length
+  };
+
+  if (activeTab === "builder") {
+    return <PopupBuilder onBack={() => setActiveTab("overview")} />;
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <Card className="bg-gradient-to-br from-blue-600 to-purple-600 border-0 text-white">
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2 flex items-center">
-                    Welcome back! 👋
-                  </h1>
-                  <p className="text-blue-100 text-lg mb-6">
-                    Your campaigns have generated $23,156 in attributed revenue this month.
-                  </p>
-                  <Button 
-                    onClick={() => onNavigate("campaigns")}
-                    className="bg-white text-blue-600 hover:bg-blue-50"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create New Campaign
-                  </Button>
-                </div>
-                <div className="hidden lg:block">
-                  <TrendingUp className="w-24 h-24 text-white/20" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <Card key={index} className="bg-card border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                    <stat.icon className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className={`text-xs ${
-                      stat.changeType === 'positive' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                    }`}
-                  >
-                    {stat.change}
-                  </Badge>
-                </div>
-                <h3 className="text-2xl font-bold text-foreground mb-1">{stat.value}</h3>
-                <p className="text-sm text-muted-foreground">{stat.title}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {quickActions.map((action, index) => (
-            <Card 
-              key={index} 
-              className="bg-card border-border cursor-pointer hover:bg-accent/50 transition-colors"
-              onClick={action.action}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                    action.color === 'blue' ? 'bg-blue-600' :
-                    action.color === 'purple' ? 'bg-purple-600' :
-                    'bg-green-600'
-                  }`}>
-                    <action.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground mb-2">{action.title}</h3>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Recent Campaigns Section */}
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
+    <div className="min-h-screen bg-slate-50">
+      <div className="border-b border-slate-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
             <div>
-              <CardTitle className="text-foreground">Recent Campaigns</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Monitor your active and recent popup campaigns
-              </CardDescription>
+              <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+              <p className="text-slate-600 mt-1">Manage your popups, templates, and website tracking</p>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="border-border text-muted-foreground hover:bg-accent"
-              onClick={() => onNavigate("campaigns")}
-            >
-              View All
+            <Button onClick={() => setActiveTab("builder")} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Create New Popup
             </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                    <Target className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-foreground">Summer Sale Campaign</h4>
-                    <p className="text-sm text-muted-foreground">Active • 2,341 impressions today</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">4.2% CTR</p>
-                  <p className="text-xs text-muted-foreground">$1,234 revenue</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-foreground">Newsletter Signup</h4>
-                    <p className="text-sm text-muted-foreground">Active • 1,823 impressions today</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">6.8% CTR</p>
-                  <p className="text-xs text-muted-foreground">234 signups</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-foreground">Exit Intent Offer</h4>
-                    <p className="text-sm text-muted-foreground">Paused • Last active 2 days ago</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-muted-foreground">2.1% CTR</p>
-                  <p className="text-xs text-muted-foreground">$567 revenue</p>
-                </div>
-              </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+            <TabsTrigger value="websites">Websites</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="builder">Builder</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Templates</CardTitle>
+                  <Template className="w-4 h-4 text-slate-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.templates}</div>
+                  <p className="text-xs text-slate-600">Created templates</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Campaigns</CardTitle>
+                  <Rocket className="w-4 h-4 text-slate-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.campaigns}</div>
+                  <p className="text-xs text-slate-600">Active campaigns</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Websites</CardTitle>
+                  <Globe className="w-4 h-4 text-slate-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.websites}</div>
+                  <p className="text-xs text-slate-600">Connected websites</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Tracking</CardTitle>
+                  <Zap className="w-4 h-4 text-slate-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.activeWebsites}</div>
+                  <p className="text-xs text-slate-600">Websites with tracking</p>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("builder")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plus className="w-5 h-5" />
+                    Create New Popup
+                  </CardTitle>
+                  <CardDescription>Start building a new popup from scratch</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">
+                    Start Building <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("websites")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="w-5 h-5" />
+                    Add Website
+                  </CardTitle>
+                  <CardDescription>Connect a new website for tracking</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">
+                    Add Website <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("templates")}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Template className="w-5 h-5" />
+                    Browse Templates
+                  </CardTitle>
+                  <CardDescription>Explore and use existing templates</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">
+                    Browse Templates <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Your latest templates and campaigns</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {templatesLoading || campaignsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-slate-600">Loading activity...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {templates.slice(0, 3).map((template) => (
+                      <div key={template.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{template.name}</p>
+                          <p className="text-sm text-slate-600">Template • {new Date(template.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <Badge variant="secondary">Template</Badge>
+                      </div>
+                    ))}
+                    {campaigns.slice(0, 3).map((campaign) => (
+                      <div key={campaign.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{campaign.name}</p>
+                          <p className="text-sm text-slate-600">Campaign • {new Date(campaign.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <Badge variant="default">Campaign</Badge>
+                      </div>
+                    ))}
+                    {templates.length === 0 && campaigns.length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-slate-600">No recent activity. Create your first popup to get started!</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <TemplateGallery onSelectTemplate={(template) => {
+              // Navigate to builder with selected template
+              setActiveTab("builder");
+            }} />
+          </TabsContent>
+
+          <TabsContent value="campaigns">
+            <CampaignManager />
+          </TabsContent>
+
+          <TabsContent value="websites">
+            <WebsiteManager />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <Analytics />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

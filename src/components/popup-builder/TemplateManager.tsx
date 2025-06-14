@@ -40,28 +40,31 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
       return;
     }
 
+    console.log('Saving template with canvas state:', canvasState);
+
     if (currentTemplateId) {
+      // Update existing template
       updateTemplate({
         id: currentTemplateId,
         updates: {
           name: templateName.trim(),
           description: templateDescription.trim() || null,
-          canvas_data: canvasState,
+          canvas_data: canvasState, // Make sure canvas state is included
           tags: templateTags
         }
       });
     } else {
-      // Use the new saveTemplateWithCanvas method
-      saveTemplateWithCanvas({
+      // Create new template
+      saveTemplate({
         name: templateName.trim(),
         description: templateDescription.trim() || undefined,
-        canvasData: canvasState,
+        canvasData: canvasState, // Make sure canvas state is included
         tags: templateTags
       });
     }
     
     setIsSaveDialogOpen(false);
-  }, [templateName, currentTemplateId, updateTemplate, templateDescription, canvasState, templateTags, saveTemplateWithCanvas]);
+  }, [templateName, currentTemplateId, updateTemplate, templateDescription, canvasState, templateTags, saveTemplate]);
 
   const handleCreateCampaign = useCallback(() => {
     if (!templateName.trim()) {
@@ -82,6 +85,7 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
   }, []);
 
   const loadTemplate = useCallback((template: any) => {
+    console.log('Loading template:', template);
     onLoadTemplate(template);
     setCurrentTemplateId(template.id);
     setTemplateName(template.name);
