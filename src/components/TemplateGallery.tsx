@@ -237,6 +237,36 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
   };
 
   const handleCustomizeTemplate = (template: any) => {
+    // For gamified templates, open the game editor instead of canvas
+    if (template.category === "gamified") {
+      switch (template.id) {
+        case 16: // Spin-to-Win Fortune Wheel
+        case 10: // Alternative Spin-to-Win
+          onSelectTemplate({
+            type: 'game',
+            gameType: 'spin-wheel',
+            templateId: template.id
+          });
+          return;
+        case 17: // Scratch Card Mystery Box
+          onSelectTemplate({
+            type: 'game', 
+            gameType: 'scratch-card',
+            templateId: template.id
+          });
+          return;
+        default:
+          // For other games, show coming soon or fallback to canvas
+          onSelectTemplate({
+            type: 'game',
+            gameType: 'coming-soon',
+            templateId: template.id
+          });
+          return;
+      }
+    }
+
+    // For non-game templates, use the existing canvas approach
     const templateConfig = getTemplateConfig(template.id);
     onSelectTemplate(templateConfig);
   };
@@ -263,6 +293,22 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
     {
       id: 16,
       name: "Spin-to-Win Fortune Wheel",
+      category: "gamified",
+      type: "Modal",
+      preview: "bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600",
+      rating: 4.9,
+      uses: 3247,
+      devices: ["desktop", "mobile"],
+      description: "Interactive spinning wheel with customizable prizes and sound effects",
+      level: 1,
+      premium: false,
+      conversionRate: "24.3%",
+      features: ["Animated Wheel", "Sound Effects", "Custom Prizes", "Mobile Touch"],
+      customizable: true
+    },
+    {
+      id: 10,
+      name: "Alternative Spin-to-Win",
       category: "gamified",
       type: "Modal",
       preview: "bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600",
