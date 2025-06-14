@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -395,30 +396,32 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 min-h-screen">
+    <div className="p-6 bg-background min-h-screen">
       {/* Header with Gamification */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Template Gallery</h1>
-            <p className="text-slate-600">Choose from our collection of high-converting popup templates</p>
+            <h1 className="text-3xl font-bold mb-2 text-foreground">Template Gallery</h1>
+            <p className="text-muted-foreground">Choose from our collection of high-converting popup templates</p>
           </div>
           
           {/* User Progress */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-slate-200">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Crown className="w-5 h-5 text-yellow-500" />
-                <span className="font-semibold">Level {userLevel}</span>
+          <Card className="bg-card">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Crown className="w-5 h-5 text-yellow-500" />
+                  <span className="font-semibold text-foreground">Level {userLevel}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Zap className="w-4 h-4 text-blue-500" />
+                  <span className="text-sm text-foreground">{userPoints.toLocaleString()} pts</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Zap className="w-4 h-4 text-blue-500" />
-                <span className="text-sm">{userPoints.toLocaleString()} pts</span>
-              </div>
-            </div>
-            <Progress value={(userPoints % 500) / 5} className="mt-2 w-32" />
-            <p className="text-xs text-slate-500 mt-1">{500 - (userPoints % 500)} pts to next level</p>
-          </div>
+              <Progress value={(userPoints % 500) / 5} className="mt-2 w-32" />
+              <p className="text-xs text-muted-foreground mt-1">{500 - (userPoints % 500)} pts to next level</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Achievements */}
@@ -426,25 +429,27 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
           {achievements.map((achievement) => {
             const Icon = achievement.icon;
             return (
-              <div
+              <Card
                 key={achievement.id}
-                className={`bg-white/60 backdrop-blur-sm rounded-lg p-3 border transition-all ${
+                className={`transition-all ${
                   achievement.completed 
-                    ? "border-green-200 bg-green-50/50" 
-                    : "border-slate-200 opacity-60"
+                    ? "border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-900/20" 
+                    : "opacity-60"
                 }`}
               >
-                <div className="flex items-center space-x-2 mb-1">
-                  <Icon className={`w-4 h-4 ${achievement.completed ? "text-green-600" : "text-slate-400"}`} />
-                  <span className="text-sm font-medium">{achievement.name}</span>
-                  {achievement.completed && <Trophy className="w-3 h-3 text-yellow-500" />}
-                </div>
-                <p className="text-xs text-slate-600">{achievement.description}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-slate-500">+{achievement.points} pts</span>
-                  {achievement.completed && <Badge variant="secondary" className="text-xs">Complete</Badge>}
-                </div>
-              </div>
+                <CardContent className="p-3">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <Icon className={`w-4 h-4 ${achievement.completed ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`} />
+                    <span className="text-sm font-medium text-foreground">{achievement.name}</span>
+                    {achievement.completed && <Trophy className="w-3 h-3 text-yellow-500" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-muted-foreground">+{achievement.points} pts</span>
+                    {achievement.completed && <Badge variant="secondary" className="text-xs">Complete</Badge>}
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
@@ -466,15 +471,15 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
           {/* Search and Filter */}
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search templates..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/80"
+                className="pl-10"
               />
             </div>
-            <Button variant="outline" className="bg-white/80">
+            <Button variant="outline">
               <Filter className="w-4 h-4 mr-2" />
               Advanced Filters
             </Button>
@@ -483,7 +488,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Categories Sidebar */}
             <div className="lg:w-64">
-              <Card className="bg-white/60 backdrop-blur-sm border-slate-200">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-sm">Categories</CardTitle>
                 </CardHeader>
@@ -496,8 +501,8 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                         onClick={() => setSelectedCategory(category.id)}
                         className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
                           selectedCategory === category.id
-                            ? "bg-blue-100 text-blue-700 border border-blue-200"
-                            : "hover:bg-slate-100"
+                            ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                            : "hover:bg-accent text-foreground"
                         }`}
                       >
                         <div className="flex items-center space-x-2">
@@ -520,7 +525,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                 {filteredTemplates.map((template) => {
                   const isLocked = !canUseTemplate(template);
                   return (
-                    <Card key={template.id} className={`bg-white/60 backdrop-blur-sm border-slate-200 hover:shadow-lg transition-all group relative ${isLocked ? 'opacity-75' : ''}`}>
+                    <Card key={template.id} className={`hover:shadow-lg transition-all group relative ${isLocked ? 'opacity-75' : ''}`}>
                       {isLocked && (
                         <div className="absolute top-2 right-2 z-10">
                           <Lock className="w-4 h-4 text-red-500" />
@@ -562,7 +567,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                       
                       <CardContent className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-semibold">{template.name}</h3>
+                          <h3 className="font-semibold text-foreground">{template.name}</h3>
                           <div className="flex items-center space-x-1">
                             <Badge variant="outline" className="text-xs">
                               {template.type}
@@ -575,7 +580,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                           </div>
                         </div>
                         
-                        <p className="text-sm text-slate-600">{template.description}</p>
+                        <p className="text-sm text-muted-foreground">{template.description}</p>
                         
                         {/* Features */}
                         {template.features && (
@@ -592,15 +597,15 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-1">
                               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                              <span className="text-xs font-medium">{template.rating}</span>
+                              <span className="text-xs font-medium text-foreground">{template.rating}</span>
                             </div>
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-muted-foreground">
                               {template.uses.toLocaleString()} uses
                             </div>
                             {template.conversionRate && (
                               <div className="flex items-center space-x-1">
                                 <TrendingUp className="w-3 h-3 text-green-500" />
-                                <span className="text-xs font-medium text-green-600">
+                                <span className="text-xs font-medium text-green-600 dark:text-green-400">
                                   {template.conversionRate}
                                 </span>
                               </div>
@@ -609,7 +614,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
                           
                           <div className="flex items-center space-x-1">
                             {template.devices.map((device, index) => (
-                              <div key={index} className="text-slate-400">
+                              <div key={index} className="text-muted-foreground">
                                 {getDeviceIcon(device)}
                               </div>
                             ))}
@@ -647,11 +652,11 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
 
               {filteredTemplates.length === 0 && (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-slate-400" />
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2">No templates found</h3>
-                  <p className="text-slate-600 mb-4">Try adjusting your search or filter criteria</p>
+                  <h3 className="text-lg font-medium mb-2 text-foreground">No templates found</h3>
+                  <p className="text-muted-foreground mb-4">Try adjusting your search or filter criteria</p>
                   <Button variant="outline" onClick={() => {
                     setSearchTerm("");
                     setSelectedCategory("all");
