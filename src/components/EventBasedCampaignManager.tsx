@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,9 +105,6 @@ export const EventBasedCampaignManager = () => {
         backgroundType: 'color',
         backgroundImage: '',
         elements: [],
-        fonts: [],
-        colors: [],
-        images: [],
         version: '1.0',
         settings: {},
         customCSS: '',

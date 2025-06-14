@@ -50,15 +50,15 @@ const Index = () => {
   const renderContent = () => {
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onNavigateToBuilder={() => setActiveView('builder')} />;
       case 'builder':
-        return <PopupBuilder />;
+        return <PopupBuilder onBack={() => setActiveView('dashboard')} />;
       case 'campaigns':
         return <CampaignAnalytics />;
       case 'campaign-creator':
         return <EventBasedCampaignManager />;
       case 'templates':
-        return <TemplateGallery />;
+        return <TemplateGallery onSelectTemplate={() => setActiveView('builder')} />;
       case 'websites':
         return <WebsiteManagerEnhanced />;
       case 'analytics':
@@ -68,7 +68,7 @@ const Index = () => {
       case 'admin':
         return <Admin />;
       default:
-        return <Dashboard />;
+        return <Dashboard onNavigateToBuilder={() => setActiveView('builder')} />;
     }
   };
 
@@ -76,7 +76,12 @@ const Index = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <Sidebar className="border-r">
-          <div className="p-4">
+          <div className="p-4 flex items-center gap-3">
+            <img 
+              src="/lovable-uploads/01b275f3-962e-49f3-bc04-9696b715d718.png" 
+              alt="Pop The Builder Logo" 
+              className="w-8 h-8 rounded-lg"
+            />
             <h2 className="text-lg font-semibold text-gray-900">Pop The Builder</h2>
           </div>
           

@@ -56,15 +56,7 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route 
-                path="/" 
-                element={
-                  <Index 
-                    username={user.user_metadata?.username || user.email || "User"} 
-                    onLogout={signOut} 
-                  />
-                } 
-              />
+              <Route path="/" element={<Index />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
