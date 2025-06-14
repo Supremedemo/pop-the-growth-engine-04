@@ -20,7 +20,10 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Crown,
+  Star,
+  Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -66,7 +69,7 @@ export const Admin = () => {
           </TabsTrigger>
           <TabsTrigger value="subscriptions" className="flex items-center space-x-2">
             <CreditCard className="w-4 h-4" />
-            <span>Subscriptions</span>
+            <span>My Plan</span>
           </TabsTrigger>
           <TabsTrigger value="api" className="flex items-center space-x-2">
             <Key className="w-4 h-4" />
@@ -87,7 +90,7 @@ export const Admin = () => {
         </TabsContent>
 
         <TabsContent value="subscriptions">
-          <SubscriptionManagement />
+          <UserPlanDetails />
         </TabsContent>
 
         <TabsContent value="api">
@@ -186,121 +189,194 @@ const UserManagement = ({ onPasswordReset }: { onPasswordReset: (email: string) 
   );
 };
 
-const SubscriptionManagement = () => {
-  const subscriptions = [
-    { 
-      id: 1, 
-      email: "user1@example.com", 
-      plan: "Pro", 
-      status: "Active", 
-      nextBilling: "2024-07-15",
-      amount: "$29/month",
-      features: ["Unlimited Popups", "Advanced Analytics", "Priority Support"]
-    },
-    { 
-      id: 2, 
-      email: "user2@example.com", 
-      plan: "Starter", 
-      status: "Active", 
-      nextBilling: "2024-07-20",
-      amount: "$9/month",
-      features: ["5 Popups", "Basic Analytics", "Email Support"]
-    },
-    { 
-      id: 3, 
-      email: "user3@example.com", 
-      plan: "Enterprise", 
-      status: "Cancelled", 
-      nextBilling: "2024-06-30",
-      amount: "$99/month",
-      features: ["Unlimited Everything", "Custom Branding", "Dedicated Support"]
-    },
-  ];
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Active":
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case "Cancelled":
-        return <XCircle className="w-4 h-4 text-red-600" />;
-      case "Pending":
-        return <Clock className="w-4 h-4 text-yellow-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-600" />;
+const UserPlanDetails = () => {
+  const currentPlan = {
+    name: "Pro Plan",
+    price: "$29",
+    billing: "monthly",
+    status: "Active",
+    nextBilling: "2024-07-15",
+    features: [
+      "Unlimited Popups",
+      "Advanced Analytics",
+      "A/B Testing",
+      "Custom Templates",
+      "Priority Support",
+      "White Label Options"
+    ],
+    usage: {
+      popups: { current: 47, limit: "Unlimited" },
+      impressions: { current: 127432, limit: "Unlimited" },
+      conversions: { current: 3847, limit: "Unlimited" }
     }
   };
 
+  const availablePlans = [
+    {
+      name: "Starter",
+      price: "$9",
+      billing: "monthly",
+      icon: Star,
+      features: ["5 Popups", "Basic Analytics", "Email Support", "Standard Templates"],
+      popular: false
+    },
+    {
+      name: "Pro",
+      price: "$29",
+      billing: "monthly",
+      icon: Crown,
+      features: ["Unlimited Popups", "Advanced Analytics", "A/B Testing", "Custom Templates", "Priority Support", "White Label Options"],
+      popular: true,
+      current: true
+    },
+    {
+      name: "Enterprise",
+      price: "$99",
+      billing: "monthly",
+      icon: Sparkles,
+      features: ["Everything in Pro", "Custom Integrations", "Dedicated Account Manager", "SLA Guarantee", "Advanced Security"],
+      popular: false
+    }
+  ];
+
   return (
     <div className="space-y-6">
-      <Card>
+      {/* Current Plan Overview */}
+      <Card className="border-2 border-blue-200 bg-blue-50/50">
         <CardHeader>
-          <CardTitle>Subscription Overview</CardTitle>
-          <CardDescription>Monitor subscription metrics and revenue</CardDescription>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Crown className="w-6 h-6 text-blue-600" />
+              <div>
+                <CardTitle className="text-blue-900">Your Current Plan</CardTitle>
+                <CardDescription className="text-blue-700">Pop The Builder {currentPlan.name}</CardDescription>
+              </div>
+            </div>
+            <Badge className="bg-green-100 text-green-800">
+              <CheckCircle className="w-4 h-4 mr-1" />
+              {currentPlan.status}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="text-center p-4 border rounded-lg">
-              <CreditCard className="w-8 h-8 mx-auto mb-2 text-blue-600" />
-              <div className="text-2xl font-bold">142</div>
-              <div className="text-sm text-slate-600">Active Subscriptions</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-semibold mb-3">Plan Details</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Price:</span>
+                  <span className="font-medium">{currentPlan.price}/{currentPlan.billing}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Next billing:</span>
+                  <span className="font-medium">{currentPlan.nextBilling}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Status:</span>
+                  <span className="font-medium text-green-600">{currentPlan.status}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-4 border rounded-lg">
-              <Calendar className="w-8 h-8 mx-auto mb-2 text-green-600" />
-              <div className="text-2xl font-bold">$4,280</div>
-              <div className="text-sm text-slate-600">Monthly Revenue</div>
+            <div>
+              <h4 className="font-semibold mb-3">Usage This Month</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Popups Created:</span>
+                  <span className="font-medium">{currentPlan.usage.popups.current} / {currentPlan.usage.popups.limit}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Impressions:</span>
+                  <span className="font-medium">{currentPlan.usage.impressions.current.toLocaleString()} / {currentPlan.usage.impressions.limit}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-600">Conversions:</span>
+                  <span className="font-medium">{currentPlan.usage.conversions.current.toLocaleString()} / {currentPlan.usage.conversions.limit}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-center p-4 border rounded-lg">
-              <CheckCircle className="w-8 h-8 mx-auto mb-2 text-purple-600" />
-              <div className="text-2xl font-bold">94.2%</div>
-              <div className="text-sm text-slate-600">Retention Rate</div>
+          </div>
+          <div className="mt-4 pt-4 border-t">
+            <h4 className="font-semibold mb-2">Plan Features</h4>
+            <div className="flex flex-wrap gap-2">
+              {currentPlan.features.map((feature, index) => (
+                <Badge key={index} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                  {feature}
+                </Badge>
+              ))}
             </div>
-            <div className="text-center p-4 border rounded-lg">
-              <XCircle className="w-8 h-8 mx-auto mb-2 text-red-600" />
-              <div className="text-2xl font-bold">8</div>
-              <div className="text-sm text-slate-600">Churn This Month</div>
-            </div>
+          </div>
+          <div className="flex space-x-3 mt-6">
+            <Button variant="outline">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Manage Billing
+            </Button>
+            <Button variant="outline">
+              <Calendar className="w-4 h-4 mr-2" />
+              View Usage History
+            </Button>
           </div>
         </CardContent>
       </Card>
 
+      {/* Available Plans */}
       <Card>
         <CardHeader>
-          <CardTitle>Subscription Details</CardTitle>
-          <CardDescription>Manage individual subscriptions and billing</CardDescription>
+          <CardTitle>Available Plans</CardTitle>
+          <CardDescription>Choose the perfect plan for your popup needs</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {subscriptions.map((subscription) => (
-              <div key={subscription.id} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    {getStatusIcon(subscription.status)}
-                    <div>
-                      <div className="font-medium">{subscription.email}</div>
-                      <div className="text-sm text-slate-600">
-                        {subscription.plan} Plan • {subscription.amount}
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {availablePlans.map((plan, index) => (
+              <div 
+                key={index} 
+                className={`relative p-4 border rounded-lg ${
+                  plan.current 
+                    ? 'border-blue-500 bg-blue-50/50' 
+                    : plan.popular 
+                      ? 'border-purple-200 bg-purple-50/30' 
+                      : 'border-gray-200'
+                }`}
+              >
+                {plan.popular && !plan.current && (
+                  <Badge className="absolute -top-2 left-4 bg-purple-600">
+                    Most Popular
+                  </Badge>
+                )}
+                {plan.current && (
+                  <Badge className="absolute -top-2 left-4 bg-blue-600">
+                    Current Plan
+                  </Badge>
+                )}
+                <div className="flex items-center space-x-3 mb-3">
+                  <plan.icon className={`w-6 h-6 ${
+                    plan.current ? 'text-blue-600' : 'text-gray-600'
+                  }`} />
+                  <div>
+                    <h3 className={`font-semibold ${
+                      plan.current ? 'text-blue-900' : 'text-gray-900'
+                    }`}>
+                      {plan.name}
+                    </h3>
+                    <p className="text-2xl font-bold">
+                      {plan.price}<span className="text-sm font-normal text-gray-600">/{plan.billing}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2 mb-4">
+                  {plan.features.map((feature, featureIndex) => (
+                    <div key={featureIndex} className="flex items-center space-x-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span>{feature}</span>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant={subscription.status === "Active" ? "default" : subscription.status === "Cancelled" ? "destructive" : "secondary"}>
-                      {subscription.status}
-                    </Badge>
-                    <Button variant="outline" size="sm">
-                      Manage
-                    </Button>
-                  </div>
-                </div>
-                <div className="text-sm text-slate-600 mb-2">
-                  Next billing: {subscription.nextBilling}
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {subscription.features.map((feature, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {feature}
-                    </Badge>
                   ))}
                 </div>
+                <Button 
+                  className="w-full" 
+                  variant={plan.current ? "secondary" : "default"}
+                  disabled={plan.current}
+                >
+                  {plan.current ? "Current Plan" : "Upgrade"}
+                </Button>
               </div>
             ))}
           </div>
