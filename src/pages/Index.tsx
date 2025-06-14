@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp } from "lucide-react";
+import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, Shield } from "lucide-react";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
 import { TemplateGallery } from "@/components/TemplateGallery";
 import { Analytics } from "@/components/Analytics";
 import { CampaignManager } from "@/components/CampaignManager";
+import { Admin } from "@/components/Admin";
 
 const Index = () => {
   const [activeView, setActiveView] = useState("dashboard");
@@ -26,6 +27,8 @@ const Index = () => {
         return <CampaignManager />;
       case "analytics":
         return <Analytics />;
+      case "admin":
+        return <Admin />;
       default:
         return <Dashboard onNavigate={setActiveView} />;
     }
@@ -87,6 +90,15 @@ const Index = () => {
               >
                 <TrendingUp className="w-4 h-4" />
                 <span>Analytics</span>
+              </button>
+              <button
+                onClick={() => setActiveView("admin")}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                  activeView === "admin" ? "bg-red-100 text-red-700" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span>Admin</span>
               </button>
               <Button
                 onClick={() => setActiveView("builder")}
