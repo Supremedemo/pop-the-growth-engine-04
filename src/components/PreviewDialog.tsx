@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,14 +21,15 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
   const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("desktop");
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Adjusted resolutions to fit better in the dialog
   const macbookAirResolution = {
-    width: 1440,
-    height: 900
+    width: 1000,
+    height: 600
   };
 
   const mobileResolution = {
-    width: 390,
-    height: 844
+    width: 320,
+    height: 568
   };
 
   const currentResolution = deviceMode === "desktop" ? macbookAirResolution : mobileResolution;
@@ -63,7 +63,7 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
 
   const getPopupStyle = () => {
     const layout = canvasState.layout;
-    const scale = deviceMode === "mobile" ? 0.8 : 1;
+    const scale = deviceMode === "mobile" ? 0.6 : 0.8; // Reduced scale to fit better
     
     let backgroundStyle = {};
     if (canvasState.backgroundType === 'color') {
@@ -90,12 +90,12 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
           maxWidth: layout.dimensions?.maxWidth || '100%'
         };
         positionStyle = layout.position === 'top' 
-          ? { top: 0, left: 0, right: 0 }
+          ? { top: 40, left: 0, right: 0 } // Account for browser chrome
           : { bottom: 0, left: 0, right: 0 };
         break;
       case 'fullscreen':
         sizeStyle = { width: '100%', height: '100%' };
-        positionStyle = { top: 0, left: 0, right: 0, bottom: 0 };
+        positionStyle = { top: 40, left: 0, right: 0, bottom: 0 }; // Account for browser chrome
         break;
       case 'slide-in':
         sizeStyle = {
@@ -121,10 +121,10 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
     return {
       position: 'absolute' as const,
       zIndex: 9999,
-      borderRadius: layout.type === 'fullscreen' ? '0' : '12px',
+      borderRadius: layout.type === 'fullscreen' ? '0' : '8px',
       boxShadow: layout.type === 'banner' || layout.type === 'fullscreen' 
         ? 'none' 
-        : '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        : '0 20px 40px -12px rgba(0, 0, 0, 0.25)',
       overflow: 'hidden',
       ...backgroundStyle,
       ...sizeStyle,
@@ -229,11 +229,11 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
+      <DialogContent className="max-w-6xl w-[90vw] h-[85vh] p-0">
+        <DialogHeader className="p-4 pb-3 border-b">
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle>Preview Popup</DialogTitle>
+              <DialogTitle className="text-lg">Preview Popup</DialogTitle>
               <p className="text-sm text-gray-600 mt-1">
                 See how your popup looks on a real website
               </p>
@@ -248,10 +248,10 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
             </div>
           </div>
           
-          <div className="flex items-center space-x-4 mt-4">
+          <div className="flex items-center space-x-4 mt-3">
             <div className="flex-1 flex items-center space-x-2">
-              <Label htmlFor="preview-url" className="text-sm font-medium">
-                Website URL:
+              <Label htmlFor="preview-url" className="text-sm font-medium whitespace-nowrap">
+                URL:
               </Label>
               <div className="flex-1 flex space-x-2">
                 <Input
@@ -259,16 +259,15 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
                   type="url"
                   value={previewUrl}
                   onChange={(e) => setPreviewUrl(e.target.value)}
-                  placeholder="Enter website URL (e.g., example.com)"
-                  className="flex-1"
+                  placeholder="Enter website URL"
+                  className="flex-1 text-sm"
                 />
-                <Button onClick={handleLoadPreview} disabled={isLoading}>
+                <Button onClick={handleLoadPreview} disabled={isLoading} size="sm">
                   {isLoading ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   ) : (
                     <Globe className="w-4 h-4" />
                   )}
-                  Load
                 </Button>
               </div>
             </div>
@@ -292,54 +291,49 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
           </div>
         </DialogHeader>
 
-        <div className="flex-1 p-6 bg-gray-100">
-          <div className="relative mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+        <div className="flex-1 p-4 bg-gray-50 overflow-hidden">
+          <div className="relative mx-auto bg-white rounded-lg shadow-lg overflow-hidden h-full">
             <div 
-              className="relative bg-gray-50"
+              className="relative bg-gray-50 mx-auto"
               style={{
-                width: currentResolution.width,
-                height: currentResolution.height,
+                width: Math.min(currentResolution.width, window.innerWidth * 0.8),
+                height: Math.min(currentResolution.height, window.innerHeight * 0.6),
                 maxWidth: '100%',
-                maxHeight: '100%',
-                margin: '0 auto'
+                maxHeight: '100%'
               }}
             >
               {/* Browser Chrome */}
-              <div className="bg-gray-200 border-b flex items-center px-4 py-2 space-x-2">
+              <div className="bg-gray-200 border-b flex items-center px-3 py-1.5 space-x-2">
                 <div className="flex space-x-1">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+                  <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
                 </div>
-                <div className="flex-1 bg-white rounded px-3 py-1 text-xs text-gray-600">
+                <div className="flex-1 bg-white rounded px-2 py-0.5 text-xs text-gray-600 truncate">
                   {formatUrl(previewUrl)}
                 </div>
               </div>
 
               {/* Website Content */}
-              <div className="relative w-full h-full bg-white overflow-hidden">
+              <div className="relative w-full h-full bg-white overflow-hidden" style={{ height: 'calc(100% - 32px)' }}>
                 {previewUrl && !isLoading ? (
                   <iframe
                     ref={iframeRef}
                     src={formatUrl(previewUrl)}
                     className="w-full h-full border-0"
-                    style={{
-                      width: currentResolution.width,
-                      height: currentResolution.height - 40
-                    }}
                     onLoad={() => setIsLoading(false)}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-500">
                     {isLoading ? (
                       <div className="text-center">
-                        <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
-                        <p>Loading website...</p>
+                        <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                        <p className="text-sm">Loading website...</p>
                       </div>
                     ) : (
                       <div className="text-center">
-                        <Globe className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                        <p>Enter a URL and click Load to preview</p>
+                        <Globe className="w-8 h-8 mx-auto mb-3 text-gray-300" />
+                        <p className="text-sm">Enter a URL and click Load to preview</p>
                       </div>
                     )}
                   </div>
@@ -359,10 +353,10 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
                       {/* Close button */}
                       <button
                         onClick={() => setShowPopup(false)}
-                        className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors z-10"
+                        className="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors z-10"
                         style={{ zIndex: 10000 }}
                       >
-                        <X className="w-4 h-4 text-gray-600" />
+                        <X className="w-3 h-3 text-gray-600" />
                       </button>
 
                       {/* Render popup elements */}
@@ -377,8 +371,8 @@ export const PreviewDialog = ({ open, onOpenChange, canvasState }: PreviewDialog
           </div>
 
           {!showPopup && !isLoading && previewUrl && (
-            <div className="text-center mt-4">
-              <Button onClick={() => setShowPopup(true)} className="bg-blue-600 hover:bg-blue-700">
+            <div className="text-center mt-3">
+              <Button onClick={() => setShowPopup(true)} className="bg-blue-600 hover:bg-blue-700" size="sm">
                 Show Popup
               </Button>
             </div>
