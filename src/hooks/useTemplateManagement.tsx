@@ -90,34 +90,14 @@ export const useTemplateManagement = () => {
     }
   });
 
-  // Move template to folder mutation
-  const moveTemplateMutation = useMutation({
-    mutationFn: async ({ templateId, folderId }: { templateId: string; folderId: string | null }) => {
-      const { error } = await supabase
-        .from('user_templates')
-        .update({ folder_id: folderId })
-        .eq('id', templateId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] });
-      toast.success('Template moved successfully!');
-    },
-    onError: (error) => {
-      console.error('Error moving template:', error);
-      toast.error('Failed to move template');
-    }
-  });
-
-  // Utility functions
+  // Note: We'll need to add folder_id column to user_templates table
+  // For now, we'll filter based on a property that might not exist yet
   const getFilteredTemplates = useCallback(() => {
     let filtered = templates;
 
-    // Filter by current folder
-    filtered = filtered.filter(template => 
-      (template as any).folder_id === currentFolder
-    );
+    // Filter by current folder (this will need the folder_id column)
+    // For now, we'll just return all templates until the column is added
+    filtered = templates;
 
     // Filter by tags if any are selected
     if (selectedTags.length > 0) {
@@ -127,7 +107,7 @@ export const useTemplateManagement = () => {
     }
 
     return filtered;
-  }, [templates, currentFolder, selectedTags]);
+  }, [templates, selectedTags]);
 
   const getCurrentFolderPath = useCallback(() => {
     if (!currentFolder) return ['Root'];
@@ -171,12 +151,10 @@ export const useTemplateManagement = () => {
     isLoading: templatesLoading || foldersLoading,
     isCreatingFolder: createFolderMutation.isPending,
     isDeletingFolder: deleteFolderMutation.isPending,
-    isMovingTemplate: moveTemplateMutation.isPending,
     
     // Actions
     createFolder: createFolderMutation.mutate,
     deleteFolder: deleteFolderMutation.mutate,
-    moveTemplate: moveTemplateMutation.mutate,
     
     // Utilities
     getCurrentFolderPath

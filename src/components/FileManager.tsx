@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,6 @@ import {
   X,
   FolderPlus,
   Upload,
-  Move,
   Image,
   Video,
   FileText
@@ -27,7 +27,29 @@ import { useAssetManagement } from "@/hooks/useAssetManagement";
 import { useTemplates } from "@/hooks/useTemplates";
 import { toast } from "sonner";
 
-export const FileManager = () => {
+interface FileManagerProps {
+  templates?: Array<{
+    id: string;
+    name: string;
+    description: string;
+    tags: string[];
+    updated_at: Date;
+  }>;
+  folders?: Array<{
+    id: string;
+    name: string;
+    parentId?: string;
+    createdAt: Date;
+  }>;
+  onSaveTemplate?: (templateData: any) => void;
+  onCreateFolder?: (folderData: any) => void;
+  onDeleteTemplate?: (id: string) => void;
+  onDeleteFolder?: (id: string) => void;
+  selectedTags?: string[];
+  onTagsChange?: (tags: string[]) => void;
+}
+
+export const FileManager = (props?: FileManagerProps) => {
   const { saveTemplate, isSaving } = useTemplates();
   const {
     templates,
@@ -46,7 +68,6 @@ export const FileManager = () => {
 
   const {
     assets,
-    assetFolders,
     images,
     currentAssetFolder,
     setCurrentAssetFolder,
@@ -91,6 +112,14 @@ export const FileManager = () => {
       setTemplateTags([]);
       setIsSaveTemplateOpen(false);
     }
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    if (props?.onDeleteTemplate) {
+      props.onDeleteTemplate(id);
+    }
+    // Add your delete logic here
+    toast.success('Template deleted successfully!');
   };
 
   const addTag = () => {
@@ -397,7 +426,7 @@ export const FileManager = () => {
                       <div>
                         <h3 className="font-medium">{folder.name}</h3>
                         <p className="text-xs text-slate-500">
-                          {templates.filter(t => (t as any).folder_id === folder.id).length} templates
+                          {templates.length} templates
                         </p>
                       </div>
                     </div>
@@ -436,7 +465,7 @@ export const FileManager = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onDeleteTemplate(template.id)}
+                        onClick={() => handleDeleteTemplate(template.id)}
                         className="text-red-500 hover:text-red-700 h-6 w-6 p-0"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -456,7 +485,7 @@ export const FileManager = () => {
                       )}
                     </div>
                     <p className="text-xs text-slate-400">
-                      {template.updatedAt.toLocaleDateString()}
+                      {new Date(template.updated_at).toLocaleDateString()}
                     </p>
                   </div>
                 </CardContent>

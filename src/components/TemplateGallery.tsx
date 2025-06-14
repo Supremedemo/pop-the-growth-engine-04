@@ -600,7 +600,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
           {/* User Progress */}
           <Card className="bg-card">
             <CardContent className="p-4">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-2">
                   <Crown className="w-5 h-5 text-yellow-500" />
                   <span className="font-semibold text-foreground">Level {userLevel}</span>
@@ -880,16 +880,7 @@ export const TemplateGallery = ({ onSelectTemplate }: TemplateGalleryProps) => {
         </TabsContent>
 
         <TabsContent value="files">
-          <FileManager
-            templates={filteredUserTemplates}
-            folders={userFolders}
-            onSaveTemplate={handleSaveTemplate}
-            onCreateFolder={handleCreateFolder}
-            onDeleteTemplate={handleDeleteTemplate}
-            onDeleteFolder={handleDeleteFolder}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
-          />
+          <FileManager />
         </TabsContent>
       </Tabs>
     </div>
