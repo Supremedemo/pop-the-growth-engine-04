@@ -8,6 +8,7 @@ import { Plus, BarChart3, Settings, Users, Zap, Lightbulb, Target, TrendingUp, S
 import { useTheme } from "@/contexts/ThemeContext";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
+import { AiLandingPageBuilder } from "@/components/AiLandingPageBuilder";
 import { TemplateGallery } from "@/components/TemplateGallery";
 import { Analytics } from "@/components/Analytics";
 import { CampaignManager } from "@/components/CampaignManager";
@@ -28,6 +29,8 @@ const Index = ({ username, onLogout }: IndexProps) => {
         return <Dashboard onNavigate={setActiveView} />;
       case "builder":
         return <PopupBuilder onBack={() => setActiveView("dashboard")} />;
+      case "ai-builder":
+        return <AiLandingPageBuilder onBack={() => setActiveView("dashboard")} />;
       case "templates":
         return <TemplateGallery onSelectTemplate={() => setActiveView("builder")} />;
       case "campaigns":
@@ -123,6 +126,13 @@ const Index = ({ username, onLogout }: IndexProps) => {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create Popup
+                </Button>
+                <Button
+                  onClick={() => setActiveView("ai-builder")}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-sm border-0"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  AI Builder
                 </Button>
               </nav>
               
