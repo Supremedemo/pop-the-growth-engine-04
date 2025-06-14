@@ -99,6 +99,82 @@ const layoutsConfig = {
   fullscreen: { width: window.innerWidth, height: window.innerHeight }
 };
 
+// Helper function to create properly typed elements
+const createTypedElement = (el: any): PopupElement | null => {
+  const baseElement = {
+    id: el.id || uuidv4(),
+    x: el.x || 0,
+    y: el.y || 0,
+    width: el.width || 200,
+    height: el.height || 50,
+    zIndex: el.zIndex || 1,
+    isPinned: el.isPinned || false
+  };
+
+  switch (el.type) {
+    case 'text':
+      return {
+        ...baseElement,
+        type: 'text' as const,
+        content: el.content || 'Text',
+        fontSize: el.fontSize || 16,
+        fontWeight: el.fontWeight || 'normal',
+        textAlign: el.textAlign || 'left',
+        color: el.color || '#000000'
+      };
+    case 'image':
+      return {
+        ...baseElement,
+        type: 'image' as const,
+        src: el.src || '',
+        alt: el.alt || 'Image',
+        borderRadius: el.borderRadius || 0
+      };
+    case 'form':
+      return {
+        ...baseElement,
+        type: 'form' as const,
+        fields: el.fields || [],
+        buttonText: el.buttonText || 'Submit',
+        buttonColor: el.buttonColor || '#000000'
+      };
+    case 'timer':
+      return {
+        ...baseElement,
+        type: 'timer' as const,
+        duration: el.duration || 60,
+        format: el.format || 'mm:ss',
+        backgroundColor: el.backgroundColor || '#000000',
+        textColor: el.textColor || '#ffffff'
+      };
+    case 'html':
+      return {
+        ...baseElement,
+        type: 'html' as const,
+        htmlContent: el.htmlContent || ''
+      };
+    case 'multi-step-form':
+      return {
+        ...baseElement,
+        type: 'multi-step-form' as const,
+        steps: el.steps || [],
+        successPage: el.successPage || {
+          title: 'Thank you!',
+          message: 'Form submitted successfully',
+          showCoupon: false,
+          showDismissButton: true,
+          dismissButtonText: 'Close',
+          showRedirectButton: false,
+          redirectButtonText: 'Continue'
+        },
+        buttonColor: el.buttonColor || '#3b82f6',
+        backgroundColor: el.backgroundColor || '#ffffff'
+      };
+    default:
+      return null;
+  }
+};
+
 export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilderProps) => {
   const [canvasState, setCanvasState] = useState<CanvasState>(initialCanvasState);
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
@@ -124,79 +200,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
       // Handle canvas templates (existing logic)
       if (templateData.elements) {
         const validElements: PopupElement[] = templateData.elements
-          .map((el: any): PopupElement | null => {
-            const baseElement = {
-              id: el.id || uuidv4(),
-              x: el.x || 0,
-              y: el.y || 0,
-              width: el.width || 200,
-              height: el.height || 50,
-              zIndex: el.zIndex || 1,
-              isPinned: el.isPinned || false
-            };
-
-            // Create element based on type with proper typing
-            if (el.type === 'text') {
-              return {
-                ...baseElement,
-                type: 'text' as const,
-                content: el.content || 'Text',
-                fontSize: el.fontSize || 16,
-                fontWeight: el.fontWeight || 'normal',
-                textAlign: el.textAlign || 'left',
-                color: el.color || '#000000'
-              };
-            } else if (el.type === 'image') {
-              return {
-                ...baseElement,
-                type: 'image' as const,
-                src: el.src || '',
-                alt: el.alt || 'Image',
-                borderRadius: el.borderRadius || 0
-              };
-            } else if (el.type === 'form') {
-              return {
-                ...baseElement,
-                type: 'form' as const,
-                fields: el.fields || [],
-                buttonText: el.buttonText || 'Submit',
-                buttonColor: el.buttonColor || '#000000'
-              };
-            } else if (el.type === 'timer') {
-              return {
-                ...baseElement,
-                type: 'timer' as const,
-                duration: el.duration || 60,
-                format: el.format || 'mm:ss',
-                backgroundColor: el.backgroundColor || '#000000',
-                textColor: el.textColor || '#ffffff'
-              };
-            } else if (el.type === 'html') {
-              return {
-                ...baseElement,
-                type: 'html' as const,
-                htmlContent: el.htmlContent || ''
-              };
-            } else if (el.type === 'multi-step-form') {
-              return {
-                ...baseElement,
-                type: 'multi-step-form' as const,
-                steps: el.steps || [],
-                successPage: el.successPage || {
-                  title: 'Thank you!',
-                  message: 'Form submitted successfully',
-                  showCoupon: false,
-                  showDismissButton: true,
-                  dismissButtonText: 'Close',
-                  showRedirectButton: false,
-                  redirectButtonText: 'Continue'
-                },
-                buttonColor: el.buttonColor || '#3b82f6',
-                backgroundColor: el.backgroundColor || '#ffffff'
-              };
-            }
-            return null;
-          })
+          .map(createTypedElement)
           .filter((el): el is PopupElement => el !== null);
 
         setCanvasState(prev => ({
