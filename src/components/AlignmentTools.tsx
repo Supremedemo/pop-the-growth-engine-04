@@ -5,11 +5,11 @@ import {
   AlignLeft, 
   AlignCenter, 
   AlignRight, 
-  AlignTop, 
-  AlignMiddle, 
-  AlignBottom,
-  DistributeHorizontal,
-  DistributeVertical
+  AlignStartVertical, 
+  AlignCenterVertical, 
+  AlignEndVertical,
+  AlignHorizontalDistributeCenter,
+  AlignVerticalDistributeCenter
 } from "lucide-react";
 import { PopupElement } from "./PopupElements";
 
@@ -137,13 +137,13 @@ export const AlignmentTools = ({ selectedElements, onUpdateElements }: Alignment
 
       <div className="flex items-center space-x-1">
         <Button variant="ghost" size="sm" onClick={alignTop}>
-          <AlignTop className="w-4 h-4" />
+          <AlignStartVertical className="w-4 h-4" />
         </Button>
         <Button variant="ghost" size="sm" onClick={alignMiddle}>
-          <AlignMiddle className="w-4 h-4" />
+          <AlignCenterVertical className="w-4 h-4" />
         </Button>
         <Button variant="ghost" size="sm" onClick={alignBottom}>
-          <AlignBottom className="w-4 h-4" />
+          <AlignEndVertical className="w-4 h-4" />
         </Button>
       </div>
 
@@ -152,10 +152,10 @@ export const AlignmentTools = ({ selectedElements, onUpdateElements }: Alignment
           <div className="w-px h-4 bg-slate-300" />
           <div className="flex items-center space-x-1">
             <Button variant="ghost" size="sm" onClick={distributeHorizontally}>
-              <DistributeHorizontal className="w-4 h-4" />
+              <AlignHorizontalDistributeCenter className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={distributeVertically}>
-              <DistributeVertical className="w-4 h-4" />
+              <AlignVerticalDistributeCenter className="w-4 h-4" />
             </Button>
           </div>
         </>
