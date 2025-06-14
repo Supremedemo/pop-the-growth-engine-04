@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,6 +108,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const [templateData, setTemplateData] = useState<any>(null);
   const [showModeSelector, setShowModeSelector] = useState(!startWithTemplates);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (templateData) {
@@ -123,17 +125,21 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
       if (templateData.elements) {
         const validElements: PopupElement[] = templateData.elements
           .map((el: any): PopupElement | null => {
+            const baseElement = {
+              id: el.id || uuidv4(),
+              x: el.x || 0,
+              y: el.y || 0,
+              width: el.width || 200,
+              height: el.height || 50,
+              zIndex: el.zIndex || 1,
+              isPinned: el.isPinned || false
+            };
+
             // Create element based on type with proper typing
             if (el.type === 'text') {
               return {
-                type: 'text',
-                id: el.id || uuidv4(),
-                x: el.x || 0,
-                y: el.y || 0,
-                width: el.width || 200,
-                height: el.height || 50,
-                zIndex: el.zIndex || 1,
-                isPinned: el.isPinned || false,
+                ...baseElement,
+                type: 'text' as const,
                 content: el.content || 'Text',
                 fontSize: el.fontSize || 16,
                 fontWeight: el.fontWeight || 'normal',
@@ -142,42 +148,24 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
               };
             } else if (el.type === 'image') {
               return {
-                type: 'image',
-                id: el.id || uuidv4(),
-                x: el.x || 0,
-                y: el.y || 0,
-                width: el.width || 200,
-                height: el.height || 150,
-                zIndex: el.zIndex || 1,
-                isPinned: el.isPinned || false,
+                ...baseElement,
+                type: 'image' as const,
                 src: el.src || '',
                 alt: el.alt || 'Image',
                 borderRadius: el.borderRadius || 0
               };
             } else if (el.type === 'form') {
               return {
-                type: 'form',
-                id: el.id || uuidv4(),
-                x: el.x || 0,
-                y: el.y || 0,
-                width: el.width || 200,
-                height: el.height || 50,
-                zIndex: el.zIndex || 1,
-                isPinned: el.isPinned || false,
+                ...baseElement,
+                type: 'form' as const,
                 fields: el.fields || [],
                 buttonText: el.buttonText || 'Submit',
                 buttonColor: el.buttonColor || '#000000'
               };
             } else if (el.type === 'timer') {
               return {
-                type: 'timer',
-                id: el.id || uuidv4(),
-                x: el.x || 0,
-                y: el.y || 0,
-                width: el.width || 200,
-                height: el.height || 50,
-                zIndex: el.zIndex || 1,
-                isPinned: el.isPinned || false,
+                ...baseElement,
+                type: 'timer' as const,
                 duration: el.duration || 60,
                 format: el.format || 'mm:ss',
                 backgroundColor: el.backgroundColor || '#000000',
@@ -185,30 +173,26 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
               };
             } else if (el.type === 'html') {
               return {
-                type: 'html',
-                id: el.id || uuidv4(),
-                x: el.x || 0,
-                y: el.y || 0,
-                width: el.width || 200,
-                height: el.height || 50,
-                zIndex: el.zIndex || 1,
-                isPinned: el.isPinned || false,
+                ...baseElement,
+                type: 'html' as const,
                 htmlContent: el.htmlContent || ''
               };
             } else if (el.type === 'multi-step-form') {
               return {
-                type: 'multi-step-form',
-                id: el.id || uuidv4(),
-                x: el.x || 0,
-                y: el.y || 0,
-                width: el.width || 400,
-                height: el.height || 300,
-                zIndex: el.zIndex || 1,
-                isPinned: el.isPinned || false,
+                ...baseElement,
+                type: 'multi-step-form' as const,
                 steps: el.steps || [],
-                currentStep: el.currentStep || 0,
-                onSubmit: el.onSubmit || (() => {}),
-                onStepChange: el.onStepChange || (() => {})
+                successPage: el.successPage || {
+                  title: 'Thank you!',
+                  message: 'Form submitted successfully',
+                  showCoupon: false,
+                  showDismissButton: true,
+                  dismissButtonText: 'Close',
+                  showRedirectButton: false,
+                  redirectButtonText: 'Continue'
+                },
+                buttonColor: el.buttonColor || '#3b82f6',
+                backgroundColor: el.backgroundColor || '#ffffff'
               };
             }
             return null;
@@ -265,6 +249,14 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
       ...prev,
       elements: [...prev.elements, element],
     }));
+    
+    // Auto-select the new element
+    setSelectedElementIds([element.id]);
+    
+    toast({
+      title: "Element Added",
+      description: `${element.type} element has been added to the canvas.`,
+    });
   };
 
   const handleSelectElements = (ids: string[]) => {
@@ -286,6 +278,11 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
       elements: prev.elements.filter((element) => !ids.includes(element.id)),
     }));
     setSelectedElementIds([]);
+    
+    toast({
+      title: "Elements Deleted",
+      description: `${ids.length} element(s) have been deleted.`,
+    });
   };
 
   const handleCanvasStateUpdate = (updates: Partial<CanvasState>) => {
@@ -298,6 +295,90 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
       width: layoutsConfig[layout.type]?.width || 500,
       height: layoutsConfig[layout.type]?.height || 400
     });
+    
+    toast({
+      title: "Layout Changed",
+      description: `Layout changed to ${layout.name}`,
+    });
+  };
+
+  const handleDuplicateElements = () => {
+    if (selectedElementIds.length === 0) return;
+    
+    const elementsToClone = canvasState.elements.filter(el => selectedElementIds.includes(el.id));
+    const newElements = elementsToClone.map(el => ({
+      ...el,
+      id: uuidv4(),
+      x: el.x + 20,
+      y: el.y + 20,
+      zIndex: Math.max(...canvasState.elements.map(e => e.zIndex), 0) + 1
+    }));
+    
+    setCanvasState(prev => ({
+      ...prev,
+      elements: [...prev.elements, ...newElements]
+    }));
+    
+    setSelectedElementIds(newElements.map(el => el.id));
+    
+    toast({
+      title: "Elements Duplicated",
+      description: `${newElements.length} element(s) have been duplicated.`,
+    });
+  };
+
+  const handleSaveTemplate = () => {
+    const templateData = {
+      name: `Template ${Date.now()}`,
+      ...canvasState
+    };
+    
+    localStorage.setItem(`template_${Date.now()}`, JSON.stringify(templateData));
+    
+    toast({
+      title: "Template Saved",
+      description: "Your template has been saved locally.",
+    });
+  };
+
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(canvasState, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'popup-design.json';
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Design Exported",
+      description: "Your design has been exported as JSON.",
+    });
+  };
+
+  const handleImportJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string);
+        setCanvasState(importedData);
+        toast({
+          title: "Design Imported",
+          description: "Your design has been imported successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Import Failed",
+          description: "Invalid JSON file format.",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
   };
 
   // Mode selector screen
@@ -392,9 +473,11 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="outline" onClick={() => setShowPreview(true)}>
+                <Eye className="w-4 h-4 mr-2" />
                 Preview
               </Button>
               <Button variant="outline" onClick={() => setShowPublishDialog(true)}>
+                <Upload className="w-4 h-4 mr-2" />
                 Publish
               </Button>
             </div>
@@ -455,13 +538,14 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
   }
 
   return (
-    <div className="h-screen bg-background">
-      {/* Header */}
+    <div className="h-screen bg-background flex flex-col">
+      {/* Enhanced Header */}
       <div className="border-b bg-card">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center space-x-4">
             <Button variant="ghost" onClick={() => setShowModeSelector(true)}>
-              ← Back to Mode Selection
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
             </Button>
             <div>
               <h1 className="text-xl font-semibold">DIY Popup Builder</h1>
@@ -470,432 +554,594 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
               </p>
             </div>
           </div>
+          
           <div className="flex items-center space-x-2">
+            {/* Device Toggle */}
+            <div className="flex items-center space-x-1 bg-secondary rounded-lg p-1">
+              <Button
+                variant={previewDevice === "desktop" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setPreviewDevice("desktop")}
+                className="h-8 px-3"
+              >
+                <Monitor className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={previewDevice === "mobile" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setPreviewDevice("mobile")}
+                className="h-8 px-3"
+              >
+                <Smartphone className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <Separator orientation="vertical" className="h-8" />
+            
+            {/* Action Buttons */}
+            <Button variant="outline" size="sm" onClick={handleSaveTemplate}>
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+            
+            <Button variant="outline" size="sm" onClick={handleExportJSON}>
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => document.getElementById('import-file')?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </Button>
+            <input
+              id="import-file"
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportJSON}
+            />
+            
+            <Separator orientation="vertical" className="h-8" />
+            
             <Button variant="outline" onClick={() => setShowPreview(true)}>
+              <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
-            <Button variant="outline" onClick={() => setShowPublishDialog(true)}>
+            <Button onClick={() => setShowPublishDialog(true)}>
+              <Upload className="w-4 h-4 mr-2" />
               Publish
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex h-[calc(100vh-64px)]">
-        {/* Sidebar */}
-        <div className="w-64 border-r bg-secondary">
-          <div className="px-4 py-6">
-            <h2 className="mb-2 font-semibold">Layout</h2>
-            <Select onValueChange={(value) => handleLayoutChange(defaultLayouts.find(l => l.type === value) || defaultLayouts[0])}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a layout" />
-              </SelectTrigger>
-              <SelectContent>
-                {defaultLayouts.map((layout) => (
-                  <SelectItem key={layout.type} value={layout.type}>
-                    {layout.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Separator />
-
-          <div className="px-4 py-6">
-            <h2 className="mb-2 font-semibold">Background</h2>
-            <Select onValueChange={(value) => handleCanvasStateUpdate({ backgroundType: value as any })}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select background type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="color">Color</SelectItem>
-                <SelectItem value="image">Image</SelectItem>
-                <SelectItem value="gradient">Gradient</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {canvasState.backgroundType === "color" && (
-              <div className="mt-4">
-                <Label htmlFor="background-color">Color</Label>
-                <Input
-                  type="color"
-                  id="background-color"
-                  value={canvasState.backgroundColor}
-                  onChange={(e) =>
-                    handleCanvasStateUpdate({ backgroundColor: e.target.value })
-                  }
-                />
-              </div>
-            )}
-
-            {canvasState.backgroundType === "image" && (
-              <div className="mt-4">
-                <Label htmlFor="background-image">Image URL</Label>
-                <Input
-                  type="text"
-                  id="background-image"
-                  placeholder="Enter image URL"
-                  value={canvasState.backgroundImage || ""}
-                  onChange={(e) =>
-                    handleCanvasStateUpdate({ backgroundImage: e.target.value })
-                  }
-                />
-              </div>
-            )}
-
-            {canvasState.backgroundType === "gradient" && (
-              <div className="mt-4">
-                <Label htmlFor="background-gradient">Gradient</Label>
-                <Input
-                  type="text"
-                  id="background-gradient"
-                  placeholder="linear-gradient(to right, #43cea2, #185a9d)"
-                  value={canvasState.backgroundGradient || ""}
-                  onChange={(e) =>
-                    handleCanvasStateUpdate({ backgroundGradient: e.target.value })
-                  }
-                />
-              </div>
-            )}
-          </div>
-
-          <Separator />
-
-          <div className="px-4 py-6">
-            <h2 className="mb-2 font-semibold">Canvas</h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-grid">Show Grid</Label>
-                <Switch
-                  id="show-grid"
-                  checked={canvasState.showGrid}
-                  onCheckedChange={(checked) =>
-                    handleCanvasStateUpdate({ showGrid: checked })
-                  }
-                />
+      {/* Main Content with Resizable Panels */}
+      <div className="flex-1 overflow-hidden">
+        <ResizablePanelGroup direction="horizontal">
+          {/* Left Sidebar - Properties */}
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+            <div className="h-full bg-secondary overflow-y-auto">
+              {/* Layout Section */}
+              <div className="p-4 border-b">
+                <h3 className="font-semibold mb-3 flex items-center">
+                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  Layout
+                </h3>
+                <Select 
+                  value={canvasState.layout.type} 
+                  onValueChange={(value) => {
+                    const layout = defaultLayouts.find(l => l.type === value);
+                    if (layout) handleLayoutChange(layout);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {defaultLayouts.map((layout) => (
+                      <SelectItem key={layout.type} value={layout.type}>
+                        {layout.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div>
-                <Label htmlFor="grid-size">Grid Size: {canvasState.gridSize}px</Label>
-                <Slider
-                  id="grid-size"
-                  defaultValue={[canvasState.gridSize]}
-                  min={10}
-                  max={50}
-                  step={5}
-                  onValueChange={(value) =>
-                    handleCanvasStateUpdate({ gridSize: value[0] })
-                  }
-                />
+              {/* Background Section */}
+              <div className="p-4 border-b">
+                <h3 className="font-semibold mb-3">Background</h3>
+                <div className="space-y-3">
+                  <Select 
+                    value={canvasState.backgroundType} 
+                    onValueChange={(value) => handleCanvasStateUpdate({ backgroundType: value as any })}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="color">Solid Color</SelectItem>
+                      <SelectItem value="gradient">Gradient</SelectItem>
+                      <SelectItem value="image">Image</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {canvasState.backgroundType === "color" && (
+                    <div>
+                      <Label className="text-xs">Background Color</Label>
+                      <Input
+                        type="color"
+                        value={canvasState.backgroundColor}
+                        onChange={(e) => handleCanvasStateUpdate({ backgroundColor: e.target.value })}
+                        className="h-10 w-full"
+                      />
+                    </div>
+                  )}
+
+                  {canvasState.backgroundType === "gradient" && (
+                    <div>
+                      <Label className="text-xs">CSS Gradient</Label>
+                      <Input
+                        type="text"
+                        placeholder="linear-gradient(45deg, #ff6b6b, #4ecdc4)"
+                        value={canvasState.backgroundGradient || ""}
+                        onChange={(e) => handleCanvasStateUpdate({ backgroundGradient: e.target.value })}
+                      />
+                    </div>
+                  )}
+
+                  {canvasState.backgroundType === "image" && (
+                    <div>
+                      <Label className="text-xs">Image URL</Label>
+                      <Input
+                        type="url"
+                        placeholder="https://example.com/image.jpg"
+                        value={canvasState.backgroundImage || ""}
+                        onChange={(e) => handleCanvasStateUpdate({ backgroundImage: e.target.value })}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="snap-to-grid">Snap to Grid</Label>
-                <Switch
-                  id="snap-to-grid"
-                  checked={canvasState.showGrid}
-                  disabled={!canvasState.showGrid}
-                  onCheckedChange={(checked) =>
-                    handleCanvasStateUpdate({ showGrid: checked })
-                  }
-                />
+              {/* Canvas Settings */}
+              <div className="p-4 border-b">
+                <h3 className="font-semibold mb-3">Canvas Settings</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Show Grid</Label>
+                    <Switch
+                      checked={canvasState.showGrid}
+                      onCheckedChange={(checked) => handleCanvasStateUpdate({ showGrid: checked })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-sm">Grid Size: {canvasState.gridSize}px</Label>
+                    <Slider
+                      value={[canvasState.gridSize]}
+                      min={10}
+                      max={50}
+                      step={5}
+                      onValueChange={(value) => handleCanvasStateUpdate({ gridSize: value[0] })}
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-sm">Canvas Size</Label>
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      <Input
+                        type="number"
+                        placeholder="Width"
+                        value={canvasState.width}
+                        onChange={(e) => handleCanvasStateUpdate({ width: parseInt(e.target.value) || 500 })}
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Height"
+                        value={canvasState.height}
+                        onChange={(e) => handleCanvasStateUpdate({ height: parseInt(e.target.value) || 400 })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Element Properties */}
+              <div className="p-4">
+                <h3 className="font-semibold mb-3 flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Properties
+                </h3>
+                
+                {selectedElementIds.length === 1 ? (
+                  <>
+                    {canvasState.elements.filter(el => selectedElementIds.includes(el.id)).map(element => {
+                      switch (element.type) {
+                        case "text":
+                          return (
+                            <div key={element.id} className="space-y-4">
+                              <div>
+                                <Label className="text-xs">Content</Label>
+                                <Textarea
+                                  value={element.content}
+                                  onChange={(e) => handleUpdateElement(element.id, { content: e.target.value })}
+                                  className="mt-1"
+                                  rows={3}
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <Label className="text-xs">Font Size</Label>
+                                  <Input
+                                    type="number"
+                                    value={element.fontSize}
+                                    onChange={(e) => handleUpdateElement(element.id, { fontSize: parseInt(e.target.value) })}
+                                    className="mt-1"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Color</Label>
+                                  <Input
+                                    type="color"
+                                    value={element.color}
+                                    onChange={(e) => handleUpdateElement(element.id, { color: e.target.value })}
+                                    className="mt-1 h-9"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Font Weight</Label>
+                                <Select 
+                                  value={element.fontWeight} 
+                                  onValueChange={(value) => handleUpdateElement(element.id, { fontWeight: value })}
+                                >
+                                  <SelectTrigger className="w-full mt-1">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="normal">Normal</SelectItem>
+                                    <SelectItem value="bold">Bold</SelectItem>
+                                    <SelectItem value="lighter">Light</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Text Align</Label>
+                                <Select 
+                                  value={element.textAlign} 
+                                  onValueChange={(value) => handleUpdateElement(element.id, { textAlign: value })}
+                                >
+                                  <SelectTrigger className="w-full mt-1">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="left">Left</SelectItem>
+                                    <SelectItem value="center">Center</SelectItem>
+                                    <SelectItem value="right">Right</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          );
+                          
+                        case "image":
+                          return (
+                            <div key={element.id} className="space-y-4">
+                              <div>
+                                <Label className="text-xs">Image URL</Label>
+                                <Input
+                                  type="url"
+                                  value={element.src}
+                                  onChange={(e) => handleUpdateElement(element.id, { src: e.target.value })}
+                                  className="mt-1"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Alt Text</Label>
+                                <Input
+                                  type="text"
+                                  value={element.alt}
+                                  onChange={(e) => handleUpdateElement(element.id, { alt: e.target.value })}
+                                  className="mt-1"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Border Radius</Label>
+                                <Input
+                                  type="number"
+                                  value={element.borderRadius}
+                                  onChange={(e) => handleUpdateElement(element.id, { borderRadius: parseInt(e.target.value) })}
+                                  className="mt-1"
+                                />
+                              </div>
+                            </div>
+                          );
+                          
+                        case "form":
+                          return (
+                            <div key={element.id} className="space-y-4">
+                              <div>
+                                <Label className="text-xs">Button Text</Label>
+                                <Input
+                                  type="text"
+                                  value={element.buttonText}
+                                  onChange={(e) => handleUpdateElement(element.id, { buttonText: e.target.value })}
+                                  className="mt-1"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Button Color</Label>
+                                <Input
+                                  type="color"
+                                  value={element.buttonColor}
+                                  onChange={(e) => handleUpdateElement(element.id, { buttonColor: e.target.value })}
+                                  className="mt-1 h-9"
+                                />
+                              </div>
+                            </div>
+                          );
+                          
+                        case "timer":
+                          return (
+                            <div key={element.id} className="space-y-4">
+                              <div>
+                                <Label className="text-xs">Duration (seconds)</Label>
+                                <Input
+                                  type="number"
+                                  value={element.duration}
+                                  onChange={(e) => handleUpdateElement(element.id, { duration: parseInt(e.target.value) })}
+                                  className="mt-1"
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <Label className="text-xs">Background</Label>
+                                  <Input
+                                    type="color"
+                                    value={element.backgroundColor}
+                                    onChange={(e) => handleUpdateElement(element.id, { backgroundColor: e.target.value })}
+                                    className="mt-1 h-9"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Text Color</Label>
+                                  <Input
+                                    type="color"
+                                    value={element.textColor}
+                                    onChange={(e) => handleUpdateElement(element.id, { textColor: e.target.value })}
+                                    className="mt-1 h-9"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                          
+                        case "html":
+                          return (
+                            <div key={element.id} className="space-y-4">
+                              <div>
+                                <Label className="text-xs">HTML Content</Label>
+                                <Textarea
+                                  value={element.htmlContent}
+                                  onChange={(e) => handleUpdateElement(element.id, { htmlContent: e.target.value })}
+                                  className="mt-1 font-mono text-xs"
+                                  rows={6}
+                                />
+                              </div>
+                            </div>
+                          );
+                          
+                        case "multi-step-form":
+                          return (
+                            <div key={element.id} className="space-y-4">
+                              <div>
+                                <Label className="text-xs">Button Color</Label>
+                                <Input
+                                  type="color"
+                                  value={element.buttonColor}
+                                  onChange={(e) => handleUpdateElement(element.id, { buttonColor: e.target.value })}
+                                  className="mt-1 h-9"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Background Color</Label>
+                                <Input
+                                  type="color"
+                                  value={element.backgroundColor}
+                                  onChange={(e) => handleUpdateElement(element.id, { backgroundColor: e.target.value })}
+                                  className="mt-1 h-9"
+                                />
+                              </div>
+                            </div>
+                          );
+                          
+                        default:
+                          return null;
+                      }
+                    })}
+                  </>
+                ) : selectedElementIds.length > 1 ? (
+                  <div className="text-sm text-muted-foreground space-y-3">
+                    <p>{selectedElementIds.length} elements selected</p>
+                    <div className="space-y-2">
+                      <Button size="sm" variant="outline" onClick={handleDuplicateElements} className="w-full">
+                        <Copy className="w-4 h-4 mr-2" />
+                        Duplicate
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteElements(selectedElementIds)} className="w-full">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Select an element to edit its properties
+                  </p>
+                )}
               </div>
             </div>
-          </div>
+          </ResizablePanel>
+          
+          <ResizableHandle />
+          
+          {/* Canvas Area */}
+          <ResizablePanel defaultSize={60}>
+            <CanvasEditor
+              canvasState={canvasState}
+              selectedElementIds={selectedElementIds}
+              onSelectElements={handleSelectElements}
+              onUpdateElement={handleUpdateElement}
+              onDeleteElements={handleDeleteElements}
+              previewDevice={previewDevice}
+              onAddElement={handleAddElement}
+            />
+          </ResizablePanel>
+          
+          <ResizableHandle />
+          
+          {/* Right Sidebar - Elements & Layers */}
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+            <div className="h-full bg-secondary">
+              <div className="p-4 border-b">
+                <h3 className="font-semibold mb-3 flex items-center">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Elements
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'text')}
+                    className="h-12 flex flex-col items-center justify-center text-xs"
+                  >
+                    <span className="text-lg mb-1">T</span>
+                    Text
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'image')}
+                    className="h-12 flex flex-col items-center justify-center text-xs"
+                  >
+                    <span className="text-lg mb-1">🖼️</span>
+                    Image
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'form')}
+                    className="h-12 flex flex-col items-center justify-center text-xs"
+                  >
+                    <span className="text-lg mb-1">📝</span>
+                    Form
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'timer')}
+                    className="h-12 flex flex-col items-center justify-center text-xs"
+                  >
+                    <span className="text-lg mb-1">⏰</span>
+                    Timer
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'html')}
+                    className="h-12 flex flex-col items-center justify-center text-xs"
+                  >
+                    <span className="text-lg mb-1">⚡</span>
+                    HTML
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    draggable
+                    onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'multi-step-form')}
+                    className="h-12 flex flex-col items-center justify-center text-xs"
+                  >
+                    <span className="text-lg mb-1">📋</span>
+                    Multi-Form
+                  </Button>
+                </div>
+              </div>
 
-          <Separator />
-
-          <div className="px-4 py-6">
-            <h2 className="mb-2 font-semibold">Elements</h2>
-            {selectedElementIds.length === 1 ? (
-              <>
-                {canvasState.elements.filter(el => selectedElementIds.includes(el.id)).map(element => {
-                  switch (element.type) {
-                    case "text":
-                      return (
-                        <div key={element.id} className="space-y-4">
-                          <Label htmlFor="text-content">Content</Label>
-                          <Textarea
-                            id="text-content"
-                            value={element.content}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { content: e.target.value })
-                            }
-                          />
-
-                          <Label htmlFor="font-size">Font Size</Label>
-                          <Input
-                            type="number"
-                            id="font-size"
-                            value={element.fontSize}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { fontSize: parseInt(e.target.value) })
-                            }
-                          />
-
-                          <Label htmlFor="font-weight">Font Weight</Label>
-                          <Select onValueChange={(value) => handleUpdateElement(element.id, { fontWeight: value })}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder={element.fontWeight} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="normal">Normal</SelectItem>
-                              <SelectItem value="bold">Bold</SelectItem>
-                              <SelectItem value="italic">Italic</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Label htmlFor="text-align">Text Align</Label>
-                          <Select onValueChange={(value) => handleUpdateElement(element.id, { textAlign: value })}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder={element.textAlign} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left">Left</SelectItem>
-                              <SelectItem value="center">Center</SelectItem>
-                              <SelectItem value="right">Right</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Label htmlFor="text-color">Text Color</Label>
-                          <Input
-                            type="color"
-                            id="text-color"
-                            value={element.color}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { color: e.target.value })
-                            }
-                          />
+              {/* Layers Panel */}
+              <div className="p-4">
+                <h3 className="font-semibold mb-3 flex items-center">
+                  <Layers className="w-4 h-4 mr-2" />
+                  Layers ({canvasState.elements.length})
+                </h3>
+                <div className="space-y-1 max-h-96 overflow-y-auto">
+                  {canvasState.elements
+                    .sort((a, b) => b.zIndex - a.zIndex)
+                    .map((element) => (
+                      <div
+                        key={element.id}
+                        className={`p-2 rounded text-sm cursor-pointer flex items-center justify-between hover:bg-accent ${
+                          selectedElementIds.includes(element.id) ? 'bg-accent' : ''
+                        }`}
+                        onClick={() => handleSelectElements([element.id])}
+                      >
+                        <div className="flex items-center space-x-2 flex-1 min-w-0">
+                          <div className="flex items-center space-x-1">
+                            {element.isPinned ? (
+                              <Lock className="w-3 h-3 text-muted-foreground" />
+                            ) : (
+                              <GripVertical className="w-3 h-3 text-muted-foreground" />
+                            )}
+                          </div>
+                          <span className="truncate">
+                            {element.type === 'text' ? element.content.slice(0, 20) : 
+                             `${element.type} ${element.id.slice(-4)}`}
+                          </span>
                         </div>
-                      );
-                    case "image":
-                      return (
-                        <div key={element.id} className="space-y-4">
-                          <Label htmlFor="image-src">Image URL</Label>
-                          <Input
-                            type="text"
-                            id="image-src"
-                            value={element.src}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { src: e.target.value })
-                            }
-                          />
-
-                          <Label htmlFor="image-alt">Alt Text</Label>
-                          <Input
-                            type="text"
-                            id="image-alt"
-                            value={element.alt}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { alt: e.target.value })
-                            }
-                          />
-
-                          <Label htmlFor="border-radius">Border Radius</Label>
-                          <Input
-                            type="number"
-                            id="border-radius"
-                            value={element.borderRadius}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { borderRadius: parseInt(e.target.value) })
-                            }
-                          />
+                        <div className="flex items-center space-x-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateElement(element.id, { isPinned: !element.isPinned });
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            {element.isPinned ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                          </Button>
                         </div>
-                      );
-                    case "form":
-                      return (
-                        <div key={element.id} className="space-y-4">
-                          <Label htmlFor="button-text">Button Text</Label>
-                          <Input
-                            type="text"
-                            id="button-text"
-                            value={element.buttonText}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { buttonText: e.target.value })
-                            }
-                          />
-
-                          <Label htmlFor="button-color">Button Color</Label>
-                          <Input
-                            type="color"
-                            id="button-color"
-                            value={element.buttonColor}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { buttonColor: e.target.value })
-                            }
-                          />
-                        </div>
-                      );
-                    case "timer":
-                      return (
-                        <div key={element.id} className="space-y-4">
-                          <Label htmlFor="timer-duration">Duration (seconds)</Label>
-                          <Input
-                            type="number"
-                            id="timer-duration"
-                            value={element.duration}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { duration: parseInt(e.target.value) })
-                            }
-                          />
-
-                          <Label htmlFor="timer-format">Format</Label>
-                          <Input
-                            type="text"
-                            id="timer-format"
-                            value={element.format}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { format: e.target.value })
-                            }
-                          />
-
-                          <Label htmlFor="timer-background-color">Background Color</Label>
-                          <Input
-                            type="color"
-                            id="timer-background-color"
-                            value={element.backgroundColor}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { backgroundColor: e.target.value })
-                            }
-                          />
-
-                          <Label htmlFor="timer-text-color">Text Color</Label>
-                          <Input
-                            type="color"
-                            id="timer-text-color"
-                            value={element.textColor}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { textColor: e.target.value })
-                            }
-                          />
-                        </div>
-                      );
-                    case "html":
-                      return (
-                        <div key={element.id} className="space-y-4">
-                          <Label htmlFor="html-content">HTML Content</Label>
-                          <Textarea
-                            id="html-content"
-                            value={element.htmlContent}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { htmlContent: e.target.value })
-                            }
-                          />
-                        </div>
-                      );
-                    case "multi-step-form":
-                      return (
-                        <div key={element.id} className="space-y-4">
-                          <Label htmlFor="steps">Steps</Label>
-                          <Input
-                            type="text"
-                            id="steps"
-                            value={element.steps}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { steps: e.target.value })
-                            }
-                          />
-
-                          <Label htmlFor="current-step">Current Step</Label>
-                          <Input
-                            type="number"
-                            id="current-step"
-                            value={element.currentStep}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { currentStep: parseInt(e.target.value) })
-                            }
-                          />
-
-                          <Label htmlFor="on-submit">On Submit</Label>
-                          <Input
-                            type="text"
-                            id="on-submit"
-                            value={element.onSubmit}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { onSubmit: e.target.value })
-                            }
-                          />
-
-                          <Label htmlFor="on-step-change">On Step Change</Label>
-                          <Input
-                            type="text"
-                            id="on-step-change"
-                            value={element.onStepChange}
-                            onChange={(e) =>
-                              handleUpdateElement(element.id, { onStepChange: e.target.value })
-                            }
-                          />
-                        </div>
-                      );
-                    default:
-                      return null;
-                  }
-                })}
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Select an element to edit its properties.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Canvas */}
-        <div className="flex-1 bg-muted">
-          <CanvasEditor
-            canvasState={canvasState}
-            selectedElementIds={selectedElementIds}
-            onSelectElements={handleSelectElements}
-            onUpdateElement={handleUpdateElement}
-            onDeleteElements={handleDeleteElements}
-            previewDevice={previewDevice}
-            onAddElement={handleAddElement}
-          />
-        </div>
-
-        {/* Toolbar */}
-        <div className="w-48 border-l bg-secondary flex flex-col items-center justify-start pt-4">
-          <h2 className="mb-4 font-semibold">Add Elements</h2>
-          <div className="flex flex-col items-center space-y-3">
-            <Button
-              variant="outline"
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'text')}
-            >
-              Text
-            </Button>
-            <Button
-              variant="outline"
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'image')}
-            >
-              Image
-            </Button>
-            <Button
-              variant="outline"
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'form')}
-            >
-              Form
-            </Button>
-            <Button
-              variant="outline"
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'timer')}
-            >
-              Timer
-            </Button>
-            <Button
-              variant="outline"
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData('application/element-type', 'html')}
-            >
-              HTML
-            </Button>
-          </div>
-        </div>
+                      </div>
+                    ))}
+                  
+                  {canvasState.elements.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No elements yet.<br />
+                      Drag from the elements above.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
 
       {/* Dialogs */}
@@ -910,7 +1156,7 @@ export const PopupBuilder = ({ onBack, startWithTemplates = true }: PopupBuilder
         <PublishDialog
           open={showPublishDialog}
           onOpenChange={setShowPublishDialog}
-          templateName="Popup"
+          templateName="Custom Popup"
           canvasData={canvasState}
         />
       )}
