@@ -1,6 +1,22 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Settings } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { 
+  ArrowLeft, 
+  Settings, 
+  Undo, 
+  Redo, 
+  ZoomIn, 
+  ZoomOut, 
+  RotateCcw,
+  Grid3X3,
+  Eye,
+  Save,
+  Rocket,
+  Code,
+  FolderOpen
+} from "lucide-react";
 
 interface EditorHeaderProps {
   onBack: () => void;
@@ -60,68 +76,110 @@ export const EditorHeader = ({
   showRulesPanel
 }: EditorHeaderProps) => {
   return (
-    <div className="bg-white border-b border-slate-200 p-4">
-      <div className="flex items-center justify-between">
+    <div className="bg-white border-b border-slate-200">
+      <div className="flex items-center justify-between p-3">
+        {/* Left section - Navigation and title */}
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" onClick={onBack}>
+          <Button variant="ghost" size="sm" onClick={onBack} className="h-8">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           
-          <div className="text-lg font-semibold text-slate-900">
-            {templateName || 'Untitled Template'}
-          </div>
+          <Separator orientation="vertical" className="h-6" />
           
-          {selectedElementsCount > 0 && (
-            <Badge variant="secondary">
-              {selectedElementsCount} selected
-            </Badge>
-          )}
+          <div className="flex items-center space-x-3">
+            <h1 className="text-lg font-semibold text-slate-900 truncate max-w-64">
+              {templateName || 'Untitled Template'}
+            </h1>
+            
+            {selectedElementsCount > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {selectedElementsCount} selected
+              </Badge>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={onLoadTemplate}>
-            Load Template
+        {/* Right section - Actions */}
+        <div className="flex items-center space-x-1">
+          {/* File operations */}
+          <Button variant="ghost" size="sm" onClick={onLoadTemplate} className="h-8">
+            <FolderOpen className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onUndo} disabled={!canUndo}>
-            Undo
+          
+          <Separator orientation="vertical" className="h-6 mx-2" />
+          
+          {/* Edit operations */}
+          <Button variant="ghost" size="sm" onClick={onUndo} disabled={!canUndo} className="h-8">
+            <Undo className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onRedo} disabled={!canRedo}>
-            Redo
+          <Button variant="ghost" size="sm" onClick={onRedo} disabled={!canRedo} className="h-8">
+            <Redo className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onZoomIn}>
-            Zoom In
+          
+          <Separator orientation="vertical" className="h-6 mx-2" />
+          
+          {/* View operations */}
+          <Button variant="ghost" size="sm" onClick={onZoomIn} className="h-8">
+            <ZoomIn className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onZoomOut}>
-            Zoom Out
+          <Button variant="ghost" size="sm" onClick={onZoomOut} className="h-8">
+            <ZoomOut className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onResetZoom}>
-            Reset Zoom
+          <Button variant="ghost" size="sm" onClick={onResetZoom} className="h-8">
+            <RotateCcw className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onToggleGrid}>
-            {showGrid ? 'Hide Grid' : 'Show Grid'}
+          <Button 
+            variant={showGrid ? "secondary" : "ghost"} 
+            size="sm" 
+            onClick={onToggleGrid} 
+            className="h-8"
+          >
+            <Grid3X3 className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={onPreview}>
-            Preview
+          
+          <Separator orientation="vertical" className="h-6 mx-2" />
+          
+          {/* Preview and publish */}
+          <Button variant="ghost" size="sm" onClick={onPreview} className="h-8">
+            <Eye className="w-4 h-4" />
           </Button>
-          <Button variant="default" size="sm" onClick={onSave} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save'}
+          <Button variant="ghost" size="sm" onClick={onSave} disabled={isSaving} className="h-8">
+            <Save className="w-4 h-4" />
           </Button>
-          <Button variant="default" size="sm" onClick={onCreateCampaign} disabled={isCreating}>
-            {isCreating ? 'Creating...' : 'Create Campaign'}
+          <Button variant="default" size="sm" onClick={onCreateCampaign} disabled={isCreating} className="h-8">
+            <Rocket className="w-4 h-4 mr-2" />
+            {isCreating ? 'Creating...' : 'Campaign'}
           </Button>
-          <Button variant="default" size="sm" onClick={onGenerateCode}>
-            Generate Code
+          <Button variant="outline" size="sm" onClick={onGenerateCode} className="h-8">
+            <Code className="w-4 h-4" />
           </Button>
 
+          <Separator orientation="vertical" className="h-6 mx-2" />
+
           <Button
-            variant={showRulesPanel ? "default" : "outline"}
+            variant={showRulesPanel ? "default" : "ghost"}
             size="sm"
             onClick={onToggleRules}
+            className="h-8"
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Rules
+            <Settings className="w-4 h-4" />
           </Button>
+        </div>
+      </div>
+      
+      {/* Status bar */}
+      <div className="px-3 py-2 bg-slate-50 border-t border-slate-100">
+        <div className="flex items-center justify-between text-xs text-slate-600">
+          <div className="flex items-center space-x-4">
+            <span>Canvas: {canvasWidth}×{canvasHeight}px</span>
+            <span>Zoom: {Math.round(zoom * 100)}%</span>
+            <span>Layout: {layoutName}</span>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <span>{currentTemplateId ? 'Saved Template' : 'Unsaved'}</span>
+          </div>
         </div>
       </div>
     </div>

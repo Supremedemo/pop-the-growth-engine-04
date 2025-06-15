@@ -119,7 +119,7 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <EditorHeader
         onBack={onBack}
         currentTemplateId={templateManager.currentTemplateId}
@@ -195,7 +195,7 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
         canvasState={canvasState}
       />
 
-      <div className="flex h-[calc(100vh-80px)]">
+      <div className="flex flex-1 overflow-hidden">
         <EditorSidebar
           canvasState={canvasState}
           selectedElements={selectedElements}
@@ -213,9 +213,9 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
           isUploading={templateManager.isUploading}
         />
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {selectedElements.length > 1 && (
-            <div className="bg-white border-b border-slate-200 p-2">
+            <div className="bg-white border-b border-slate-200 p-3">
               <AlignmentTools 
                 selectedElements={selectedElements}
                 onUpdateElements={(updates) => {
@@ -239,7 +239,7 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
             />
           </div>
 
-          <div className="bg-white border-t border-slate-200 p-4">
+          <div className="bg-white border-t border-slate-200 p-3">
             <div className="flex justify-between items-center">
               <div className="flex space-x-2">
                 <Button
@@ -261,9 +261,7 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
               </div>
               
               <div className="text-sm text-slate-500">
-                {canvasState.elements.length} element{canvasState.elements.length !== 1 ? 's' : ''} • 
-                Canvas: {canvasState.width}×{canvasState.height}px • {canvasState.layout.type}
-                {templateManager.currentTemplateId && ' • Template: ' + templateManager.templateName}
+                {canvasState.elements.length} element{canvasState.elements.length !== 1 ? 's' : ''}
               </div>
             </div>
           </div>
