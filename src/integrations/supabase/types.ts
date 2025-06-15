@@ -394,6 +394,54 @@ export type Database = {
         }
         Relationships: []
       }
+      gamified_templates: {
+        Row: {
+          category: string
+          created_at: string
+          css_template: string
+          default_config: Json
+          description: string
+          html_template: string
+          id: string
+          is_active: boolean
+          js_template: string
+          level_required: number
+          name: string
+          preview_image: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          css_template: string
+          default_config?: Json
+          description: string
+          html_template: string
+          id?: string
+          is_active?: boolean
+          js_template: string
+          level_required?: number
+          name: string
+          preview_image?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          css_template?: string
+          default_config?: Json
+          description?: string
+          html_template?: string
+          id?: string
+          is_active?: boolean
+          js_template?: string
+          level_required?: number
+          name?: string
+          preview_image?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

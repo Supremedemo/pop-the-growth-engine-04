@@ -4,10 +4,10 @@ import { useCampaigns } from "./useCampaigns";
 import { useGamification } from "./useGamification";
 import { toast } from "sonner";
 import { CanvasState } from "@/components/PopupBuilder";
+import { GamifiedTemplate } from "./useTemplateCustomization";
 
 export interface GamifiedCampaignConfig {
-  templateId: string;
-  templateName: string;
+  template: GamifiedTemplate;
   customization: any;
   campaignName: string;
   targetingRules?: any;
@@ -23,20 +23,35 @@ export const useGamifiedCampaigns = () => {
     try {
       setIsCreating(true);
       
+      // Process the HTML template with customization values
+      const processedHtml = processTemplate(config.template.html_template, config.customization);
+      const processedCss = processTemplate(config.template.css_template, config.customization);
+      const processedJs = processTemplate(config.template.js_template, config.customization);
+
+      // Create the full HTML with embedded CSS and JS
+      const fullHtml = `
+        <style>${processedCss}</style>
+        ${processedHtml}
+        <script>
+          window.templateConfig = ${JSON.stringify(config.customization)};
+          ${processedJs}
+        </script>
+      `;
+      
       // Convert gamified template to canvas data format
       const canvasData: CanvasState = {
         elements: [{
           id: 'gamified-element',
           type: 'html',
-          htmlContent: `<div data-template="${config.templateId}" data-config='${JSON.stringify(config.customization)}'></div>`,
+          htmlContent: fullHtml,
           x: 50,
           y: 50,
-          width: 400,
-          height: 300,
+          width: 500,
+          height: 400,
           zIndex: 1
         }],
-        width: 500,
-        height: 400,
+        width: 600,
+        height: 500,
         backgroundColor: config.customization.backgroundColor || '#ffffff',
         backgroundType: 'color',
         zoom: 1,
@@ -52,8 +67,8 @@ export const useGamifiedCampaigns = () => {
           name: 'Modal - Center',
           type: 'modal' as const,
           position: 'center' as const,
-          description: 'Gamified template popup',
-          dimensions: { width: 500, height: 400 }
+          description: `Interactive ${config.template.name} campaign`,
+          dimensions: { width: 600, height: 500 }
         }
       };
 
@@ -61,9 +76,9 @@ export const useGamifiedCampaigns = () => {
       await new Promise<void>((resolve, reject) => {
         createCampaign({
           name: config.campaignName,
-          description: `Interactive ${config.templateName} campaign`,
+          description: `Interactive ${config.template.name} campaign`,
           canvasData,
-          templateId: config.templateId,
+          templateId: config.template.id,
           targetingRules: config.targetingRules || {
             pageUrl: '/*',
             triggerType: 'time_delay',
@@ -97,26 +112,44 @@ export const useGamifiedCampaigns = () => {
     }
   };
 
-  const getTemplateEmbedCode = (templateId: string, config: any) => {
+  const processTemplate = (template: string, config: any) => {
+    let processed = template;
+    
+    // Replace template variables with actual values
+    Object.keys(config).forEach(key => {
+      const placeholder = `{{${key}}}`;
+      const value = config[key];
+      processed = processed.replace(new RegExp(placeholder, 'g'), value);
+    });
+    
+    return processed;
+  };
+
+  const getTemplateEmbedCode = (template: GamifiedTemplate, config: any) => {
+    const processedHtml = processTemplate(template.html_template, config);
+    const processedCss = processTemplate(template.css_template, config);
+    const processedJs = processTemplate(template.js_template, config);
+
     return `
 <!-- Gamified Template Embed Code -->
+<div id="gamified-template-container">
+  <style>
+    ${processedCss}
+  </style>
+  ${processedHtml}
+</div>
+
 <script>
   (function() {
     // Template configuration
-    const templateConfig = ${JSON.stringify(config, null, 2)};
+    window.templateConfig = ${JSON.stringify(config, null, 2)};
+    window.templateConfig.onSubmit = function(data) {
+      console.log('Template submission:', data);
+      // Handle form submission here
+    };
     
-    // Load template on page
-    function loadGamifiedTemplate() {
-      // Your gamified template implementation would go here
-      console.log('Loading template: ${templateId}', templateConfig);
-    }
-    
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadGamifiedTemplate);
-    } else {
-      loadGamifiedTemplate();
-    }
+    // Initialize template
+    ${processedJs}
   })();
 </script>
     `.trim();
