@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
@@ -30,6 +31,7 @@ import PopupLibrary from "@/components/popwola/PopupLibrary";
 const Index = () => {
   const { user, signOut } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
 
   if (!user) {
     return <Auth />;
@@ -52,7 +54,20 @@ const Index = () => {
       case 'dashboard':
         return <Dashboard onNavigateToBuilder={() => setActiveView('builder')} />;
       case 'builder':
-        return <PopupBuilder onBack={() => setActiveView('dashboard')} />;
+        return (
+          <PopupBuilder
+            onBack={() => {
+              // If editing, go back to library, else dashboard
+              if (editingTemplateId) {
+                setActiveView("templates");
+                setEditingTemplateId(null);
+              } else {
+                setActiveView('dashboard');
+              }
+            }}
+            templateId={editingTemplateId || undefined}
+          />
+        );
       case 'campaigns':
         return <CampaignAnalytics />;
       case 'campaign-creator':
@@ -60,8 +75,14 @@ const Index = () => {
       case 'templates':
         return (
           <PopupLibrary
-            onCreateNew={() => setActiveView('builder')}
-            onEditTemplate={(tid) => setActiveView('builder')}
+            onCreateNew={() => {
+              setEditingTemplateId(null);
+              setActiveView('builder');
+            }}
+            onEditTemplate={(tid) => {
+              setEditingTemplateId(tid);
+              setActiveView('builder');
+            }}
           />
         );
       case 'websites':
@@ -100,7 +121,10 @@ const Index = () => {
                     return (
                       <SidebarMenuItem key={item.id}>
                         <SidebarMenuButton
-                          onClick={() => setActiveView(item.id)}
+                          onClick={() => {
+                            setActiveView(item.id);
+                            if (item.id !== "builder") setEditingTemplateId(null);
+                          }}
                           isActive={activeView === item.id}
                           className="w-full justify-start"
                         >
@@ -147,3 +171,4 @@ const Index = () => {
 };
 
 export default Index;
+

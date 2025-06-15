@@ -46,7 +46,10 @@ export default function PopupLibrary({ onCreateNew, onEditTemplate }: {
                 <Card
                   key={tpl.id}
                   className={`transition-all cursor-pointer hover:shadow-lg ${selectedTemplateId === tpl.id ? "ring-2 ring-primary" : "hover:bg-primary/5"}`}
-                  onClick={() => setSelectedTemplateId(tpl.id)}
+                  onClick={() => {
+                    setSelectedTemplateId(tpl.id);
+                    if (onEditTemplate) onEditTemplate(tpl.id);
+                  }}
                 >
                   <CardContent className="p-6">
                     <div className="flex flex-col gap-2">
