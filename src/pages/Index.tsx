@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import PredefinedTemplatesPage from "@/components/templates/predefined/PredefinedTemplatesPage";
+import PopupLibrary from "@/components/popwola/PopupLibrary";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -58,7 +59,12 @@ const Index = () => {
       case 'campaign-creator':
         return <EventBasedCampaignManager />;
       case 'templates':
-        return <PredefinedTemplatesPage />;
+        return (
+          <PopupLibrary
+            onCreateNew={() => setActiveView('builder')}
+            onEditTemplate={(tid) => setActiveView('builder')}
+          />
+        );
       case 'websites':
         return <WebsiteManagerEnhanced />;
       case 'analytics':
