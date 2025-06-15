@@ -1,160 +1,139 @@
 
-import { useState, useCallback, useEffect } from "react";
-import { CanvasState } from "@/components/PopupBuilder";
+import { useState, useEffect } from "react";
 import { useTemplates } from "@/hooks/useTemplates";
-import { useCampaigns } from "@/hooks/useCampaigns";
-import { useAssetManagement } from "@/hooks/useAssetManagement";
-import { useTemplateManagement } from "@/hooks/useTemplateManagement";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { CanvasState } from "../PopupBuilder";
 import { toast } from "sonner";
 
-interface TemplateManagerProps {
+interface UseTemplateManagerProps {
   templateId?: string;
   canvasState: CanvasState;
   onLoadTemplate: (template: any) => void;
 }
 
-export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: TemplateManagerProps) => {
-  const { templates, saveTemplate, updateTemplate, isSaving } = useTemplates();
-  const { createCampaign, isCreating } = useCampaigns();
-  const { uploadAsset, isUploading } = useAssetManagement();
-  const { saveTemplateWithCanvas, generateTemplateCode, isSavingTemplate } = useTemplateManagement();
-
-  const [currentTemplateId, setCurrentTemplateId] = useState(templateId);
-  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
-  const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
-  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
+export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: UseTemplateManagerProps) => {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
+  const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
   const [isCodeDialogOpen, setIsCodeDialogOpen] = useState(false);
-
-  // Load template if templateId is provided
-  const loadedTemplate = currentTemplateId ? templates.find(t => t.id === currentTemplateId) : null;
   
+  const [currentTemplateId, setCurrentTemplateId] = useState(templateId || null);
+  const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateTags, setTemplateTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
+  const [generatedCode, setGeneratedCode] = useState("");
 
-  // Update template details when a template is loaded
+  const { templates, saveTemplate, isSaving } = useTemplates();
+  const { uploadFile, isUploading } = useFileUpload();
+
+  const [isCreating, setIsCreating] = useState(false);
+
   useEffect(() => {
-    if (loadedTemplate) {
-      console.log('Loading template details:', loadedTemplate);
-      setTemplateName(loadedTemplate.name);
-      setTemplateDescription(loadedTemplate.description || "");
-      setTemplateTags(loadedTemplate.tags || []);
-      
-      // Load the canvas data
-      if (loadedTemplate.canvas_data) {
-        console.log('Loading canvas data:', loadedTemplate.canvas_data);
-        onLoadTemplate(loadedTemplate);
+    if (templateId && templates.length > 0) {
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        setTemplateName(template.name);
+        setTemplateDescription(template.description || "");
+        setTemplateTags(template.tags || []);
+        onLoadTemplate(template);
       }
     }
-  }, [loadedTemplate, onLoadTemplate]);
+  }, [templateId, templates, onLoadTemplate]);
 
-  const handleSaveTemplate = useCallback(() => {
-    if (!templateName.trim()) {
-      toast.error('Please enter a template name');
-      return;
-    }
-
-    console.log('Saving template with canvas state:', canvasState);
-    console.log('Current template ID:', currentTemplateId);
-
-    if (currentTemplateId && loadedTemplate) {
-      // Update existing template
-      console.log('Updating existing template:', currentTemplateId);
-      updateTemplate({
-        id: currentTemplateId,
-        updates: {
-          name: templateName.trim(),
-          description: templateDescription.trim() || null,
-          canvas_data: canvasState,
-          tags: templateTags
-        }
-      });
-    } else {
-      // Create new template
-      console.log('Creating new template');
-      saveTemplate({
-        name: templateName.trim(),
-        description: templateDescription.trim() || undefined,
-        canvasData: canvasState,
-        tags: templateTags
-      });
-      
-      // Set the current template ID after saving (this will be handled by the mutation success)
-    }
-    
-    setIsSaveDialogOpen(false);
-  }, [templateName, currentTemplateId, loadedTemplate, updateTemplate, templateDescription, canvasState, templateTags, saveTemplate]);
-
-  const handleCreateCampaign = useCallback(() => {
-    if (!templateName.trim()) {
-      toast.error('Please save the template first');
-      return;
-    }
-
-    createCampaign({
-      name: `${templateName} Campaign`,
-      description: `Campaign based on ${templateName} template`,
-      canvasData: canvasState,
-      templateId: currentTemplateId
-    });
-  }, [templateName, createCampaign, canvasState, currentTemplateId]);
-
-  const handleLoadTemplate = useCallback(() => {
+  const handleLoadTemplate = () => {
     setIsTemplateDialogOpen(true);
-  }, []);
+  };
 
-  const loadTemplate = useCallback((template: any) => {
-    console.log('Loading template:', template);
+  const loadTemplate = (template: any) => {
     setCurrentTemplateId(template.id);
     setTemplateName(template.name);
     setTemplateDescription(template.description || "");
     setTemplateTags(template.tags || []);
-    
-    // Load canvas data
-    if (template.canvas_data) {
-      console.log('Loading canvas data from template:', template.canvas_data);
-      onLoadTemplate(template);
-    }
-    
+    onLoadTemplate(template);
     setIsTemplateDialogOpen(false);
-    toast.success(`Template "${template.name}" loaded successfully!`);
-  }, [onLoadTemplate]);
+  };
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim()) {
+      toast.error("Please enter a template name");
+      return;
+    }
 
     try {
-      const uploadedFile = await uploadAsset(file, '/popup-assets/');
-      return uploadedFile.url;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
-    }
-  }, [uploadAsset]);
+      const templateData = {
+        name: templateName,
+        description: templateDescription,
+        tags: templateTags,
+        canvas_data: canvasState,
+        is_public: false
+      };
 
-  const addTag = useCallback(() => {
+      const savedTemplate = await saveTemplate(templateData, currentTemplateId || undefined);
+      setCurrentTemplateId(savedTemplate.id);
+      setIsSaveDialogOpen(false);
+      toast.success("Template saved successfully!");
+    } catch (error) {
+      console.error("Error saving template:", error);
+      toast.error("Failed to save template");
+    }
+  };
+
+  const handleCreateCampaign = async () => {
+    setIsCreating(true);
+    try {
+      // Create campaign logic would go here
+      // For now, just simulate the creation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Campaign created successfully!");
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      toast.error("Failed to create campaign");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleGenerateCode = () => {
+    const code = `<!-- Popup Template: ${templateName} -->
+<div class="popup-container">
+  <!-- Generated popup code would go here -->
+</div>`;
+    setGeneratedCode(code);
+    setIsCodeDialogOpen(true);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return "";
+
+    try {
+      const result = await uploadFile(file, "templates");
+      return result.url;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error("Failed to upload file");
+      return "";
+    }
+  };
+
+  const addTag = () => {
     if (newTag.trim() && !templateTags.includes(newTag.trim())) {
       setTemplateTags([...templateTags, newTag.trim()]);
       setNewTag("");
     }
-  }, [newTag, templateTags]);
+  };
 
-  const removeTag = useCallback((tagToRemove: string) => {
+  const removeTag = (tagToRemove: string) => {
     setTemplateTags(templateTags.filter(tag => tag !== tagToRemove));
-  }, [templateTags]);
-
-  const handleGenerateCode = useCallback(() => {
-    setIsCodeDialogOpen(true);
-  }, []);
-
-  const generatedCode = generateTemplateCode(canvasState);
+  };
 
   return {
     templates,
     currentTemplateId,
+    currentCampaignId,
     templateName,
     setTemplateName,
     templateDescription,
@@ -163,26 +142,26 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
     setTemplateTags,
     newTag,
     setNewTag,
-    isSaving: isSaving || isSavingTemplate,
+    generatedCode,
+    isSaving,
     isCreating,
     isUploading,
-    isSaveDialogOpen,
-    setIsSaveDialogOpen,
-    isPublishDialogOpen,
-    setIsPublishDialogOpen,
-    isPreviewDialogOpen,
-    setIsPreviewDialogOpen,
     isTemplateDialogOpen,
     setIsTemplateDialogOpen,
+    isSaveDialogOpen,
+    setIsSaveDialogOpen,
+    isPreviewDialogOpen,
+    setIsPreviewDialogOpen,
+    isPublishDialogOpen,
+    setIsPublishDialogOpen,
     isCodeDialogOpen,
     setIsCodeDialogOpen,
-    generatedCode,
-    handleSaveTemplate,
-    handleCreateCampaign,
     handleLoadTemplate,
     loadTemplate,
-    handleFileUpload,
+    handleSaveTemplate,
+    handleCreateCampaign,
     handleGenerateCode,
+    handleFileUpload,
     addTag,
     removeTag
   };

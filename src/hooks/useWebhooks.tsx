@@ -34,13 +34,14 @@ export const useWebhooks = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      const { data, error } = await supabase
-        .from('webhooks')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Use raw SQL query since the table types haven't been generated yet
+      const { data, error } = await supabase.rpc('execute_sql', {
+        query: 'SELECT * FROM webhooks WHERE user_id = $1 ORDER BY created_at DESC',
+        params: [user.id]
+      });
 
       if (error) throw error;
-      return data as Webhook[];
+      return (data || []) as Webhook[];
     },
     enabled: !!user
   });
@@ -49,17 +50,26 @@ export const useWebhooks = () => {
     mutationFn: async (webhookData: Omit<Webhook, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'last_tested_at' | 'last_test_status' | 'last_test_response'>) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase
-        .from('webhooks')
-        .insert({
-          ...webhookData,
-          user_id: user.id,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('execute_sql', {
+        query: `
+          INSERT INTO webhooks (user_id, name, url, method, headers, auth_type, auth_config, is_active)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          RETURNING *
+        `,
+        params: [
+          user.id,
+          webhookData.name,
+          webhookData.url,
+          webhookData.method,
+          JSON.stringify(webhookData.headers),
+          webhookData.auth_type,
+          JSON.stringify(webhookData.auth_config),
+          webhookData.is_active
+        ]
+      });
 
       if (error) throw error;
-      return data as Webhook;
+      return data?.[0] as Webhook;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['webhooks'] });
@@ -73,15 +83,34 @@ export const useWebhooks = () => {
 
   const updateWebhookMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Webhook> }) => {
-      const { data, error } = await supabase
-        .from('webhooks')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('execute_sql', {
+        query: `
+          UPDATE webhooks 
+          SET name = COALESCE($2, name),
+              url = COALESCE($3, url),
+              method = COALESCE($4, method),
+              headers = COALESCE($5, headers),
+              auth_type = COALESCE($6, auth_type),
+              auth_config = COALESCE($7, auth_config),
+              is_active = COALESCE($8, is_active),
+              updated_at = NOW()
+          WHERE id = $1
+          RETURNING *
+        `,
+        params: [
+          id,
+          updates.name,
+          updates.url,
+          updates.method,
+          updates.headers ? JSON.stringify(updates.headers) : null,
+          updates.auth_type,
+          updates.auth_config ? JSON.stringify(updates.auth_config) : null,
+          updates.is_active
+        ]
+      });
 
       if (error) throw error;
-      return data as Webhook;
+      return data?.[0] as Webhook;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['webhooks'] });
@@ -95,10 +124,10 @@ export const useWebhooks = () => {
 
   const deleteWebhookMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('webhooks')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.rpc('execute_sql', {
+        query: 'DELETE FROM webhooks WHERE id = $1',
+        params: [id]
+      });
 
       if (error) throw error;
     },

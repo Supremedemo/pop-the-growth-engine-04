@@ -5,8 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, ChevronLeft, ChevronRight, Copy, ExternalLink } from "lucide-react";
 import { BaseElement } from "./PopupElements";
-import { supabase } from "@/lib/supabase";
-import { toast } from "react-toastify";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export interface FormStep {
   id: string;
