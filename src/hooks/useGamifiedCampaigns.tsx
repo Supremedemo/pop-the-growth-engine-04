@@ -28,15 +28,12 @@ export const useGamifiedCampaigns = () => {
         elements: [{
           id: 'gamified-element',
           type: 'html',
-          templateId: config.templateId,
-          config: config.customization,
+          htmlContent: `<div data-template="${config.templateId}" data-config='${JSON.stringify(config.customization)}'></div>`,
           x: 50,
           y: 50,
           width: 400,
           height: 300,
-          zIndex: 1,
-          content: `<div data-template="${config.templateId}" data-config='${JSON.stringify(config.customization)}'></div>`,
-          styles: {}
+          zIndex: 1
         }],
         width: 500,
         height: 400,
