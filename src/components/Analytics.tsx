@@ -32,7 +32,6 @@ import {
 } from "lucide-react";
 import { useCampaignAnalytics } from "@/hooks/useCampaignAnalytics";
 import { useCampaigns } from "@/hooks/useCampaigns";
-import { useUserTracking } from "@/hooks/useUserTracking";
 
 export const Analytics = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
@@ -47,9 +46,67 @@ export const Analytics = () => {
     undefined,
     dateRange
   );
-  const { getEventAnalytics } = useUserTracking();
 
-  // Process analytics data for charts
+  // Calculate previous period data for trends
+  const previousPeriodRange = {
+    from: new Date(dateRange.from.getTime() - (dateRange.to.getTime() - dateRange.from.getTime())),
+    to: dateRange.from
+  };
+
+  const { summary: previousSummary } = useCampaignAnalytics(
+    selectedCampaign !== "all" ? selectedCampaign : undefined,
+    undefined,
+    previousPeriodRange
+  );
+
+  // Calculate percentage changes
+  const calculateChange = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  const revenueChange = calculateChange(summary.totalRevenue, previousSummary.totalRevenue);
+  const conversionRateChange = calculateChange(summary.conversionRate, previousSummary.conversionRate);
+  const impressionsChange = calculateChange(summary.totalImpressions, previousSummary.totalImpressions);
+  const ctrChange = calculateChange(summary.clickThroughRate, previousSummary.clickThroughRate);
+
+  // Process device breakdown from user agents
+  const processDeviceData = () => {
+    const deviceCounts = { Desktop: 0, Mobile: 0, Tablet: 0 };
+    
+    analytics.forEach(analytic => {
+      if (analytic.user_agent) {
+        const ua = analytic.user_agent.toLowerCase();
+        if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+          deviceCounts.Mobile++;
+        } else if (ua.includes('tablet') || ua.includes('ipad')) {
+          deviceCounts.Tablet++;
+        } else {
+          deviceCounts.Desktop++;
+        }
+      } else {
+        deviceCounts.Desktop++; // Default for unknown
+      }
+    });
+
+    const total = Object.values(deviceCounts).reduce((sum, count) => sum + count, 0);
+    
+    if (total === 0) {
+      return [
+        { name: "Desktop", value: 0, color: "#3b82f6" },
+        { name: "Mobile", value: 0, color: "#10b981" },
+        { name: "Tablet", value: 0, color: "#f59e0b" },
+      ];
+    }
+
+    return [
+      { name: "Desktop", value: Math.round((deviceCounts.Desktop / total) * 100), color: "#3b82f6" },
+      { name: "Mobile", value: Math.round((deviceCounts.Mobile / total) * 100), color: "#10b981" },
+      { name: "Tablet", value: Math.round((deviceCounts.Tablet / total) * 100), color: "#f59e0b" },
+    ];
+  };
+
+  // Process time series data for charts
   const processTimeSeriesData = () => {
     const dailyData: Record<string, any> = {};
     
@@ -74,21 +131,34 @@ export const Analytics = () => {
     return Object.values(dailyData).slice(-7); // Last 7 days
   };
 
+  // Process hourly conversion data
   const processHourlyData = () => {
-    const hourlyData: Record<number, number> = {};
+    const hourlyConversions: Record<number, number> = {};
+    const hourlyImpressions: Record<number, number> = {};
     
     analytics.forEach(analytic => {
+      const hour = new Date(analytic.timestamp).getHours();
+      
       if (analytic.event_type === 'conversion') {
-        const hour = new Date(analytic.timestamp).getHours();
-        hourlyData[hour] = (hourlyData[hour] || 0) + 1;
+        hourlyConversions[hour] = (hourlyConversions[hour] || 0) + 1;
+      }
+      if (analytic.event_type === 'impression') {
+        hourlyImpressions[hour] = (hourlyImpressions[hour] || 0) + 1;
       }
     });
 
     const hours = ['6AM', '9AM', '12PM', '3PM', '6PM', '9PM'];
-    return hours.map((hour, index) => ({
-      hour,
-      rate: ((hourlyData[6 + index * 3] || 0) / (analytics.filter(a => a.event_type === 'impression').length || 1)) * 100
-    }));
+    return hours.map((hour, index) => {
+      const hourIndex = 6 + index * 3;
+      const conversions = hourlyConversions[hourIndex] || 0;
+      const impressions = hourlyImpressions[hourIndex] || 0;
+      const rate = impressions > 0 ? (conversions / impressions) * 100 : 0;
+      
+      return {
+        hour,
+        rate: Math.round(rate * 100) / 100
+      };
+    });
   };
 
   const processCampaignData = () => {
@@ -108,17 +178,12 @@ export const Analytics = () => {
         name: campaign.name,
         conversions: campaignStats.conversions,
         revenue: campaignStats.revenue,
-        rate: conversionRate
+        rate: Math.round(conversionRate * 100) / 100
       };
     }).filter(c => c.conversions > 0 || c.revenue > 0);
   };
 
-  const deviceData = [
-    { name: "Desktop", value: 45.2, color: "#3b82f6" },
-    { name: "Mobile", value: 41.8, color: "#10b981" },
-    { name: "Tablet", value: 13.0, color: "#f59e0b" },
-  ];
-
+  const deviceData = processDeviceData();
   const timeSeriesData = processTimeSeriesData();
   const hourlyPerformanceData = processHourlyData();
   const campaignPerformanceData = processCampaignData();
@@ -127,32 +192,32 @@ export const Analytics = () => {
     {
       title: "Total Revenue",
       value: `$${summary.totalRevenue.toFixed(2)}`,
-      change: "+15.7%", // TODO: Calculate actual change
-      trend: "up",
+      change: `${revenueChange >= 0 ? '+' : ''}${revenueChange.toFixed(1)}%`,
+      trend: revenueChange >= 0 ? "up" : "down",
       icon: DollarSign,
       color: "text-green-600"
     },
     {
       title: "Conversion Rate",
       value: `${summary.conversionRate.toFixed(2)}%`,
-      change: "+0.4%", // TODO: Calculate actual change
-      trend: "up",
+      change: `${conversionRateChange >= 0 ? '+' : ''}${conversionRateChange.toFixed(1)}%`,
+      trend: conversionRateChange >= 0 ? "up" : "down",
       icon: MousePointer,
       color: "text-blue-600"
     },
     {
       title: "Total Impressions",
       value: summary.totalImpressions.toLocaleString(),
-      change: "+12.5%", // TODO: Calculate actual change
-      trend: "up",
+      change: `${impressionsChange >= 0 ? '+' : ''}${impressionsChange.toFixed(1)}%`,
+      trend: impressionsChange >= 0 ? "up" : "down",
       icon: Eye,
       color: "text-purple-600"
     },
     {
       title: "Click-Through Rate",
       value: `${summary.clickThroughRate.toFixed(2)}%`,
-      change: "-2.1%", // TODO: Calculate actual change
-      trend: "down",
+      change: `${ctrChange >= 0 ? '+' : ''}${ctrChange.toFixed(1)}%`,
+      trend: ctrChange >= 0 ? "up" : "down",
       icon: Users,
       color: "text-orange-600"
     }
@@ -307,24 +372,30 @@ export const Analytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={deviceData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {deviceData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => `${value}%`} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  {deviceData.some(d => d.value > 0) ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={deviceData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {deviceData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => `${value}%`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-muted-foreground">No device data available</p>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-center space-x-6 mt-4">
                   {deviceData.map((device, index) => (
@@ -347,15 +418,21 @@ export const Analytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={hourlyPerformanceData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="hour" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => `${Number(value).toFixed(2)}%`} />
-                      <Bar dataKey="rate" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {hourlyPerformanceData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={hourlyPerformanceData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="hour" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => `${Number(value).toFixed(2)}%`} />
+                        <Bar dataKey="rate" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-muted-foreground">No hourly data available</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
