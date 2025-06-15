@@ -394,6 +394,86 @@ export type Database = {
         }
         Relationships: []
       }
+      form_submission_rules: {
+        Row: {
+          actions: Json
+          campaign_id: string | null
+          conditions: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          priority: number
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actions?: Json
+          campaign_id?: string | null
+          conditions?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          priority?: number
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actions?: Json
+          campaign_id?: string | null
+          conditions?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          priority?: number
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      form_submissions: {
+        Row: {
+          created_at: string
+          delivered_webhook_ids: string[] | null
+          form_data: Json
+          id: string
+          processed_at: string | null
+          rule_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivered_webhook_ids?: string[] | null
+          form_data: Json
+          id?: string
+          processed_at?: string | null
+          rule_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivered_webhook_ids?: string[] | null
+          form_data?: Json
+          id?: string
+          processed_at?: string | null
+          rule_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "form_submission_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gamified_templates: {
         Row: {
           category: string
@@ -768,6 +848,105 @@ export type Database = {
           mime_type?: string
           original_filename?: string
           storage_path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_deliveries: {
+        Row: {
+          delivered_at: string | null
+          delivery_status: string
+          id: string
+          response_body: string | null
+          response_status: number | null
+          submission_id: string | null
+          user_id: string
+          webhook_id: string
+        }
+        Insert: {
+          delivered_at?: string | null
+          delivery_status?: string
+          id?: string
+          response_body?: string | null
+          response_status?: number | null
+          submission_id?: string | null
+          user_id: string
+          webhook_id: string
+        }
+        Update: {
+          delivered_at?: string | null
+          delivery_status?: string
+          id?: string
+          response_body?: string | null
+          response_status?: number | null
+          submission_id?: string | null
+          user_id?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "form_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          auth_config: Json
+          auth_type: string
+          created_at: string
+          headers: Json
+          id: string
+          is_active: boolean
+          last_test_response: string | null
+          last_test_status: string | null
+          last_tested_at: string | null
+          method: string
+          name: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          auth_config?: Json
+          auth_type?: string
+          created_at?: string
+          headers?: Json
+          id?: string
+          is_active?: boolean
+          last_test_response?: string | null
+          last_test_status?: string | null
+          last_tested_at?: string | null
+          method?: string
+          name: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          auth_config?: Json
+          auth_type?: string
+          created_at?: string
+          headers?: Json
+          id?: string
+          is_active?: boolean
+          last_test_response?: string | null
+          last_test_status?: string | null
+          last_tested_at?: string | null
+          method?: string
+          name?: string
+          updated_at?: string
+          url?: string
           user_id?: string
         }
         Relationships: []

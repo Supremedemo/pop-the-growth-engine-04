@@ -21,6 +21,15 @@ export interface Webhook {
   updated_at: string;
 }
 
+const isValidURL = (url: string) => {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const useWebhooks = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -33,14 +42,12 @@ export const useWebhooks = () => {
     queryKey: ['webhooks', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      
       const { data, error } = await supabase.functions.invoke('execute-sql', {
         body: {
           query: 'SELECT * FROM webhooks WHERE user_id = $1 ORDER BY created_at DESC',
           params: [user.id]
         }
       });
-
       if (error) throw error;
       return (data?.data || []) as Webhook[];
     },
@@ -50,7 +57,17 @@ export const useWebhooks = () => {
   const createWebhookMutation = useMutation({
     mutationFn: async (webhookData: Omit<Webhook, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'last_tested_at' | 'last_test_status' | 'last_test_response'>) => {
       if (!user) throw new Error('User not authenticated');
-
+      if (!webhookData.name || !webhookData.url || !isValidURL(webhookData.url)) {
+        throw new Error('Invalid webhook name or URL');
+      }
+      // Validate headers/auth_config shape
+      let headers, auth_config;
+      try {
+        headers = JSON.stringify(webhookData.headers ?? {});
+        auth_config = JSON.stringify(webhookData.auth_config ?? {});
+      } catch {
+        throw new Error('Headers or Auth Config must be valid JSON');
+      }
       const { data, error } = await supabase.functions.invoke('execute-sql', {
         body: {
           query: `
@@ -63,14 +80,13 @@ export const useWebhooks = () => {
             webhookData.name,
             webhookData.url,
             webhookData.method,
-            JSON.stringify(webhookData.headers),
+            headers,
             webhookData.auth_type,
-            JSON.stringify(webhookData.auth_config),
+            auth_config,
             webhookData.is_active
           ]
         }
       });
-
       if (error) throw error;
       return data?.data?.[0] as Webhook;
     },
@@ -78,14 +94,22 @@ export const useWebhooks = () => {
       queryClient.invalidateQueries({ queryKey: ['webhooks'] });
       toast.success('Webhook created successfully!');
     },
-    onError: (error) => {
-      console.error('Error creating webhook:', error);
-      toast.error('Failed to create webhook');
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to create webhook');
     }
   });
 
   const updateWebhookMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Webhook> }) => {
+      if (!user) throw new Error('User not authenticated');
+      // Only update if webhook belongs to the user
+      let headers, auth_config;
+      try {
+        headers = updates.headers ? JSON.stringify(updates.headers) : null;
+        auth_config = updates.auth_config ? JSON.stringify(updates.auth_config) : null;
+      } catch {
+        throw new Error('Headers or Auth Config must be valid JSON');
+      }
       const { data, error } = await supabase.functions.invoke('execute-sql', {
         body: {
           query: `
@@ -98,7 +122,7 @@ export const useWebhooks = () => {
                 auth_config = COALESCE($7, auth_config),
                 is_active = COALESCE($8, is_active),
                 updated_at = NOW()
-            WHERE id = $1
+            WHERE id = $1 AND user_id = $9
             RETURNING *
           `,
           params: [
@@ -106,14 +130,14 @@ export const useWebhooks = () => {
             updates.name,
             updates.url,
             updates.method,
-            updates.headers ? JSON.stringify(updates.headers) : null,
+            headers,
             updates.auth_type,
-            updates.auth_config ? JSON.stringify(updates.auth_config) : null,
-            updates.is_active
+            auth_config,
+            updates.is_active,
+            user.id
           ]
         }
       });
-
       if (error) throw error;
       return data?.data?.[0] as Webhook;
     },
@@ -121,39 +145,37 @@ export const useWebhooks = () => {
       queryClient.invalidateQueries({ queryKey: ['webhooks'] });
       toast.success('Webhook updated successfully!');
     },
-    onError: (error) => {
-      console.error('Error updating webhook:', error);
-      toast.error('Failed to update webhook');
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to update webhook');
     }
   });
 
   const deleteWebhookMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
       const { error } = await supabase.functions.invoke('execute-sql', {
         body: {
-          query: 'DELETE FROM webhooks WHERE id = $1',
-          params: [id]
+          query: 'DELETE FROM webhooks WHERE id = $1 AND user_id = $2',
+          params: [id, user.id]
         }
       });
-
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['webhooks'] });
       toast.success('Webhook deleted successfully!');
     },
-    onError: (error) => {
-      console.error('Error deleting webhook:', error);
-      toast.error('Failed to delete webhook');
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to delete webhook');
     }
   });
 
   const testWebhookMutation = useMutation({
     mutationFn: async (webhookId: string) => {
+      // Security: no changes required unless you want to rate limit/test ownership
       const { data, error } = await supabase.functions.invoke('test-webhook', {
         body: { webhookId }
       });
-
       if (error) throw error;
       return data;
     },
@@ -161,9 +183,8 @@ export const useWebhooks = () => {
       queryClient.invalidateQueries({ queryKey: ['webhooks'] });
       toast.success('Webhook test completed!');
     },
-    onError: (error) => {
-      console.error('Error testing webhook:', error);
-      toast.error('Failed to test webhook');
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to test webhook');
     }
   });
 

@@ -30,7 +30,6 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
     queryKey: ['form-submission-rules', user?.id, campaignId, templateId],
     queryFn: async () => {
       if (!user) return [];
-      
       let query = `
         SELECT * FROM form_submission_rules 
         WHERE user_id = $1
@@ -61,7 +60,14 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
   const createRuleMutation = useMutation({
     mutationFn: async (ruleData: Omit<FormSubmissionRule, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user) throw new Error('User not authenticated');
-
+      // Validate JSON shape for conditions/actions
+      let conditions, actions;
+      try {
+        conditions = JSON.stringify(ruleData.conditions ?? {});
+        actions = JSON.stringify(ruleData.actions ?? {});
+      } catch {
+        throw new Error('Conditions and Actions must be valid JSON');
+      }
       const { data, error } = await supabase.functions.invoke('execute-sql', {
         body: {
           query: `
@@ -74,8 +80,8 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
             ruleData.campaign_id,
             ruleData.template_id,
             ruleData.name,
-            JSON.stringify(ruleData.conditions),
-            JSON.stringify(ruleData.actions),
+            conditions,
+            actions,
             ruleData.is_active,
             ruleData.priority
           ]
@@ -89,14 +95,21 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
       queryClient.invalidateQueries({ queryKey: ['form-submission-rules'] });
       toast.success('Rule created successfully!');
     },
-    onError: (error) => {
-      console.error('Error creating rule:', error);
+    onError: (error: any) => {
       toast.error('Failed to create rule');
     }
   });
 
   const updateRuleMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<FormSubmissionRule> }) => {
+      if (!user) throw new Error('User not authenticated');
+      let conditions, actions;
+      try {
+        conditions = updates.conditions ? JSON.stringify(updates.conditions) : null;
+        actions = updates.actions ? JSON.stringify(updates.actions) : null;
+      } catch {
+        throw new Error('Conditions and Actions must be valid JSON');
+      }
       const { data, error } = await supabase.functions.invoke('execute-sql', {
         body: {
           query: `
@@ -107,16 +120,17 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
                 is_active = COALESCE($5, is_active),
                 priority = COALESCE($6, priority),
                 updated_at = NOW()
-            WHERE id = $1
+            WHERE id = $1 AND user_id = $7
             RETURNING *
           `,
           params: [
             id,
             updates.name,
-            updates.conditions ? JSON.stringify(updates.conditions) : null,
-            updates.actions ? JSON.stringify(updates.actions) : null,
+            conditions,
+            actions,
             updates.is_active,
-            updates.priority
+            updates.priority,
+            user.id
           ]
         }
       });
@@ -128,18 +142,18 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
       queryClient.invalidateQueries({ queryKey: ['form-submission-rules'] });
       toast.success('Rule updated successfully!');
     },
-    onError: (error) => {
-      console.error('Error updating rule:', error);
+    onError: (error: any) => {
       toast.error('Failed to update rule');
     }
   });
 
   const deleteRuleMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
       const { error } = await supabase.functions.invoke('execute-sql', {
         body: {
-          query: 'DELETE FROM form_submission_rules WHERE id = $1',
-          params: [id]
+          query: 'DELETE FROM form_submission_rules WHERE id = $1 AND user_id = $2',
+          params: [id, user.id]
         }
       });
 
@@ -149,8 +163,7 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
       queryClient.invalidateQueries({ queryKey: ['form-submission-rules'] });
       toast.success('Rule deleted successfully!');
     },
-    onError: (error) => {
-      console.error('Error deleting rule:', error);
+    onError: () => {
       toast.error('Failed to delete rule');
     }
   });
