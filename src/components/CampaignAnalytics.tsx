@@ -24,22 +24,20 @@ import {
   Play,
   Pause,
   Settings,
-  Copy
+  Copy,
+  Activity
 } from "lucide-react";
 import { useCampaigns } from "@/hooks/useCampaigns";
+import { useCampaignAnalytics } from "@/hooks/useCampaignAnalytics";
+import { useCampaignDeployments } from "@/hooks/useCampaignDeployments";
 
 export const CampaignAnalytics = () => {
-  const { campaigns, isLoading } = useCampaigns();
+  const { campaigns, isLoading: campaignsLoading } = useCampaigns();
+  const { summary, isLoading: analyticsLoading } = useCampaignAnalytics();
+  const { deployments, updateDeploymentStatus, isUpdating } = useCampaignDeployments();
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  // Mock analytics data - in real app this would come from tracking
-  const mockAnalytics = {
-    totalImpressions: 125640,
-    totalConversions: 3420,
-    totalRevenue: 28750,
-    activecampaigns: campaigns.filter(c => c.status === 'active').length
-  };
 
   const filteredCampaigns = campaigns.filter(campaign => {
     const matchesSearch = campaign.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -55,19 +53,35 @@ export const CampaignAnalytics = () => {
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100";
       case "draft":
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
-      case "scheduled":
+      case "completed":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
     }
   };
 
-  if (isLoading) {
+  const getDeploymentStatus = (campaignId: string) => {
+    const deployment = deployments.find(d => d.campaign_id === campaignId);
+    return deployment?.status || 'not-deployed';
+  };
+
+  const handleToggleDeployment = (campaignId: string, currentStatus: string) => {
+    const deployment = deployments.find(d => d.campaign_id === campaignId);
+    if (!deployment) return;
+
+    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+    updateDeploymentStatus({
+      deploymentId: deployment.id,
+      status: newStatus
+    });
+  };
+
+  if (campaignsLoading || analyticsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading campaigns...</p>
+          <p className="text-slate-600">Loading analytics...</p>
         </div>
       </div>
     );
@@ -83,7 +97,7 @@ export const CampaignAnalytics = () => {
             Campaign Analytics
           </h1>
           <p className="text-slate-600 mt-2">
-            Monitor performance and manage your popup campaigns
+            Real-time performance monitoring and campaign management
           </p>
         </div>
       </div>
@@ -95,7 +109,7 @@ export const CampaignAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Total Impressions</p>
-                <p className="text-2xl font-bold text-blue-600">{mockAnalytics.totalImpressions.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-blue-600">{summary.totalImpressions.toLocaleString()}</p>
               </div>
               <Eye className="w-8 h-8 text-blue-500" />
             </div>
@@ -106,8 +120,9 @@ export const CampaignAnalytics = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Conversions</p>
-                <p className="text-2xl font-bold text-green-600">{mockAnalytics.totalConversions.toLocaleString()}</p>
+                <p className="text-sm text-slate-500">Total Clicks</p>
+                <p className="text-2xl font-bold text-green-600">{summary.totalClicks.toLocaleString()}</p>
+                <p className="text-xs text-slate-400">CTR: {summary.clickThroughRate.toFixed(2)}%</p>
               </div>
               <MousePointer className="w-8 h-8 text-green-500" />
             </div>
@@ -118,8 +133,9 @@ export const CampaignAnalytics = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Active Campaigns</p>
-                <p className="text-2xl font-bold text-purple-600">{mockAnalytics.activecampaigns}</p>
+                <p className="text-sm text-slate-500">Conversions</p>
+                <p className="text-2xl font-bold text-purple-600">{summary.totalConversions.toLocaleString()}</p>
+                <p className="text-xs text-slate-400">CVR: {summary.conversionRate.toFixed(2)}%</p>
               </div>
               <Users className="w-8 h-8 text-purple-500" />
             </div>
@@ -131,7 +147,7 @@ export const CampaignAnalytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Revenue</p>
-                <p className="text-2xl font-bold text-orange-600">${mockAnalytics.totalRevenue.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-orange-600">${summary.totalRevenue.toFixed(2)}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-orange-500" />
             </div>
@@ -161,7 +177,7 @@ export const CampaignAnalytics = () => {
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="paused">Paused</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -171,7 +187,7 @@ export const CampaignAnalytics = () => {
       {/* Campaigns Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Campaigns</CardTitle>
+          <CardTitle>Campaign Performance</CardTitle>
           <CardDescription>
             {filteredCampaigns.length} of {campaigns.length} campaigns
           </CardDescription>
@@ -182,21 +198,25 @@ export const CampaignAnalytics = () => {
               <TableRow>
                 <TableHead>Campaign</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Deployment</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Impressions</TableHead>
+                <TableHead>Clicks</TableHead>
                 <TableHead>Conversions</TableHead>
-                <TableHead>CVR</TableHead>
                 <TableHead>Revenue</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCampaigns.map((campaign) => {
-                // Mock performance data
-                const impressions = Math.floor(Math.random() * 10000) + 1000;
-                const conversions = Math.floor(impressions * (Math.random() * 0.05 + 0.01));
-                const cvr = ((conversions / impressions) * 100).toFixed(2);
-                const revenue = conversions * (Math.random() * 50 + 10);
+                const campaignStats = summary.campaignStats[campaign.id] || {
+                  impressions: 0,
+                  clicks: 0,
+                  conversions: 0,
+                  revenue: 0
+                };
+                
+                const deploymentStatus = getDeploymentStatus(campaign.id);
                 
                 return (
                   <TableRow key={campaign.id}>
@@ -214,20 +234,38 @@ export const CampaignAnalytics = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-3 h-3" />
+                        <Badge variant={deploymentStatus === 'active' ? 'default' : 'secondary'}>
+                          {deploymentStatus === 'not-deployed' ? 'Not Deployed' : deploymentStatus}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(campaign.created_at).toLocaleDateString()}
                       </div>
                     </TableCell>
-                    <TableCell>{impressions.toLocaleString()}</TableCell>
-                    <TableCell>{conversions.toLocaleString()}</TableCell>
-                    <TableCell>{cvr}%</TableCell>
-                    <TableCell>${revenue.toFixed(0)}</TableCell>
+                    <TableCell>{campaignStats.impressions.toLocaleString()}</TableCell>
+                    <TableCell>{campaignStats.clicks.toLocaleString()}</TableCell>
+                    <TableCell>{campaignStats.conversions.toLocaleString()}</TableCell>
+                    <TableCell>${campaignStats.revenue.toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
-                          {campaign.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        </Button>
+                        {deploymentStatus !== 'not-deployed' && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleToggleDeployment(campaign.id, deploymentStatus)}
+                            disabled={isUpdating}
+                          >
+                            {deploymentStatus === "active" ? 
+                              <Pause className="w-4 h-4" /> : 
+                              <Play className="w-4 h-4" />
+                            }
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm">
                           <Copy className="w-4 h-4" />
                         </Button>

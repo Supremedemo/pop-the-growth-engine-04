@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { useWebsiteManagement } from "@/hooks/useWebsiteManagement";
 import { useUserTracking } from "@/hooks/useUserTracking";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useCampaigns } from "@/hooks/useCampaigns";
+import { useCampaignDeployments } from "@/hooks/useCampaignDeployments";
 import { 
   Target, 
   Users, 
@@ -24,7 +26,8 @@ import {
   Download,
   Plus,
   Palette,
-  ExternalLink
+  ExternalLink,
+  Rocket
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,6 +43,7 @@ export const EventBasedCampaignManager = () => {
   const { websites, isLoading: websitesLoading } = useWebsiteManagement();
   const { templates, saveTemplate, isSaving: isSavingTemplate } = useTemplates();
   const { createCampaign, isCreating } = useCampaigns();
+  const { deployCampaign, isDeploying } = useCampaignDeployments();
   
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>("");
   const [campaignName, setCampaignName] = useState("");
@@ -51,6 +55,7 @@ export const EventBasedCampaignManager = () => {
   const [scheduleType, setScheduleType] = useState<"immediate" | "scheduled">("immediate");
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
+  const [goLiveAfterCreation, setGoLiveAfterCreation] = useState(false);
 
   // Template creation state
   const [isCreateTemplateOpen, setIsCreateTemplateOpen] = useState(false);
@@ -117,7 +122,7 @@ export const EventBasedCampaignManager = () => {
     setIsCanvasEditorOpen(true);
   };
 
-  const handleCreateCampaign = () => {
+  const handleCreateCampaign = async () => {
     if (!campaignName.trim()) {
       toast.error('Please enter a campaign name');
       return;
@@ -148,36 +153,65 @@ export const EventBasedCampaignManager = () => {
     const targetingRules = {
       websiteId: selectedWebsiteId,
       eventType,
-      targetUrl: targetUrl || undefined
+      targetUrl: targetUrl || undefined,
+      triggerConditions: {
+        eventType,
+        urlPattern: targetUrl || '*',
+        frequency: 'once_per_session'
+      }
     };
 
     const displaySettings = {
       scheduleType,
       scheduledDate: scheduleType === "scheduled" ? scheduledDate : undefined,
-      scheduledTime: scheduleType === "scheduled" ? scheduledTime : undefined
+      scheduledTime: scheduleType === "scheduled" ? scheduledTime : undefined,
+      autoClose: true,
+      closeAfter: 30000,
+      showOverlay: true
     };
 
     const template = templates.find(t => t.id === selectedTemplateId);
 
-    createCampaign({
-      name: campaignName,
-      description: campaignDescription || undefined,
-      canvasData: template?.canvas_data || createBasicCanvasData(),
-      templateId: selectedTemplateId,
-      targetingRules,
-      displaySettings
-    });
+    try {
+      const result = await new Promise<any>((resolve, reject) => {
+        createCampaign({
+          name: campaignName,
+          description: campaignDescription || undefined,
+          canvasData: template?.canvas_data || createBasicCanvasData(),
+          templateId: selectedTemplateId,
+          targetingRules,
+          displaySettings
+        }, {
+          onSuccess: (campaign: any) => resolve(campaign),
+          onError: (error: Error) => reject(error)
+        });
+      });
 
-    // Reset form
-    setCampaignName("");
-    setCampaignDescription("");
-    setSelectedEventType("");
-    setCustomEventType("");
-    setTargetUrl("");
-    setSelectedTemplateId("");
-    setScheduleType("immediate");
-    setScheduledDate("");
-    setScheduledTime("");
+      // If user wants to go live immediately, deploy the campaign
+      if (goLiveAfterCreation && result?.id) {
+        deployCampaign({
+          campaignId: result.id,
+          websiteId: selectedWebsiteId,
+          rules: targetingRules,
+          config: displaySettings
+        });
+      }
+
+      // Reset form
+      setCampaignName("");
+      setCampaignDescription("");
+      setSelectedEventType("");
+      setCustomEventType("");
+      setTargetUrl("");
+      setSelectedTemplateId("");
+      setScheduleType("immediate");
+      setScheduledDate("");
+      setScheduledTime("");
+      setGoLiveAfterCreation(false);
+
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+    }
   };
 
   if (websitesLoading) {
@@ -224,7 +258,10 @@ export const EventBasedCampaignManager = () => {
                 <SelectContent>
                   {websites.map((website) => (
                     <SelectItem key={website.id} value={website.id}>
-                      {website.name}
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${website.tracking_enabled ? 'bg-green-500' : 'bg-gray-400'}`} />
+                        {website.name}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -446,6 +483,21 @@ export const EventBasedCampaignManager = () => {
                 </Select>
               </div>
 
+              {/* Go Live Option */}
+              <div className="flex items-center space-x-2 p-4 border rounded-lg bg-blue-50">
+                <input
+                  type="checkbox"
+                  id="goLive"
+                  checked={goLiveAfterCreation}
+                  onChange={(e) => setGoLiveAfterCreation(e.target.checked)}
+                  className="rounded"
+                />
+                <Label htmlFor="goLive" className="flex items-center gap-2 cursor-pointer">
+                  <Rocket className="w-4 h-4" />
+                  Deploy campaign immediately after creation
+                </Label>
+              </div>
+
               {/* Scheduling */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -492,10 +544,12 @@ export const EventBasedCampaignManager = () => {
 
               <Button 
                 onClick={handleCreateCampaign}
-                disabled={isCreating}
+                disabled={isCreating || isDeploying}
                 className="w-full"
               >
-                {isCreating ? 'Creating Campaign...' : 'Create Campaign'}
+                {isCreating ? 'Creating Campaign...' : 
+                 isDeploying ? 'Deploying Campaign...' :
+                 goLiveAfterCreation ? 'Create & Deploy Campaign' : 'Create Campaign'}
               </Button>
             </CardContent>
           </Card>

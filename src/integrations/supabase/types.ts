@@ -50,6 +50,139 @@ export type Database = {
           },
         ]
       }
+      campaign_analytics: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          deployment_id: string | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          page_url: string
+          referrer: string | null
+          revenue_value: number | null
+          timestamp: string
+          user_agent: string | null
+          user_session: string | null
+          website_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          deployment_id?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          page_url: string
+          referrer?: string | null
+          revenue_value?: number | null
+          timestamp?: string
+          user_agent?: string | null
+          user_session?: string | null
+          website_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          deployment_id?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          page_url?: string
+          referrer?: string | null
+          revenue_value?: number | null
+          timestamp?: string
+          user_agent?: string | null
+          user_session?: string | null
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_analytics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_analytics_deployment_id_fkey"
+            columns: ["deployment_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_deployments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_analytics_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_deployments: {
+        Row: {
+          campaign_id: string
+          conversion_count: number
+          created_at: string
+          deployed_at: string | null
+          deployment_config: Json
+          id: string
+          last_triggered_at: string | null
+          rules: Json
+          status: string
+          trigger_count: number
+          updated_at: string
+          website_id: string
+        }
+        Insert: {
+          campaign_id: string
+          conversion_count?: number
+          created_at?: string
+          deployed_at?: string | null
+          deployment_config?: Json
+          id?: string
+          last_triggered_at?: string | null
+          rules?: Json
+          status?: string
+          trigger_count?: number
+          updated_at?: string
+          website_id: string
+        }
+        Update: {
+          campaign_id?: string
+          conversion_count?: number
+          created_at?: string
+          deployed_at?: string | null
+          deployment_config?: Json
+          id?: string
+          last_triggered_at?: string | null
+          rules?: Json
+          status?: string
+          trigger_count?: number
+          updated_at?: string
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_deployments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_deployments_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           canvas_data: Json
@@ -105,6 +238,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      event_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          event_type: string
+          id: string
+          last_error: string | null
+          max_attempts: number
+          payload: Json
+          priority: number
+          processed_at: string | null
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          event_type: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          processed_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          max_attempts?: number
+          payload?: Json
+          priority?: number
+          processed_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -382,7 +560,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      process_queue_event: {
+        Args: { event_id: string }
+        Returns: boolean
+      }
+      queue_campaign_deployment: {
+        Args: {
+          p_campaign_id: string
+          p_website_id: string
+          p_rules?: Json
+          p_config?: Json
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
