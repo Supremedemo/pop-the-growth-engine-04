@@ -95,7 +95,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
     height: '100%',
     cursor: element.isPinned ? 'not-allowed' : 'move',
     opacity: element.isPinned ? 0.6 : 1,
-    pointerEvents: element.isPinned ? 'none' : 'auto',
+    pointerEvents: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['pointerEvents'],
     userSelect: element.isPinned ? 'none' : 'auto'
   };
 
@@ -132,7 +132,14 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
               padding: '8px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: textEl.textAlign === 'center' ? 'center' : textEl.textAlign === 'right' ? 'flex-end' : 'flex-start',
+              justifyContent:
+                textEl.textAlign === 'center'
+                  ? 'center'
+                  : textEl.textAlign === 'right'
+                  ? 'flex-end'
+                  : 'flex-start',
+              pointerEvents: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['pointerEvents'],
+              userSelect: element.isPinned ? 'none' : 'auto'
             }}
             onClick={handleClick}
           >
@@ -152,6 +159,8 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 height: '100%',
                 objectFit: 'cover',
                 borderRadius: imgEl.borderRadius,
+                pointerEvents: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['pointerEvents'],
+                userSelect: element.isPinned ? 'none' : 'auto'
               }}
             />
           </div>
@@ -206,6 +215,8 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 color: timerEl.textColor,
                 width: '100%',
                 height: '100%',
+                pointerEvents: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['pointerEvents'],
+                userSelect: element.isPinned ? 'none' : 'auto'
               }}
             >
               <Clock className="w-5 h-5 mr-2" />
