@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useGamification } from "@/hooks/useGamification";
 import { useTemplateCustomization } from "@/hooks/useTemplateCustomization";
+import { useCampaigns } from "@/hooks/useCampaigns";
+import { GamifiedTemplatePreview } from "./GamifiedTemplatePreview";
 import { 
   Star, 
   Trophy, 
@@ -29,21 +32,27 @@ import {
   Trash2,
   TrendingUp,
   Target,
-  RotateCcw
+  RotateCcw,
+  Eye,
+  Globe,
+  Copy
 } from "lucide-react";
 import { toast } from "sonner";
 
 interface TemplateGalleryEnhancedProps {
   onTemplateSelect?: (template: any) => void;
+  onCreateCampaign?: (template: any, config: any) => void;
 }
 
-export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnhancedProps) => {
+export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: TemplateGalleryEnhancedProps) => {
   const [activeTab, setActiveTab] = useState("templates");
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [customizationConfig, setCustomizationConfig] = useState<any>({});
   const [templateName, setTemplateName] = useState("");
   const [isCustomizing, setIsCustomizing] = useState(false);
-  const [showAchievements, setShowAchievements] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [campaignName, setCampaignName] = useState("");
+  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
 
   const { 
     userProgression, 
@@ -62,6 +71,8 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
     deleteCustomization,
     isSaving
   } = useTemplateCustomization();
+
+  const { createCampaign, isCreating } = useCampaigns();
 
   const progressToNext = getProgressToNextLevel();
   const unlockedAchievements = userAchievements.map(ua => ua.achievement_id);
@@ -83,7 +94,14 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
     setSelectedTemplate(template);
     setCustomizationConfig(template.default_config);
     setTemplateName(`My ${template.name}`);
+    setCampaignName(`${template.name} Campaign`);
     setIsCustomizing(true);
+  };
+
+  const handlePreviewTemplate = (template: any) => {
+    setSelectedTemplate(template);
+    setCustomizationConfig(template.default_config);
+    setIsPreviewOpen(true);
   };
 
   const handleUseTemplate = (template: any) => {
@@ -103,6 +121,72 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
     }
   };
 
+  const handleCreateCampaignFromTemplate = async () => {
+    if (!selectedTemplate || !campaignName.trim()) {
+      toast.error('Please enter a campaign name');
+      return;
+    }
+
+    try {
+      setIsCreatingCampaign(true);
+      
+      // Create campaign with the customized template
+      createCampaign({
+        name: campaignName,
+        description: `Interactive ${selectedTemplate.name} campaign`,
+        canvasData: {
+          elements: [{
+            id: 'gamified-element',
+            type: 'gamified-template',
+            templateId: selectedTemplate.id,
+            config: customizationConfig,
+            x: 50,
+            y: 50,
+            width: 400,
+            height: 300,
+            zIndex: 1
+          }],
+          width: 500,
+          height: 400,
+          backgroundColor: customizationConfig.backgroundColor || '#ffffff',
+          showOverlay: true,
+          overlayColor: '#000000',
+          overlayOpacity: 50,
+          showCloseButton: true,
+          closeButtonPosition: 'top-right',
+          layout: {
+            type: 'modal',
+            position: 'center'
+          }
+        },
+        templateId: selectedTemplate.id,
+        targetingRules: {
+          pageUrl: '/*',
+          triggerType: 'time_delay',
+          triggerValue: 3000
+        },
+        displaySettings: {
+          showOnMobile: true,
+          showOnDesktop: true,
+          frequency: 'once_per_session'
+        }
+      });
+
+      updateProgression({ action: 'campaign_created' });
+      toast.success('Campaign created successfully!');
+      setIsCustomizing(false);
+      setIsCreatingCampaign(false);
+      
+      if (onCreateCampaign) {
+        onCreateCampaign(selectedTemplate, customizationConfig);
+      }
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      toast.error('Failed to create campaign');
+      setIsCreatingCampaign(false);
+    }
+  };
+
   const handleSaveCustomization = () => {
     if (!selectedTemplate || !templateName.trim()) {
       toast.error('Please enter a template name');
@@ -117,7 +201,7 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
     });
 
     updateProgression({ action: 'template_customized' });
-    setIsCustomizing(false);
+    toast.success('Template customization saved!');
   };
 
   const renderCustomizationControls = () => {
@@ -291,7 +375,7 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="templates">Gamified Templates</TabsTrigger>
+          <TabsTrigger value="templates">Game Templates</TabsTrigger>
           <TabsTrigger value="my-templates">My Templates</TabsTrigger>
           <TabsTrigger value="achievements">Achievements</TabsTrigger>
         </TabsList>
@@ -317,6 +401,16 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
                       <div className="absolute inset-0 flex items-center justify-center">
                         <Gamepad className="w-12 h-12 text-white/80" />
                       </div>
+                      {!isLocked && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="absolute top-2 left-2"
+                          onClick={() => handlePreviewTemplate(template)}
+                        >
+                          <Eye className="w-3 h-3" />
+                        </Button>
+                      )}
                     </div>
                     <CardTitle className="flex items-center justify-between">
                       {template.name}
@@ -326,23 +420,27 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
                   </CardHeader>
                   
                   <CardContent>
-                    <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        disabled={isLocked}
-                        onClick={() => handleUseTemplate(template)}
-                        className="flex-1"
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        Use Template
-                      </Button>
+                    <div className="space-y-2">
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          disabled={isLocked}
+                          onClick={() => handleTemplateCustomize(template)}
+                          className="flex-1"
+                        >
+                          <Palette className="w-4 h-4 mr-2" />
+                          Customize & Deploy
+                        </Button>
+                      </div>
                       <Button
                         size="sm"
                         variant="outline"
                         disabled={isLocked}
-                        onClick={() => handleTemplateCustomize(template)}
+                        onClick={() => handleUseTemplate(template)}
+                        className="w-full"
                       >
-                        <Palette className="w-4 h-4" />
+                        <Copy className="w-4 h-4 mr-2" />
+                        Quick Use
                       </Button>
                     </div>
                   </CardContent>
@@ -454,29 +552,106 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
 
       {/* Customization Dialog */}
       <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Customize {selectedTemplate?.name}</DialogTitle>
+            <DialogTitle>Customize & Deploy {selectedTemplate?.name}</DialogTitle>
             <DialogDescription>
-              Personalize your template with colors, text, and settings
+              Customize your interactive template and deploy it as a campaign on your website
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6">
-            {renderCustomizationControls()}
-            
-            <div className="flex justify-end space-x-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Customization Controls */}
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="campaignName">Campaign Name</Label>
+                <Input
+                  id="campaignName"
+                  value={campaignName}
+                  onChange={(e) => setCampaignName(e.target.value)}
+                  placeholder="Enter campaign name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="templateName">Template Name (for saving)</Label>
+                <Input
+                  id="templateName"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Enter template name"
+                />
+              </div>
+
+              {renderCustomizationControls()}
+            </div>
+
+            {/* Right Column - Live Preview */}
+            <div className="space-y-4">
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <h3 className="font-medium mb-2">Live Preview</h3>
+                <div className="bg-white border rounded-lg p-4 min-h-[300px] flex items-center justify-center">
+                  {selectedTemplate && (
+                    <div className="text-center space-y-2">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mx-auto flex items-center justify-center">
+                        <Gamepad className="w-8 h-8 text-white" />
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {selectedTemplate.name} Preview
+                      </p>
+                      <Button
+                        size="sm"
+                        onClick={() => setIsPreviewOpen(true)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Full Preview
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-between pt-4 border-t">
+            <div className="flex space-x-2">
               <Button variant="outline" onClick={() => setIsCustomizing(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSaveCustomization} disabled={isSaving}>
+              <Button 
+                variant="outline" 
+                onClick={handleSaveCustomization} 
+                disabled={isSaving}
+              >
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save Template'}
+                Save Template
               </Button>
             </div>
+            <Button 
+              onClick={handleCreateCampaignFromTemplate} 
+              disabled={isCreatingCampaign || isCreating}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Globe className="w-4 h-4 mr-2" />
+              {isCreatingCampaign || isCreating ? 'Creating...' : 'Deploy as Campaign'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Template Preview Dialog */}
+      {isPreviewOpen && selectedTemplate && (
+        <GamifiedTemplatePreview
+          template={selectedTemplate}
+          config={customizationConfig}
+          onClose={() => setIsPreviewOpen(false)}
+          onSubmit={(data) => {
+            console.log('Preview submission:', data);
+            toast.success('Template preview completed!');
+            setIsPreviewOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 };
