@@ -105,10 +105,18 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
   const selectedElements = canvasState.elements.filter(el => selectedElementIds.includes(el.id));
 
   // Generate code for template publishing
-  const generatedCode = `<!-- Popup Template: ${templateManager.templateName} -->
+  const generatedCode = {
+    html: `<!-- Popup Template: ${templateManager.templateName} -->
 <div class="popup-container">
   <!-- Generated popup code would go here -->
-</div>`;
+</div>`,
+    css: `/* Styles for ${templateManager.templateName} */
+.popup-container {
+  /* Generated CSS would go here */
+}`,
+    js: `// JavaScript for ${templateManager.templateName}
+// Generated JS would go here`
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">

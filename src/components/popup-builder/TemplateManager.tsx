@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useFileUpload } from "@/hooks/useFileUpload";
@@ -26,7 +25,7 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
   const [newTag, setNewTag] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
 
-  const { templates, saveTemplate, isSaving } = useTemplates();
+  const { templates, saveTemplate, updateTemplate, isSaving } = useTemplates();
   const { uploadFile, isUploading } = useFileUpload();
 
   const [isCreating, setIsCreating] = useState(false);
@@ -71,12 +70,28 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
         isPublic: false
       };
 
-      const savedTemplate = await saveTemplate(templateData, currentTemplateId || undefined);
-      if (savedTemplate) {
-        setCurrentTemplateId(savedTemplate.id);
-        setIsSaveDialogOpen(false);
-        toast.success("Template saved successfully!");
+      if (currentTemplateId) {
+        // Update existing template
+        await updateTemplate({
+          id: currentTemplateId,
+          updates: templateData
+        });
+      } else {
+        // Create new template
+        const result = await new Promise<any>((resolve, reject) => {
+          saveTemplate(templateData, {
+            onSuccess: (data) => resolve(data),
+            onError: (error) => reject(error)
+          });
+        });
+        
+        if (result?.id) {
+          setCurrentTemplateId(result.id);
+        }
       }
+      
+      setIsSaveDialogOpen(false);
+      toast.success("Template saved successfully!");
     } catch (error) {
       console.error("Error saving template:", error);
       toast.error("Failed to save template");
