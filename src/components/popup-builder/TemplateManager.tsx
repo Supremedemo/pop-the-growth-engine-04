@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useFileUpload } from "@/hooks/useFileUpload";
+import { useCampaigns } from "@/hooks/useCampaigns";
 import { CanvasState } from "../PopupBuilder";
 import { toast } from "sonner";
 
@@ -27,8 +29,7 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
 
   const { templates, saveTemplate, updateTemplate, isSaving } = useTemplates();
   const { uploadFile, isUploading } = useFileUpload();
-
-  const [isCreating, setIsCreating] = useState(false);
+  const { createCampaign, isCreating } = useCampaigns();
 
   useEffect(() => {
     if (templateId && templates.length > 0) {
@@ -78,16 +79,17 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
         });
       } else {
         // Create new template
-        const result = await new Promise<any>((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           saveTemplate(templateData, {
-            onSuccess: (data) => resolve(data),
-            onError: (error) => reject(error)
+            onSuccess: (data: any) => {
+              if (data?.id) {
+                setCurrentTemplateId(data.id);
+              }
+              resolve();
+            },
+            onError: (error: Error) => reject(error)
           });
         });
-        
-        if (result?.id) {
-          setCurrentTemplateId(result.id);
-        }
       }
       
       setIsSaveDialogOpen(false);
@@ -99,17 +101,24 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
   };
 
   const handleCreateCampaign = async () => {
-    setIsCreating(true);
     try {
-      // Create campaign logic would go here
-      // For now, just simulate the creation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success("Campaign created successfully!");
+      if (!templateName.trim()) {
+        toast.error("Please save the template first");
+        return;
+      }
+
+      createCampaign({
+        name: `${templateName} Campaign`,
+        description: templateDescription || `Campaign for ${templateName}`,
+        canvasData: canvasState,
+        templateId: currentTemplateId || undefined,
+        targetingRules: {},
+        displaySettings: {}
+      });
+
     } catch (error) {
       console.error("Error creating campaign:", error);
       toast.error("Failed to create campaign");
-    } finally {
-      setIsCreating(false);
     }
   };
 

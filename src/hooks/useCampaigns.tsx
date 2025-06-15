@@ -66,7 +66,15 @@ export const useCampaigns = () => {
       targetingRules?: any;
       displaySettings?: any;
     }) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Validate user session before making request
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('Authentication session expired');
+      }
 
       const { data, error } = await supabase
         .from('campaigns')
@@ -83,20 +91,32 @@ export const useCampaigns = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Campaign creation error:', error);
+        throw error;
+      }
       
       return {
         ...data,
         canvas_data: data.canvas_data as unknown as CanvasState
       } as Campaign;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       toast.success('Campaign created successfully!');
+      console.log('Campaign created:', data);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error creating campaign:', error);
-      toast.error('Failed to create campaign');
+      
+      // Handle specific auth errors
+      if (error.message?.includes('JWT') || error.message?.includes('auth') || error.message?.includes('session')) {
+        toast.error('Authentication error. Please refresh the page and try again.');
+      } else if (error.message?.includes('row-level security')) {
+        toast.error('Permission denied. Please check your account permissions.');
+      } else {
+        toast.error('Failed to create campaign. Please try again.');
+      }
     }
   });
 
@@ -105,6 +125,12 @@ export const useCampaigns = () => {
       id: string;
       updates: Partial<Omit<Campaign, 'id' | 'user_id' | 'created_at' | 'updated_at'>>;
     }) => {
+      // Validate user session before making request
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('Authentication session expired');
+      }
+
       // Cast CanvasState to Json for database storage
       const dbUpdates = {
         ...updates,
@@ -130,9 +156,15 @@ export const useCampaigns = () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       toast.success('Campaign updated successfully!');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating campaign:', error);
-      toast.error('Failed to update campaign');
+      
+      // Handle specific auth errors
+      if (error.message?.includes('JWT') || error.message?.includes('auth') || error.message?.includes('session')) {
+        toast.error('Authentication error. Please refresh the page and try again.');
+      } else {
+        toast.error('Failed to update campaign. Please try again.');
+      }
     }
   });
 
