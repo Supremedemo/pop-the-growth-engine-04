@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   Settings, 
   Key, 
@@ -13,51 +14,87 @@ import {
   Shield, 
   Zap,
   Database,
-  Globe,
   Eye,
   EyeOff,
   CreditCard,
   Calendar,
   CheckCircle,
-  XCircle,
-  Clock,
   Crown,
   Star,
-  Sparkles
+  Sparkles,
+  Send
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserManagement } from "@/hooks/useUserManagement";
 
 export const Admin = () => {
   const [activeTab, setActiveTab] = useState("users");
   const [showApiKey, setShowApiKey] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const { toast } = useToast();
+  
+  const {
+    userProfile,
+    isLoading,
+    resetMethod,
+    setResetMethod,
+    resetPassword,
+    updateProfile,
+    sendEmailOTP,
+    isResettingPassword,
+    isUpdatingProfile
+  } = useUserManagement();
 
-  const handlePasswordReset = (email: string) => {
-    // Simulate password reset
-    toast({
-      title: "Password Reset",
-      description: `Password reset email sent to ${email}`,
-    });
+  React.useEffect(() => {
+    if (userProfile) {
+      setFullName(userProfile.full_name || "");
+      setUsername(userProfile.username || "");
+    }
+  }, [userProfile]);
+
+  const handlePasswordReset = () => {
+    if (resetMethod === 'email' && userProfile?.email) {
+      resetPassword({ email: userProfile.email });
+    } else if (resetMethod === 'password' && newPassword.trim()) {
+      resetPassword({ newPassword });
+      setNewPassword("");
+    }
+  };
+
+  const handleProfileUpdate = () => {
+    updateProfile({ fullName, username });
   };
 
   const handleApiKeyGenerate = () => {
-    // Simulate API key generation
     toast({
       title: "API Key Generated",
       description: "New API key has been generated successfully",
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Admin Panel</h1>
-          <p className="text-slate-600">Manage users, settings, and integrations</p>
+          <p className="text-slate-600">Manage your account, settings, and integrations</p>
         </div>
-        <Badge variant="secondary" className="bg-red-100 text-red-800">
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
           <Shield className="w-4 h-4 mr-1" />
-          Admin Access
+          User Account
         </Badge>
       </div>
 
@@ -65,7 +102,7 @@ export const Admin = () => {
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="users" className="flex items-center space-x-2">
             <User className="w-4 h-4" />
-            <span>Users</span>
+            <span>Account</span>
           </TabsTrigger>
           <TabsTrigger value="subscriptions" className="flex items-center space-x-2">
             <CreditCard className="w-4 h-4" />
@@ -86,7 +123,22 @@ export const Admin = () => {
         </TabsList>
 
         <TabsContent value="users">
-          <UserManagement onPasswordReset={handlePasswordReset} />
+          <UserAccountManagement 
+            userProfile={userProfile}
+            resetMethod={resetMethod}
+            setResetMethod={setResetMethod}
+            newPassword={newPassword}
+            setNewPassword={setNewPassword}
+            fullName={fullName}
+            setFullName={setFullName}
+            username={username}
+            setUsername={setUsername}
+            onPasswordReset={handlePasswordReset}
+            onProfileUpdate={handleProfileUpdate}
+            onSendEmailOTP={sendEmailOTP}
+            isResettingPassword={isResettingPassword}
+            isUpdatingProfile={isUpdatingProfile}
+          />
         </TabsContent>
 
         <TabsContent value="subscriptions">
@@ -113,75 +165,162 @@ export const Admin = () => {
   );
 };
 
-const UserManagement = ({ onPasswordReset }: { onPasswordReset: (email: string) => void }) => {
-  const [resetEmail, setResetEmail] = useState("");
+const UserAccountManagement = ({ 
+  userProfile,
+  resetMethod,
+  setResetMethod,
+  newPassword,
+  setNewPassword,
+  fullName,
+  setFullName,
+  username,
+  setUsername,
+  onPasswordReset,
+  onProfileUpdate,
+  onSendEmailOTP,
+  isResettingPassword,
+  isUpdatingProfile
+}: any) => {
   
-  const users = [
-    { id: 1, email: "user1@example.com", role: "Admin", status: "Active", lastLogin: "2 hours ago" },
-    { id: 2, email: "user2@example.com", role: "Editor", status: "Active", lastLogin: "1 day ago" },
-    { id: 3, email: "user3@example.com", role: "Viewer", status: "Inactive", lastLogin: "1 week ago" },
-  ];
-
   return (
     <div className="space-y-6">
+      {/* Current User Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Password Reset</CardTitle>
-          <CardDescription>Send password reset emails to users</CardDescription>
+          <CardTitle>Account Information</CardTitle>
+          <CardDescription>Your current account details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex space-x-2">
-            <div className="flex-1">
-              <Label htmlFor="reset-email">User Email</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                placeholder="user@example.com"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-              />
+          {userProfile && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-600">Email Address</Label>
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4 text-slate-400" />
+                  <span className="font-medium">{userProfile.email}</span>
+                  {userProfile.email_confirmed_at && (
+                    <Badge variant="outline" className="text-green-600 border-green-200">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Verified
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-600">User ID</Label>
+                <span className="font-mono text-xs text-slate-500">{userProfile.id}</span>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-600">Account Created</Label>
+                <span className="text-sm">{new Date(userProfile.created_at).toLocaleDateString()}</span>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-slate-600">Last Sign In</Label>
+                <span className="text-sm">
+                  {userProfile.last_sign_in_at 
+                    ? new Date(userProfile.last_sign_in_at).toLocaleDateString()
+                    : 'Never'
+                  }
+                </span>
+              </div>
             </div>
-            <Button 
-              onClick={() => {
-                if (resetEmail) {
-                  onPasswordReset(resetEmail);
-                  setResetEmail("");
-                }
-              }}
-              className="mt-6"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Send Reset
-            </Button>
-          </div>
+          )}
         </CardContent>
       </Card>
 
+      {/* Profile Update */}
       <Card>
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>Manage user accounts and permissions</CardDescription>
+          <CardTitle>Update Profile</CardTitle>
+          <CardDescription>Update your name and username</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your full name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+              />
+            </div>
+          </div>
+          
+          <Button 
+            onClick={onProfileUpdate}
+            disabled={isUpdatingProfile}
+          >
+            {isUpdatingProfile ? 'Updating...' : 'Update Profile'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Password Reset */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Password Reset</CardTitle>
+          <CardDescription>Reset your password using email or direct change</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="space-y-4">
-            {users.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="space-y-1">
-                  <div className="font-medium">{user.email}</div>
-                  <div className="text-sm text-slate-600">
-                    {user.role} • Last login: {user.lastLogin}
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant={user.status === "Active" ? "default" : "secondary"}>
-                    {user.status}
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    Edit
-                  </Button>
-                </div>
+            <Label>Reset Method</Label>
+            <RadioGroup value={resetMethod} onValueChange={setResetMethod}>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="email" id="email-method" />
+                <Label htmlFor="email-method">Email Reset Link</Label>
               </div>
-            ))}
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="password" id="password-method" />
+                <Label htmlFor="password-method">Direct Password Change</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {resetMethod === 'password' && (
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password (min 6 characters)"
+                minLength={6}
+              />
+            </div>
+          )}
+
+          <div className="flex space-x-2">
+            <Button 
+              onClick={onPasswordReset}
+              disabled={isResettingPassword || (resetMethod === 'password' && !newPassword.trim())}
+            >
+              {isResettingPassword ? 'Processing...' : 
+                resetMethod === 'email' ? 'Send Reset Email' : 'Update Password'
+              }
+            </Button>
+            
+            <Button 
+              variant="outline"
+              onClick={onSendEmailOTP}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Send Email OTP
+            </Button>
           </div>
         </CardContent>
       </Card>

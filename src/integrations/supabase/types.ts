@@ -292,6 +292,27 @@ export type Database = {
           },
         ]
       }
+      email_confirmations: {
+        Row: {
+          confirmed_at: string
+          created_at: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          confirmed_at?: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          confirmed_at?: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       event_queue: {
         Row: {
           attempts: number
