@@ -15,6 +15,7 @@ import { useCanvasStateManager } from "./popup-builder/CanvasStateManager";
 import { useZoomControls } from "./popup-builder/ZoomControls";
 import { useTemplateManager } from "./popup-builder/TemplateManager";
 import { TemplatePublisher } from "./popup-builder/TemplatePublisher";
+import { RulesPanel } from "./popup-builder/RulesPanel";
 
 interface PopupBuilderProps {
   onBack: () => void;
@@ -42,6 +43,7 @@ export interface CanvasState {
 
 export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
   const [previewDevice, setPreviewDevice] = useState("desktop");
+  const [showRulesPanel, setShowRulesPanel] = useState(false);
 
   const defaultLayout: PopupLayout = {
     id: "modal-center",
@@ -128,6 +130,8 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
         onSave={() => templateManager.setIsSaveDialogOpen(true)}
         onCreateCampaign={templateManager.handleCreateCampaign}
         onGenerateCode={templateManager.handleGenerateCode}
+        onToggleRules={() => setShowRulesPanel(!showRulesPanel)}
+        showRulesPanel={showRulesPanel}
       />
 
       <TemplateDialogs
@@ -249,6 +253,13 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
             </div>
           </div>
         </div>
+
+        {showRulesPanel && (
+          <RulesPanel 
+            campaignId={templateManager.currentCampaignId} 
+            templateId={templateManager.currentTemplateId} 
+          />
+        )}
       </div>
     </div>
   );

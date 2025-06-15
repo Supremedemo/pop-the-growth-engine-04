@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, ChevronLeft, ChevronRight, Copy, ExternalLink } from "lucide-react";
 import { BaseElement } from "./PopupElements";
+import { supabase } from "@/lib/supabase";
+import { toast } from "react-toastify";
 
 export interface FormStep {
   id: string;
@@ -51,12 +53,77 @@ export const MultiStepFormRenderer = ({ element, isPreview = false }: MultiStepF
   const [isComplete, setIsComplete] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [copiedCoupon, setCopiedCoupon] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNext = () => {
     if (currentStep < element.steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      handleFormSubmission();
+    }
+  };
+
+  const handleFormSubmission = async () => {
+    if (isPreview) {
       setIsComplete(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Get campaign/template context from URL or localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const campaignId = urlParams.get('campaign_id') || localStorage.getItem('current_campaign_id');
+      const templateId = urlParams.get('template_id') || localStorage.getItem('current_template_id');
+      const websiteId = localStorage.getItem('website_id');
+      const trackedUserId = localStorage.getItem('tracked_user_id');
+
+      // Prepare form data with step structure
+      const submissionData: Record<string, any> = {};
+      element.steps.forEach((step, index) => {
+        const stepData: Record<string, any> = {};
+        step.fields.forEach(field => {
+          if (formData[field.id] !== undefined) {
+            stepData[field.id] = formData[field.id];
+          }
+        });
+        submissionData[`step_${index + 1}`] = stepData;
+      });
+
+      // Prepare user info
+      const userInfo = {
+        ip_address: null, // Will be filled by edge function
+        user_agent: navigator.userAgent,
+        referrer: document.referrer,
+        timestamp: new Date().toISOString(),
+        page_url: window.location.href
+      };
+
+      // Submit to processing function
+      const { data, error } = await supabase.functions.invoke('process-form-submission', {
+        body: {
+          campaignId,
+          templateId,
+          formData: submissionData,
+          userInfo,
+          websiteId,
+          trackedUserId
+        }
+      });
+
+      if (error) {
+        console.error('Form submission error:', error);
+        toast.error('Failed to submit form. Please try again.');
+        return;
+      }
+
+      console.log('Form submitted successfully:', data);
+      setIsComplete(true);
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast.error('Failed to submit form. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -248,7 +315,7 @@ export const MultiStepFormRenderer = ({ element, isPreview = false }: MultiStepF
         <Button
           variant="outline"
           onClick={handlePrevious}
-          disabled={currentStep === 0}
+          disabled={currentStep === 0 || isSubmitting}
           className="flex items-center space-x-2"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -259,8 +326,11 @@ export const MultiStepFormRenderer = ({ element, isPreview = false }: MultiStepF
           style={{ backgroundColor: element.buttonColor }}
           className="text-white flex items-center space-x-2"
           onClick={handleNext}
+          disabled={isSubmitting}
         >
-          <span>{currentStep === element.steps.length - 1 ? 'Submit' : 'Next'}</span>
+          <span>
+            {isSubmitting ? 'Submitting...' : (currentStep === element.steps.length - 1 ? 'Submit' : 'Next')}
+          </span>
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
