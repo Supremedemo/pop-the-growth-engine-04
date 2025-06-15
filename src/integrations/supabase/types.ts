@@ -239,6 +239,59 @@ export type Database = {
           },
         ]
       }
+      discovered_events: {
+        Row: {
+          created_at: string
+          event_schema: Json
+          event_type: string
+          first_seen: string
+          id: string
+          is_conversion_event: boolean
+          last_seen: string
+          occurrence_count: number
+          revenue_mapping: Json | null
+          sample_payload: Json
+          updated_at: string
+          website_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_schema?: Json
+          event_type: string
+          first_seen?: string
+          id?: string
+          is_conversion_event?: boolean
+          last_seen?: string
+          occurrence_count?: number
+          revenue_mapping?: Json | null
+          sample_payload?: Json
+          updated_at?: string
+          website_id: string
+        }
+        Update: {
+          created_at?: string
+          event_schema?: Json
+          event_type?: string
+          first_seen?: string
+          id?: string
+          is_conversion_event?: boolean
+          last_seen?: string
+          occurrence_count?: number
+          revenue_mapping?: Json | null
+          sample_payload?: Json
+          updated_at?: string
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovered_events_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_queue: {
         Row: {
           attempts: number
@@ -572,6 +625,10 @@ export type Database = {
           p_config?: Json
         }
         Returns: string
+      }
+      trigger_event_discovery: {
+        Args: { p_website_id: string }
+        Returns: boolean
       }
     }
     Enums: {

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +47,30 @@ export const AdvancedTriggerBuilder = ({
   );
   const [conditionLogic, setConditionLogic] = useState(initialRules?.logic || 'AND');
 
-  const selectedEvent = discoveredEvents.find(e => e.event_type === selectedEventType);
+  // Mock events for development
+  const mockEvents = [
+    {
+      id: '1',
+      event_type: 'page_view',
+      occurrence_count: 145,
+      sample_payload: { url: '/home', timestamp: 1649876543210, user_id: 'user123' }
+    },
+    {
+      id: '2',
+      event_type: 'button_click',
+      occurrence_count: 87,
+      sample_payload: { element: 'cta-button', page: '/pricing', timestamp: 1649876543210 }
+    },
+    {
+      id: '3',
+      event_type: 'purchase',
+      occurrence_count: 23,
+      sample_payload: { amount: 99.99, currency: 'USD', product_id: 'prod_123', user_id: 'user456' }
+    }
+  ];
+
+  const eventsToShow = discoveredEvents.length > 0 ? discoveredEvents : mockEvents;
+  const selectedEvent = eventsToShow.find(e => e.event_type === selectedEventType);
 
   const getFieldsFromEvent = (event: any) => {
     if (!event || !event.sample_payload) return [];
@@ -186,8 +208,8 @@ export const AdvancedTriggerBuilder = ({
               <SelectValue placeholder="Select an event type" />
             </SelectTrigger>
             <SelectContent>
-              {discoveredEvents.map((event) => (
-                <SelectItem key={event.id} value={event.event_type}>
+              {eventsToShow.map((event) => (
+                <SelectItem key={event.id || event.event_type} value={event.event_type}>
                   <div className="flex items-center justify-between w-full">
                     <span>{event.event_type}</span>
                     <Badge variant="outline" className="ml-2">

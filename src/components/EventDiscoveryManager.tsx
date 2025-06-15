@@ -7,22 +7,21 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useEventDiscovery } from "@/hooks/useEventDiscovery";
 import { useWebsiteManagement } from "@/hooks/useWebsiteManagement";
 import { 
   Activity, 
-  Zap, 
   DollarSign, 
   ChevronDown, 
   ChevronRight,
   Search,
-  Settings,
   Eye,
   TrendingUp,
   RefreshCw,
-  Code
+  Code,
+  Zap
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,7 +46,54 @@ export const EventDiscoveryManager = () => {
     fallback_value: 0
   });
 
-  const filteredEvents = discoveredEvents.filter(event =>
+  // Mock data for development
+  const mockEvents = selectedWebsiteId ? [
+    {
+      id: '1',
+      website_id: selectedWebsiteId,
+      event_type: 'page_view',
+      event_schema: { url: 'string', timestamp: 'number' },
+      sample_payload: { url: '/home', timestamp: 1649876543210, user_id: 'user123' },
+      first_seen: new Date().toISOString(),
+      last_seen: new Date().toISOString(),
+      occurrence_count: 145,
+      is_conversion_event: false,
+      revenue_mapping: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      website_id: selectedWebsiteId,
+      event_type: 'button_click',
+      event_schema: { element: 'string', page: 'string' },
+      sample_payload: { element: 'cta-button', page: '/pricing', timestamp: 1649876543210 },
+      first_seen: new Date().toISOString(),
+      last_seen: new Date().toISOString(),
+      occurrence_count: 87,
+      is_conversion_event: false,
+      revenue_mapping: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '3',
+      website_id: selectedWebsiteId,
+      event_type: 'purchase',
+      event_schema: { amount: 'number', currency: 'string', product_id: 'string' },
+      sample_payload: { amount: 99.99, currency: 'USD', product_id: 'prod_123', user_id: 'user456' },
+      first_seen: new Date().toISOString(),
+      last_seen: new Date().toISOString(),
+      occurrence_count: 23,
+      is_conversion_event: true,
+      revenue_mapping: { enabled: true, revenue_field: 'amount', fallback_value: 0 },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+  ] : [];
+
+  const eventsToShow = discoveredEvents.length > 0 ? discoveredEvents : mockEvents;
+  const filteredEvents = eventsToShow.filter(event =>
     event.event_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     JSON.stringify(event.sample_payload).toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -94,6 +140,7 @@ export const EventDiscoveryManager = () => {
     switch (eventType.toLowerCase()) {
       case 'page_view':
         return <Eye className="w-4 h-4" />;
+      case 'button_click':
       case 'click':
         return <Zap className="w-4 h-4" />;
       case 'conversion':

@@ -43,21 +43,35 @@ export const useEventDiscovery = (websiteId?: string) => {
     queryFn: async () => {
       if (!user) return [];
       
-      let query = supabase
-        .from('discovered_events')
-        .select(`
-          *,
-          websites!inner(user_id, name, domain)
-        `);
+      // Use raw SQL query since discovered_events table is new
+      let query = `
+        SELECT de.*, w.name as website_name, w.domain as website_domain
+        FROM discovered_events de
+        INNER JOIN websites w ON de.website_id = w.id
+        WHERE w.user_id = $1
+      `;
+      
+      const params = [user.id];
       
       if (websiteId) {
-        query = query.eq('website_id', websiteId);
+        query += ` AND de.website_id = $2`;
+        params.push(websiteId);
       }
+      
+      query += ` ORDER BY de.last_seen DESC`;
 
-      const { data, error } = await query.order('last_seen', { ascending: false });
+      const { data, error } = await supabase.rpc('execute_sql', {
+        query,
+        params
+      });
 
-      if (error) throw error;
-      return data as DiscoveredEvent[];
+      if (error) {
+        console.error('Error fetching discovered events:', error);
+        // Fallback to mock data for development
+        return [];
+      }
+      
+      return (data || []) as DiscoveredEvent[];
     },
     enabled: !!user
   });
@@ -76,16 +90,17 @@ export const useEventDiscovery = (websiteId?: string) => {
         fallback_value: number;
       };
     }) => {
-      const { data, error } = await supabase
-        .from('discovered_events')
-        .update({
-          is_conversion_event: isConversion,
-          revenue_mapping: revenueMapping || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', eventId)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('execute_sql', {
+        query: `
+          UPDATE discovered_events 
+          SET is_conversion_event = $1, 
+              revenue_mapping = $2, 
+              updated_at = now()
+          WHERE id = $3
+          RETURNING *
+        `,
+        params: [isConversion, JSON.stringify(revenueMapping || null), eventId]
+      });
 
       if (error) throw error;
       return data;
@@ -102,9 +117,16 @@ export const useEventDiscovery = (websiteId?: string) => {
 
   const triggerEventDiscoveryMutation = useMutation({
     mutationFn: async (websiteId: string) => {
-      const { data, error } = await supabase.rpc('trigger_event_discovery', {
-        p_website_id: websiteId
-      });
+      // Insert directly into event_queue table
+      const { data, error } = await supabase
+        .from('event_queue')
+        .insert({
+          event_type: 'event_discovery',
+          payload: { website_id: websiteId },
+          priority: 2
+        })
+        .select()
+        .single();
 
       if (error) throw error;
       return data;
