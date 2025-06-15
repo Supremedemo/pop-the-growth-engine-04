@@ -1,0 +1,483 @@
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { useGamification } from "@/hooks/useGamification";
+import { useTemplateCustomization } from "@/hooks/useTemplateCustomization";
+import { 
+  Star, 
+  Trophy, 
+  Crown, 
+  Rocket,
+  Gamepad,
+  Palette,
+  Save,
+  Play,
+  Settings,
+  Lock,
+  Heart,
+  Edit,
+  Trash2,
+  TrendingUp,
+  Target,
+  RotateCcw
+} from "lucide-react";
+import { toast } from "sonner";
+
+interface TemplateGalleryEnhancedProps {
+  onTemplateSelect?: (template: any) => void;
+}
+
+export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnhancedProps) => {
+  const [activeTab, setActiveTab] = useState("templates");
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [customizationConfig, setCustomizationConfig] = useState<any>({});
+  const [templateName, setTemplateName] = useState("");
+  const [isCustomizing, setIsCustomizing] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+
+  const { 
+    userProgression, 
+    achievements, 
+    userAchievements, 
+    updateProgression,
+    getProgressToNextLevel,
+    isLoadingProgression 
+  } = useGamification();
+
+  const {
+    gamifiedTemplates,
+    customizations,
+    saveCustomization,
+    updateCustomization,
+    deleteCustomization,
+    isSaving
+  } = useTemplateCustomization();
+
+  const progressToNext = getProgressToNextLevel();
+  const unlockedAchievements = userAchievements.map(ua => ua.achievement_id);
+
+  const getIconForAchievement = (iconName: string) => {
+    const icons: any = {
+      Star, Trophy, Crown, Rocket, Gamepad, TrendingUp, Target, RotateCcw
+    };
+    return icons[iconName] || Star;
+  };
+
+  const getLevelIcon = (level: number) => {
+    if (level >= 10) return Crown;
+    if (level >= 5) return Trophy;
+    return Star;
+  };
+
+  const handleTemplateCustomize = (template: any) => {
+    setSelectedTemplate(template);
+    setCustomizationConfig(template.default_config);
+    setTemplateName(`My ${template.name}`);
+    setIsCustomizing(true);
+  };
+
+  const handleUseTemplate = (template: any) => {
+    if (userProgression && userProgression.level < template.level_required) {
+      toast.error(`This template requires level ${template.level_required}. You are level ${userProgression.level}.`);
+      return;
+    }
+
+    updateProgression('template_used');
+    toast.success(`Using ${template.name} template!`);
+    
+    if (onTemplateSelect) {
+      onTemplateSelect({
+        ...template,
+        config: customizationConfig
+      });
+    }
+  };
+
+  const handleSaveCustomization = () => {
+    if (!selectedTemplate || !templateName.trim()) {
+      toast.error('Please enter a template name');
+      return;
+    }
+
+    saveCustomization({
+      template_base_id: selectedTemplate.id,
+      customization_data: customizationConfig,
+      template_name: templateName,
+      is_favorite: false
+    });
+
+    updateProgression('template_customized');
+    setIsCustomizing(false);
+  };
+
+  const renderCustomizationControls = () => {
+    if (!selectedTemplate) return null;
+
+    const config = customizationConfig;
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <Label htmlFor="templateName">Template Name</Label>
+          <Input
+            id="templateName"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+            placeholder="Enter template name"
+          />
+        </div>
+
+        {/* Background Color */}
+        <div>
+          <Label>Background Color</Label>
+          <div className="flex items-center space-x-2">
+            <Input
+              type="color"
+              value={config.backgroundColor || '#ffffff'}
+              onChange={(e) => setCustomizationConfig({
+                ...config,
+                backgroundColor: e.target.value
+              })}
+              className="w-16 h-10"
+            />
+            <Input
+              value={config.backgroundColor || '#ffffff'}
+              onChange={(e) => setCustomizationConfig({
+                ...config,
+                backgroundColor: e.target.value
+              })}
+              placeholder="#ffffff"
+            />
+          </div>
+        </div>
+
+        {/* Text Color */}
+        <div>
+          <Label>Text Color</Label>
+          <div className="flex items-center space-x-2">
+            <Input
+              type="color"
+              value={config.textColor || '#333333'}
+              onChange={(e) => setCustomizationConfig({
+                ...config,
+                textColor: e.target.value
+              })}
+              className="w-16 h-10"
+            />
+            <Input
+              value={config.textColor || '#333333'}
+              onChange={(e) => setCustomizationConfig({
+                ...config,
+                textColor: e.target.value
+              })}
+              placeholder="#333333"
+            />
+          </div>
+        </div>
+
+        {/* Button Text */}
+        <div>
+          <Label>Button Text</Label>
+          <Input
+            value={config.buttonText || ''}
+            onChange={(e) => setCustomizationConfig({
+              ...config,
+              buttonText: e.target.value
+            })}
+            placeholder="Enter button text"
+          />
+        </div>
+
+        {/* Template-specific controls */}
+        {selectedTemplate.id === 'spin-wheel' && (
+          <div className="space-y-4">
+            <div>
+              <Label>Wheel Prizes (one per line)</Label>
+              <Textarea
+                value={config.prizes?.join('\n') || ''}
+                onChange={(e) => setCustomizationConfig({
+                  ...config,
+                  prizes: e.target.value.split('\n').filter(p => p.trim())
+                })}
+                placeholder="10% Off\n20% Off\nFree Shipping"
+                rows={4}
+              />
+            </div>
+            <div>
+              <Label>Show Confetti</Label>
+              <Switch
+                checked={config.showConfetti}
+                onCheckedChange={(checked) => setCustomizationConfig({
+                  ...config,
+                  showConfetti: checked
+                })}
+              />
+            </div>
+          </div>
+        )}
+
+        {selectedTemplate.id === 'scratch-card' && (
+          <div className="space-y-4">
+            <div>
+              <Label>Reveal Text</Label>
+              <Input
+                value={config.revealText || ''}
+                onChange={(e) => setCustomizationConfig({
+                  ...config,
+                  revealText: e.target.value
+                })}
+                placeholder="You Won 20% Off!"
+              />
+            </div>
+            <div>
+              <Label>Show Sparkles</Label>
+              <Switch
+                checked={config.showSparkles}
+                onCheckedChange={(checked) => setCustomizationConfig({
+                  ...config,
+                  showSparkles: checked
+                })}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* User Progress Header */}
+      <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                {React.createElement(getLevelIcon(userProgression?.level || 1), {
+                  className: "w-8 h-8"
+                })}
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Level {userProgression?.level || 1}</h2>
+                <p className="text-blue-100">{userProgression?.total_points || 0} points</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-blue-100">Next Level</p>
+              <div className="w-32">
+                <Progress 
+                  value={progressToNext.percentage} 
+                  className="h-2 bg-white/20"
+                />
+              </div>
+              <p className="text-xs text-blue-100 mt-1">
+                {progressToNext.current}/{progressToNext.required}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="templates">Gamified Templates</TabsTrigger>
+          <TabsTrigger value="my-templates">My Templates</TabsTrigger>
+          <TabsTrigger value="achievements">Achievements</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="templates" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {gamifiedTemplates.map((template) => {
+              const isLocked = (userProgression?.level || 1) < template.level_required;
+              
+              return (
+                <Card key={template.id} className={`relative ${isLocked ? 'opacity-60' : ''}`}>
+                  {isLocked && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge variant="secondary" className="bg-red-100 text-red-800">
+                        <Lock className="w-3 h-3 mr-1" />
+                        Level {template.level_required}
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  <CardHeader>
+                    <div className="w-full h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg relative overflow-hidden">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Gamepad className="w-12 h-12 text-white/80" />
+                      </div>
+                    </div>
+                    <CardTitle className="flex items-center justify-between">
+                      {template.name}
+                      <Badge variant="outline">{template.category}</Badge>
+                    </CardTitle>
+                    <CardDescription>{template.description}</CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        disabled={isLocked}
+                        onClick={() => handleUseTemplate(template)}
+                        className="flex-1"
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        Use Template
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isLocked}
+                        onClick={() => handleTemplateCustomize(template)}
+                      >
+                        <Palette className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="my-templates" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {customizations.map((customization) => (
+              <Card key={customization.id}>
+                <CardHeader>
+                  <div className="w-full h-32 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg relative overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Settings className="w-12 h-12 text-white/80" />
+                    </div>
+                  </div>
+                  <CardTitle className="flex items-center justify-between">
+                    {customization.template_name}
+                    {customization.is_favorite && (
+                      <Heart className="w-4 h-4 text-red-500 fill-current" />
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Based on {gamifiedTemplates.find(t => t.id === customization.template_base_id)?.name}
+                  </CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleUseTemplate({
+                        ...gamifiedTemplates.find(t => t.id === customization.template_base_id),
+                        config: customization.customization_data
+                      })}
+                      className="flex-1"
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Use
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const baseTemplate = gamifiedTemplates.find(t => t.id === customization.template_base_id);
+                        if (baseTemplate) {
+                          setSelectedTemplate(baseTemplate);
+                          setCustomizationConfig(customization.customization_data);
+                          setTemplateName(customization.template_name);
+                          setIsCustomizing(true);
+                        }
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteCustomization(customization.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="achievements" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {achievements.map((achievement) => {
+              const isUnlocked = unlockedAchievements.includes(achievement.id);
+              const IconComponent = getIconForAchievement(achievement.icon);
+              
+              return (
+                <Card key={achievement.id} className={`${isUnlocked ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200' : 'opacity-60'}`}>
+                  <CardHeader>
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        isUnlocked ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        <IconComponent className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-sm">{achievement.name}</CardTitle>
+                        <Badge variant={isUnlocked ? "default" : "secondary"} className="text-xs">
+                          {achievement.points_reward} points
+                        </Badge>
+                      </div>
+                      {isUnlocked && <Star className="w-5 h-5 text-yellow-500 fill-current" />}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600">{achievement.description}</p>
+                    <Badge variant="outline" className="mt-2 text-xs">
+                      {achievement.category}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Customization Dialog */}
+      <Dialog open={isCustomizing} onOpenChange={setIsCustomizing}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Customize {selectedTemplate?.name}</DialogTitle>
+            <DialogDescription>
+              Personalize your template with colors, text, and settings
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {renderCustomizationControls()}
+            
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsCustomizing(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveCustomization} disabled={isSaving}>
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? 'Saving...' : 'Save Template'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};

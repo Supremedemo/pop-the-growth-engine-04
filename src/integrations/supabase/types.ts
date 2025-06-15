@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          points_reward: number
+          unlock_condition: Json
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          is_active?: boolean
+          name: string
+          points_reward?: number
+          unlock_condition?: Json
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          points_reward?: number
+          unlock_condition?: Json
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           campaign_id: string | null
@@ -385,6 +421,39 @@ export type Database = {
         }
         Relationships: []
       }
+      template_customizations: {
+        Row: {
+          created_at: string
+          customization_data: Json
+          id: string
+          is_favorite: boolean
+          template_base_id: string
+          template_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customization_data?: Json
+          id?: string
+          is_favorite?: boolean
+          template_base_id: string
+          template_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customization_data?: Json
+          id?: string
+          is_favorite?: boolean
+          template_base_id?: string
+          template_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       template_folders: {
         Row: {
           created_at: string
@@ -464,6 +533,35 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_events: {
         Row: {
           event_data: Json | null
@@ -514,6 +612,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_progression: {
+        Row: {
+          achievements_unlocked: string[]
+          campaigns_created: number
+          created_at: string
+          id: string
+          level: number
+          templates_used: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievements_unlocked?: string[]
+          campaigns_created?: number
+          created_at?: string
+          id?: string
+          level?: number
+          templates_used?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievements_unlocked?: string[]
+          campaigns_created?: number
+          created_at?: string
+          id?: string
+          level?: number
+          templates_used?: number
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_templates: {
         Row: {
@@ -649,6 +783,10 @@ export type Database = {
       }
       trigger_event_discovery: {
         Args: { p_website_id: string }
+        Returns: boolean
+      }
+      update_user_progression: {
+        Args: { p_user_id: string; p_action: string; p_data?: Json }
         Returns: boolean
       }
     }
