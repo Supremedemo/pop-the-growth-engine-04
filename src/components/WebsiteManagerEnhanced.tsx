@@ -107,9 +107,9 @@ export const WebsiteManagerEnhanced = () => {
     );
   }
 
-  // Filter websites to show live ones first
-  const websitesWithData = websites.filter(w => w.tracking_enabled);
-  const websitesWithoutData = websites.filter(w => !w.tracking_enabled);
+  // Filter websites based on actual tracking data instead of tracking_enabled flag
+  const websitesWithData = websites.filter(w => w.has_tracking_data);
+  const websitesWithoutData = websites.filter(w => !w.has_tracking_data);
 
   return (
     <div className="max-w-6xl mx-auto p-6">

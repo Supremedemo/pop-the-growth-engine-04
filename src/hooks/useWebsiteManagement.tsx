@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -15,6 +14,7 @@ export interface Website {
   tracking_enabled: boolean;
   created_at: string;
   updated_at: string;
+  has_tracking_data?: boolean;
 }
 
 export const useWebsiteManagement = () => {
@@ -37,7 +37,30 @@ export const useWebsiteManagement = () => {
 
       if (error) throw error;
       
-      return (data || []) as Website[];
+      // Check for tracking data for each website
+      const websitesWithTrackingStatus = await Promise.all(
+        (data || []).map(async (website) => {
+          // Check if website has any tracked users or user events
+          const { data: trackedUsers } = await supabase
+            .from('tracked_users')
+            .select('id')
+            .eq('website_id', website.id)
+            .limit(1);
+
+          const { data: userEvents } = await supabase
+            .from('user_events')
+            .select('id')
+            .eq('website_id', website.id)
+            .limit(1);
+
+          return {
+            ...website,
+            has_tracking_data: (trackedUsers && trackedUsers.length > 0) || (userEvents && userEvents.length > 0)
+          };
+        })
+      );
+      
+      return websitesWithTrackingStatus as Website[];
     },
     enabled: !!user
   });
