@@ -25,7 +25,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import PredefinedTemplatesPage from "@/components/templates/predefined/PredefinedTemplatesPage";
 import PopupLibrary from "@/components/popwola/PopupLibrary";
 
 const Index = () => {
