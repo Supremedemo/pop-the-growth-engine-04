@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dashboard } from "@/components/Dashboard";
 import { PopupBuilder } from "@/components/PopupBuilder";
@@ -26,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import PredefinedTemplatesPage from "@/components/templates/predefined/PredefinedTemplatesPage";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -58,7 +58,7 @@ const Index = () => {
       case 'campaign-creator':
         return <EventBasedCampaignManager />;
       case 'templates':
-        return <TemplateGallery onSelectTemplate={() => setActiveView('builder')} />;
+        return <PredefinedTemplatesPage />;
       case 'websites':
         return <WebsiteManagerEnhanced />;
       case 'analytics':
