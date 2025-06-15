@@ -21,39 +21,108 @@ export interface GamifiedTemplate {
   name: string;
   description: string;
   category: 'spin-wheel' | 'scratch-card' | 'slot-machine' | 'memory-game' | 'quiz' | 'survey';
-  html_template: string;
-  css_template: string;
-  js_template: string;
+  preview_image: string;
   default_config: any;
-  preview_image: string | null;
   level_required: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 export const useTemplateCustomization = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch gamified templates from database
-  const { data: gamifiedTemplates = [], isLoading: isLoadingTemplates } = useQuery({
-    queryKey: ['gamified-templates'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gamified_templates')
-        .select('*')
-        .eq('is_active', true)
-        .order('level_required', { ascending: true });
-      
-      if (error) {
-        console.error('Error fetching gamified templates:', error);
-        return [];
+  // Default gamified templates
+  const gamifiedTemplates: GamifiedTemplate[] = [
+    {
+      id: 'spin-wheel',
+      name: 'Spin the Wheel',
+      description: 'Classic spin wheel with customizable prizes and colors',
+      category: 'spin-wheel',
+      preview_image: '/placeholder.svg',
+      level_required: 1,
+      default_config: {
+        prizes: ['10% Off', '20% Off', 'Free Shipping', 'Try Again', '30% Off', 'Free Gift'],
+        colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+        backgroundColor: '#ffffff',
+        textColor: '#333333',
+        buttonText: 'Spin to Win!',
+        centerText: 'SPIN',
+        showConfetti: true
       }
-      
-      return data as GamifiedTemplate[];
+    },
+    {
+      id: 'scratch-card',
+      name: 'Scratch Card',
+      description: 'Interactive scratch card with hidden rewards',
+      category: 'scratch-card',
+      preview_image: '/placeholder.svg',
+      level_required: 2,
+      default_config: {
+        scratchImage: '/placeholder.svg',
+        revealText: 'You Won 20% Off!',
+        backgroundColor: '#f8f9fa',
+        cardColor: '#silver',
+        textColor: '#333333',
+        buttonText: 'Claim Your Prize',
+        showSparkles: true
+      }
+    },
+    {
+      id: 'slot-machine',
+      name: 'Slot Machine',
+      description: 'Fun slot machine with animated reels',
+      category: 'slot-machine',
+      preview_image: '/placeholder.svg',
+      level_required: 3,
+      default_config: {
+        symbols: ['🍒', '🍋', '🍊', '🍇', '⭐', '💎'],
+        backgroundColor: '#1a1a2e',
+        machineColor: '#16213e',
+        textColor: '#ffffff',
+        buttonText: 'Pull the Lever!',
+        winMessages: ['Jackpot!', 'Winner!', 'Lucky you!'],
+        showLights: true
+      }
+    },
+    {
+      id: 'memory-game',
+      name: 'Memory Game',
+      description: 'Match cards to win prizes',
+      category: 'memory-game',
+      preview_image: '/placeholder.svg',
+      level_required: 4,
+      default_config: {
+        cardCount: 8,
+        cardBackColor: '#4ECDC4',
+        cardFrontColor: '#ffffff',
+        backgroundColor: '#f8f9fa',
+        textColor: '#333333',
+        buttonText: 'Start Game',
+        prizes: ['5% Off', '15% Off', '25% Off', 'Free Shipping'],
+        showTimer: true
+      }
+    },
+    {
+      id: 'quiz',
+      name: 'Interactive Quiz',
+      description: 'Engage users with a fun quiz',
+      category: 'quiz',
+      preview_image: '/placeholder.svg',
+      level_required: 5,
+      default_config: {
+        questions: [
+          {
+            question: 'What\'s your favorite season?',
+            options: ['Spring', 'Summer', 'Fall', 'Winter']
+          }
+        ],
+        backgroundColor: '#ffffff',
+        primaryColor: '#4ECDC4',
+        textColor: '#333333',
+        buttonText: 'Start Quiz',
+        showProgress: true
+      }
     }
-  });
+  ];
 
   // Get user customizations
   const { data: customizations, isLoading } = useQuery({
@@ -149,7 +218,6 @@ export const useTemplateCustomization = () => {
 
   return {
     gamifiedTemplates,
-    isLoadingTemplates,
     customizations: customizations || [],
     isLoading,
     saveCustomization: saveCustomizationMutation.mutate,

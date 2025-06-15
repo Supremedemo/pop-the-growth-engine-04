@@ -1,105 +1,138 @@
 
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { Auth } from './Auth';
-import { Dashboard } from '@/components/Dashboard';
-import { RealDashboard } from '@/components/RealDashboard';
-import { PopupBuilder } from '@/components/PopupBuilder';
-import { CampaignManager } from '@/components/CampaignManager';
-import { Analytics } from '@/components/Analytics';
-import { TemplateGalleryEnhanced } from '@/components/TemplateGalleryEnhanced';
-import { WebsiteManagerEnhanced } from '@/components/WebsiteManagerEnhanced';
-import { UserProgressDashboard } from '@/components/UserProgressDashboard';
-import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Dashboard } from "@/components/Dashboard";
+import { PopupBuilder } from "@/components/PopupBuilder";
+import { TemplateGallery } from "@/components/TemplateGallery";
+import { Analytics } from "@/components/Analytics";
+import { Auth } from "@/pages/Auth";
+import { Admin } from "@/components/Admin";
+import { FileManager } from "@/components/FileManager";
+import { WebsiteManagerEnhanced } from "@/components/WebsiteManagerEnhanced";
+import { EventBasedCampaignManager } from "@/components/EventBasedCampaignManager";
+import { CampaignAnalytics } from "@/components/CampaignAnalytics";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   LayoutDashboard, 
-  MousePointer, 
+  Palette, 
+  Image, 
   BarChart3, 
-  FileText, 
-  Globe, 
-  Trophy,
-  Menu
-} from 'lucide-react';
+  Settings, 
+  LogOut,
+  Folder,
+  Globe,
+  Target,
+  TrendingUp
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user, signOut } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');
-
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
 
   if (!user) {
     return <Auth />;
   }
 
-  const sidebarItems = [
+  const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'builder', label: 'Popup Builder', icon: MousePointer },
-    { id: 'campaigns', label: 'Campaigns', icon: FileText },
-    { id: 'templates', label: 'Templates', icon: FileText },
+    { id: 'builder', label: 'Popup Builder', icon: Palette },
+    { id: 'campaigns', label: 'Campaign Analytics', icon: TrendingUp },
+    { id: 'campaign-creator', label: 'Campaign Creator', icon: Target },
+    { id: 'templates', label: 'Templates', icon: Image },
     { id: 'websites', label: 'Websites', icon: Globe },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'progress', label: 'Progress', icon: Trophy },
+    { id: 'files', label: 'File Manager', icon: Folder },
+    { id: 'admin', label: 'Admin', icon: Settings },
   ];
 
   const renderContent = () => {
     switch (activeView) {
       case 'dashboard':
-        return <RealDashboard onNavigate={setActiveView} />;
+        return <Dashboard onNavigateToBuilder={() => setActiveView('builder')} />;
       case 'builder':
-        return <PopupBuilder />;
+        return <PopupBuilder onBack={() => setActiveView('dashboard')} />;
       case 'campaigns':
-        return <CampaignManager />;
+        return <CampaignAnalytics />;
+      case 'campaign-creator':
+        return <EventBasedCampaignManager />;
       case 'templates':
-        return <TemplateGalleryEnhanced />;
+        return <TemplateGallery onSelectTemplate={() => setActiveView('builder')} />;
       case 'websites':
         return <WebsiteManagerEnhanced />;
       case 'analytics':
         return <Analytics />;
-      case 'progress':
-        return <UserProgressDashboard />;
+      case 'files':
+        return <FileManager />;
+      case 'admin':
+        return <Admin />;
       default:
-        return <RealDashboard onNavigate={setActiveView} />;
+        return <Dashboard onNavigateToBuilder={() => setActiveView('builder')} />;
     }
   };
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full">
+      <div className="min-h-screen flex w-full">
         <Sidebar className="border-r">
-          <SidebarContent className="p-4">
-            <div className="space-y-2">
-              {sidebarItems.map((item) => {
-                const IconComponent = item.icon;
-                return (
-                  <Button
-                    key={item.id}
-                    variant={activeView === item.id ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setActiveView(item.id)}
-                  >
-                    <IconComponent className="w-4 h-4 mr-2" />
-                    {item.label}
-                  </Button>
-                );
-              })}
+          <div className="p-4 flex items-center gap-3">
+            <img 
+              src="/lovable-uploads/01b275f3-962e-49f3-bc04-9696b715d718.png" 
+              alt="Pop The Builder Logo" 
+              className="w-8 h-8 rounded-lg"
+            />
+            <h2 className="text-lg font-semibold text-gray-900">Pop The Builder</h2>
+          </div>
+          
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          onClick={() => setActiveView(item.id)}
+                          isActive={activeView === item.id}
+                          className="w-full justify-start"
+                        >
+                          <Icon className="mr-2 h-4 w-4" />
+                          {item.label}
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <div className="mt-auto p-4 space-y-2">
+              <Separator className="mb-2" />
+              <div className="text-sm text-gray-600 mb-2">
+                Welcome, {user.email}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={signOut}
+                className="w-full justify-start"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
             </div>
           </SidebarContent>
         </Sidebar>
 
         <div className="flex-1 flex flex-col">
-          <header className="border-b px-6 py-4 flex items-center">
-            <SidebarTrigger>
-              <Menu className="w-5 h-5" />
-            </SidebarTrigger>
-            <h1 className="ml-4 text-xl font-semibold">
-              {sidebarItems.find(item => item.id === activeView)?.label || 'Dashboard'}
-            </h1>
+          <header className="border-b p-4 flex items-center">
+            <SidebarTrigger />
           </header>
-
-          <main className="flex-1 overflow-auto p-6">
+          
+          <main className="flex-1 overflow-auto">
             {renderContent()}
           </main>
         </div>

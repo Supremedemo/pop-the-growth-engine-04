@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useGamification } from "@/hooks/useGamification";
-import { useTemplateCustomization, GamifiedTemplate } from "@/hooks/useTemplateCustomization";
+import { useTemplateCustomization } from "@/hooks/useTemplateCustomization";
 import { useGamifiedCampaigns } from "@/hooks/useGamifiedCampaigns";
 import { GamifiedTemplatePreview } from "./GamifiedTemplatePreview";
 import { 
@@ -35,8 +35,7 @@ import {
   RotateCcw,
   Eye,
   Globe,
-  Copy,
-  Loader2
+  Copy
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,7 +46,7 @@ interface TemplateGalleryEnhancedProps {
 
 export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: TemplateGalleryEnhancedProps) => {
   const [activeTab, setActiveTab] = useState("templates");
-  const [selectedTemplate, setSelectedTemplate] = useState<GamifiedTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [customizationConfig, setCustomizationConfig] = useState<any>({});
   const [templateName, setTemplateName] = useState("");
   const [isCustomizing, setIsCustomizing] = useState(false);
@@ -65,7 +64,6 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
 
   const {
     gamifiedTemplates,
-    isLoadingTemplates,
     customizations,
     saveCustomization,
     updateCustomization,
@@ -91,7 +89,7 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
     return Star;
   };
 
-  const handleTemplateCustomize = (template: GamifiedTemplate) => {
+  const handleTemplateCustomize = (template: any) => {
     setSelectedTemplate(template);
     setCustomizationConfig(template.default_config);
     setTemplateName(`My ${template.name}`);
@@ -99,10 +97,27 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
     setIsCustomizing(true);
   };
 
-  const handlePreviewTemplate = (template: GamifiedTemplate) => {
+  const handlePreviewTemplate = (template: any) => {
     setSelectedTemplate(template);
     setCustomizationConfig(template.default_config);
     setIsPreviewOpen(true);
+  };
+
+  const handleUseTemplate = (template: any) => {
+    if (userProgression && userProgression.level < template.level_required) {
+      toast.error(`This template requires level ${template.level_required}. You are level ${userProgression.level}.`);
+      return;
+    }
+
+    updateProgression({ action: 'template_used' });
+    toast.success(`Using ${template.name} template!`);
+    
+    if (onTemplateSelect) {
+      onTemplateSelect({
+        ...template,
+        config: customizationConfig
+      });
+    }
   };
 
   const handleCreateCampaignFromTemplate = async () => {
@@ -113,7 +128,8 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
 
     try {
       const success = await createGamifiedCampaign({
-        template: selectedTemplate,
+        templateId: selectedTemplate.id,
+        templateName: selectedTemplate.name,
         customization: customizationConfig,
         campaignName: campaignName,
         targetingRules: {
@@ -222,30 +238,6 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
           </div>
         </div>
 
-        {/* Primary Color */}
-        <div>
-          <Label>Primary Color</Label>
-          <div className="flex items-center space-x-2">
-            <Input
-              type="color"
-              value={config.primaryColor || '#4ECDC4'}
-              onChange={(e) => setCustomizationConfig({
-                ...config,
-                primaryColor: e.target.value
-              })}
-              className="w-16 h-10"
-            />
-            <Input
-              value={config.primaryColor || '#4ECDC4'}
-              onChange={(e) => setCustomizationConfig({
-                ...config,
-                primaryColor: e.target.value
-              })}
-              placeholder="#4ECDC4"
-            />
-          </div>
-        </div>
-
         {/* Button Text */}
         <div>
           <Label>Button Text</Label>
@@ -260,7 +252,7 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
         </div>
 
         {/* Template-specific controls */}
-        {selectedTemplate.category === 'spin-wheel' && (
+        {selectedTemplate.id === 'spin-wheel' && (
           <div className="space-y-4">
             <div>
               <Label>Wheel Prizes (one per line)</Label>
@@ -274,10 +266,20 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
                 rows={4}
               />
             </div>
+            <div>
+              <Label>Show Confetti</Label>
+              <Switch
+                checked={config.showConfetti}
+                onCheckedChange={(checked) => setCustomizationConfig({
+                  ...config,
+                  showConfetti: checked
+                })}
+              />
+            </div>
           </div>
         )}
 
-        {selectedTemplate.category === 'scratch-card' && (
+        {selectedTemplate.id === 'scratch-card' && (
           <div className="space-y-4">
             <div>
               <Label>Reveal Text</Label>
@@ -291,14 +293,13 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
               />
             </div>
             <div>
-              <Label>Reveal Title</Label>
-              <Input
-                value={config.revealTitle || ''}
-                onChange={(e) => setCustomizationConfig({
+              <Label>Show Sparkles</Label>
+              <Switch
+                checked={config.showSparkles}
+                onCheckedChange={(checked) => setCustomizationConfig({
                   ...config,
-                  revealTitle: e.target.value
+                  showSparkles: checked
                 })}
-                placeholder="Congratulations!"
               />
             </div>
           </div>
@@ -306,15 +307,6 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
       </div>
     );
   };
-
-  if (isLoadingTemplates) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin" />
-        <span className="ml-2">Loading templates...</span>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -603,17 +595,8 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
               disabled={isCreating}
               className="bg-green-600 hover:bg-green-700"
             >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Globe className="w-4 h-4 mr-2" />
-                  Deploy as Campaign
-                </>
-              )}
+              <Globe className="w-4 h-4 mr-2" />
+              {isCreating ? 'Creating...' : 'Deploy as Campaign'}
             </Button>
           </div>
         </DialogContent>
