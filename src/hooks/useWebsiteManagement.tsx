@@ -148,46 +148,42 @@ export const useWebsiteManagement = () => {
 <script>
 (function() {
   var ptb = window.ptb = window.ptb || {};
-  ptb.websiteId = "${website.beacon_id}";
+  ptb.websiteId = "${website.id}";
   ptb.apiKey = "${website.api_key}";
-  ptb.apiUrl = "https://qxwjsqnjwjdnawpwotfv.supabase.co";
+  ptb.apiUrl = "https://qxwjsqnjwjdnawpwotfv.supabase.co/rest/v1/user_events";
   
   // Generate or get session ID
   ptb.sessionId = sessionStorage.getItem('ptb_session') || 
     Math.random().toString(36).substring(2) + Date.now().toString(36);
   sessionStorage.setItem('ptb_session', ptb.sessionId);
   
-  // Generate or get user ID
-  ptb.userId = localStorage.getItem('ptb_user') || 
-    Math.random().toString(36).substring(2) + Date.now().toString(36);
-  localStorage.setItem('ptb_user', ptb.userId);
+  // Generate or get cookie ID for user tracking
+  ptb.trackedUserId = localStorage.getItem('ptb_tracked_user_id_' + ptb.websiteId);
+  if (!ptb.trackedUserId) {
+    ptb.trackedUserId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem('ptb_tracked_user_id_' + ptb.websiteId, ptb.trackedUserId);
+  }
   
-  // Track page view
   ptb.track = function(eventType, data) {
-    var eventData = {
-      event_type: eventType,
+    var now = new Date();
+    var payload = {
       website_id: ptb.websiteId,
-      user_id: ptb.userId,
-      session_id: ptb.sessionId,
+      tracked_user_id: ptb.trackedUserId,
+      event_type: eventType,
+      event_data: data || {},
       url: window.location.href,
       referrer: document.referrer,
-      user_agent: navigator.userAgent,
-      timestamp: new Date().toISOString(),
-      data: data || {}
+      timestamp: now.toISOString(),
+      session_id: ptb.sessionId
     };
-    
-    // Send to your tracking endpoint
-    fetch(ptb.apiUrl + '/rest/v1/analytics_events', {
+    fetch(ptb.apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': ptb.apiKey,
         'Authorization': 'Bearer ' + ptb.apiKey
       },
-      body: JSON.stringify({
-        event_type: eventData.event_type,
-        event_data: eventData
-      })
+      body: JSON.stringify(payload)
     }).catch(function(err) {
       console.warn('PTB tracking failed:', err);
     });
@@ -201,11 +197,12 @@ export const useWebsiteManagement = () => {
   
   // Track clicks
   document.addEventListener('click', function(e) {
+    var el = e.target;
     ptb.track('click', {
-      element: e.target.tagName,
-      id: e.target.id,
-      class: e.target.className,
-      text: e.target.textContent.substring(0, 100)
+      element: el.tagName,
+      id: el.id,
+      class: el.className,
+      text: (el.textContent || '').substring(0, 100)
     });
   });
   
@@ -228,7 +225,7 @@ export const useWebsiteManagement = () => {
     }
   });
   
-  // Track time on page
+  // Track time on page (when user leaves)
   var startTime = Date.now();
   window.addEventListener('beforeunload', function() {
     var timeOnPage = Math.round((Date.now() - startTime) / 1000);
