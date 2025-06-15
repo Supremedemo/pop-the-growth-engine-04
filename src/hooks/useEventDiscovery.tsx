@@ -43,7 +43,7 @@ export const useEventDiscovery = (websiteId?: string) => {
     queryFn: async () => {
       if (!user) return [];
       
-      // Use raw SQL query since discovered_events table is new
+      // Use the supabase client to call the execute_sql function
       let query = `
         SELECT de.*, w.name as website_name, w.domain as website_domain
         FROM discovered_events de
@@ -60,9 +60,11 @@ export const useEventDiscovery = (websiteId?: string) => {
       
       query += ` ORDER BY de.last_seen DESC`;
 
-      const { data, error } = await supabase.rpc('execute_sql', {
-        query,
-        params
+      const { data, error } = await supabase.functions.invoke('execute-sql', {
+        body: {
+          query,
+          params
+        }
       });
 
       if (error) {
@@ -71,7 +73,7 @@ export const useEventDiscovery = (websiteId?: string) => {
         return [];
       }
       
-      return (data || []) as DiscoveredEvent[];
+      return (data?.data || []) as DiscoveredEvent[];
     },
     enabled: !!user
   });
@@ -90,16 +92,18 @@ export const useEventDiscovery = (websiteId?: string) => {
         fallback_value: number;
       };
     }) => {
-      const { data, error } = await supabase.rpc('execute_sql', {
-        query: `
-          UPDATE discovered_events 
-          SET is_conversion_event = $1, 
-              revenue_mapping = $2, 
-              updated_at = now()
-          WHERE id = $3
-          RETURNING *
-        `,
-        params: [isConversion, JSON.stringify(revenueMapping || null), eventId]
+      const { data, error } = await supabase.functions.invoke('execute-sql', {
+        body: {
+          query: `
+            UPDATE discovered_events 
+            SET is_conversion_event = $1, 
+                revenue_mapping = $2, 
+                updated_at = now()
+            WHERE id = $3
+            RETURNING *
+          `,
+          params: [isConversion, JSON.stringify(revenueMapping || null), eventId]
+        }
       });
 
       if (error) throw error;
@@ -117,16 +121,10 @@ export const useEventDiscovery = (websiteId?: string) => {
 
   const triggerEventDiscoveryMutation = useMutation({
     mutationFn: async (websiteId: string) => {
-      // Insert directly into event_queue table
-      const { data, error } = await supabase
-        .from('event_queue')
-        .insert({
-          event_type: 'event_discovery',
-          payload: { website_id: websiteId },
-          priority: 2
-        })
-        .select()
-        .single();
+      // Use the trigger_event_discovery function
+      const { data, error } = await supabase.rpc('trigger_event_discovery', {
+        p_website_id: websiteId
+      });
 
       if (error) throw error;
       return data;
