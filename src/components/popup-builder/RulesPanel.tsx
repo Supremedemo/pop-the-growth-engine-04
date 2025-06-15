@@ -464,7 +464,7 @@ export const RulesPanel = ({
                       Add
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-lg">
+                  <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Create Webhook</DialogTitle>
                       <DialogDescription>
@@ -476,7 +476,7 @@ export const RulesPanel = ({
                 </Dialog>
 
                 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                  <DialogContent className="max-w-lg">
+                  <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Edit Webhook</DialogTitle>
                       <DialogDescription>
