@@ -1,6 +1,8 @@
 
-const mobileFirstTemplates = [
-  // To be populated with real templates
-];
+import { predefinedTemplates } from "../predefined/templatesData";
+
+const mobileFirstTemplates = predefinedTemplates.filter(
+  t => t.category === "Mobile-First"
+);
 
 export default mobileFirstTemplates;

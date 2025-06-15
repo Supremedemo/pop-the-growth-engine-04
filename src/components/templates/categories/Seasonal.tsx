@@ -1,6 +1,8 @@
 
-const seasonalTemplates = [
-  // To be populated with real templates
-];
+import { predefinedTemplates } from "../predefined/templatesData";
+
+const seasonalTemplates = predefinedTemplates.filter(
+  t => t.category === "Holiday/Seasonal"
+);
 
 export default seasonalTemplates;
