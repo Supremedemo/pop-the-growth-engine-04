@@ -96,7 +96,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
     cursor: element.isPinned ? 'not-allowed' : 'move',
     opacity: element.isPinned ? 0.6 : 1,
     pointerEvents: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['pointerEvents'],
-    userSelect: element.isPinned ? 'none' : 'auto'
+    userSelect: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['userSelect'],
   };
 
   const renderElement = () => {
@@ -139,7 +139,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                   ? 'flex-end'
                   : 'flex-start',
               pointerEvents: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['pointerEvents'],
-              userSelect: element.isPinned ? 'none' : 'auto'
+              userSelect: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['userSelect'],
             }}
             onClick={handleClick}
           >
@@ -160,7 +160,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 objectFit: 'cover',
                 borderRadius: imgEl.borderRadius,
                 pointerEvents: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['pointerEvents'],
-                userSelect: element.isPinned ? 'none' : 'auto'
+                userSelect: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['userSelect'],
               }}
             />
           </div>
@@ -192,7 +192,6 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
       case "timer":
         const timerEl = element as TimerElement;
         const [timeLeft, setTimeLeft] = useState(timerEl.duration);
-        
         React.useEffect(() => {
           const timer = setInterval(() => {
             setTimeLeft((prev) => Math.max(0, prev - 1));
@@ -216,7 +215,7 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
                 width: '100%',
                 height: '100%',
                 pointerEvents: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['pointerEvents'],
-                userSelect: element.isPinned ? 'none' : 'auto'
+                userSelect: (element.isPinned ? 'none' : 'auto') as React.CSSProperties['userSelect'],
               }}
             >
               <Clock className="w-5 h-5 mr-2" />
