@@ -51,11 +51,20 @@ export const useCampaigns = () => {
   });
 
   const createCampaignMutation = useMutation({
-    mutationFn: async ({ name, description, canvasData, templateId }: {
+    mutationFn: async ({ 
+      name, 
+      description, 
+      canvasData, 
+      templateId, 
+      targetingRules, 
+      displaySettings 
+    }: {
       name: string;
       description?: string;
       canvasData: CanvasState;
       templateId?: string;
+      targetingRules?: any;
+      displaySettings?: any;
     }) => {
       if (!user) throw new Error('User not authenticated');
 
@@ -68,8 +77,8 @@ export const useCampaigns = () => {
           description: description || null,
           canvas_data: canvasData as any, // Cast CanvasState to Json
           status: 'draft',
-          targeting_rules: {},
-          display_settings: {}
+          targeting_rules: targetingRules || {},
+          display_settings: displaySettings || {}
         })
         .select()
         .single();
