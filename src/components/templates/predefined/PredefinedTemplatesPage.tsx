@@ -27,20 +27,24 @@ const PredefinedTemplatesPage = () => {
       <header className="bg-white border-b px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">Predefined Templates</h2>
-          <p className="text-slate-600 text-sm">Pick a ready-made template, then customize the details to your brand needs.</p>
+          <p className="text-slate-600 text-sm">
+            Pick a ready-made template, then customize the details to your brand needs.
+          </p>
         </div>
-        <TabsList className="flex bg-slate-100 rounded-lg space-x-1">
-          {categories.map((cat) => (
-            <TabsTrigger
-              key={cat.value}
-              value={cat.value}
-              className={`px-3 py-1 rounded-full ${selectedCategory === cat.value ? "bg-white text-slate-900" : "text-slate-600 hover:bg-slate-200"}`}
-              onClick={() => setSelectedCategory(cat.value)}
-            >
-              {cat.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {/* Tabs now inside a real <Tabs> */}
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+          <TabsList className="flex bg-slate-100 rounded-lg space-x-1">
+            {categories.map((cat) => (
+              <TabsTrigger
+                key={cat.value}
+                value={cat.value}
+                className={`px-3 py-1 rounded-full ${selectedCategory === cat.value ? "bg-white text-slate-900" : "text-slate-600 hover:bg-slate-200"}`}
+              >
+                {cat.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </header>
 
       {/* Main content: 3-column layout */}
@@ -86,4 +90,3 @@ const PredefinedTemplatesPage = () => {
 };
 
 export default PredefinedTemplatesPage;
-
