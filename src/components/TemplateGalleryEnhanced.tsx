@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -93,7 +92,7 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
       return;
     }
 
-    updateProgression('template_used');
+    updateProgression({ action: 'template_used' });
     toast.success(`Using ${template.name} template!`);
     
     if (onTemplateSelect) {
@@ -117,7 +116,7 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
       is_favorite: false
     });
 
-    updateProgression('template_customized');
+    updateProgression({ action: 'template_customized' });
     setIsCustomizing(false);
   };
 
@@ -210,7 +209,7 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect }: TemplateGalleryEnh
                   ...config,
                   prizes: e.target.value.split('\n').filter(p => p.trim())
                 })}
-                placeholder="10% Off\n20% Off\nFree Shipping"
+                placeholder="10% Off&#10;20% Off&#10;Free Shipping"
                 rows={4}
               />
             </div>
