@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,11 +89,14 @@ export const ElementRenderer = ({ element, isSelected, onSelect, onUpdate, onDel
     onDelete(element.id);
   };
 
+  // Pin/locked: prevent updates/interactions if pinned
   const baseStyle = {
     width: '100%',
     height: '100%',
-    cursor: element.isPinned ? 'default' : 'move',
-    opacity: element.isPinned ? 0.8 : 1,
+    cursor: element.isPinned ? 'not-allowed' : 'move',
+    opacity: element.isPinned ? 0.6 : 1,
+    pointerEvents: element.isPinned ? 'none' : 'auto',
+    userSelect: element.isPinned ? 'none' : 'auto'
   };
 
   const renderElement = () => {

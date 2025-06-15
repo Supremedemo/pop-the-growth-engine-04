@@ -387,6 +387,44 @@ export const CanvasEditor = ({
     }
   };
 
+  const handleBringForward = (id: string) => {
+    const elements = [...canvasState.elements];
+    const idx = elements.findIndex(e => e.id === id);
+    if (idx === -1) return;
+
+    const currZ = elements[idx].zIndex;
+    const higherEls = elements.filter(e => e.zIndex > currZ);
+    if (higherEls.length === 0) return;
+
+    const minGreaterZ = Math.min(...higherEls.map(e => e.zIndex));
+    // Swap zIndex with the very next higher element
+    const swapIdx = elements.findIndex(e => e.zIndex === minGreaterZ);
+    if (swapIdx !== -1) {
+      [elements[idx].zIndex, elements[swapIdx].zIndex] = [elements[swapIdx].zIndex, elements[idx].zIndex];
+      onUpdateElement(id, { zIndex: elements[idx].zIndex });
+      // Also update swapIdx
+      onUpdateElement(elements[swapIdx].id, { zIndex: elements[swapIdx].zIndex });
+    }
+  };
+
+  const handleSendBackward = (id: string) => {
+    const elements = [...canvasState.elements];
+    const idx = elements.findIndex(e => e.id === id);
+    if (idx === -1) return;
+
+    const currZ = elements[idx].zIndex;
+    const lowerEls = elements.filter(e => e.zIndex < currZ);
+    if (lowerEls.length === 0) return;
+
+    const maxLowerZ = Math.max(...lowerEls.map(e => e.zIndex));
+    const swapIdx = elements.findIndex(e => e.zIndex === maxLowerZ);
+    if (swapIdx !== -1) {
+      [elements[idx].zIndex, elements[swapIdx].zIndex] = [elements[swapIdx].zIndex, elements[idx].zIndex];
+      onUpdateElement(id, { zIndex: elements[idx].zIndex });
+      onUpdateElement(elements[swapIdx].id, { zIndex: elements[swapIdx].zIndex });
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -439,6 +477,8 @@ export const CanvasEditor = ({
               onUpdate={onUpdateElement}
               gridSize={canvasState.gridSize}
               snapToGrid={canvasState.showGrid}
+              onBringForward={handleBringForward}
+              onSendBackward={handleSendBackward}
             />
           ))}
 

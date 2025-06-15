@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { PopupElement, ElementRenderer } from "./PopupElements";
 import { X, Pin, PinOff } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 interface CanvasElementProps {
   element: PopupElement;
@@ -10,6 +11,10 @@ interface CanvasElementProps {
   onUpdate: (id: string, updates: Partial<PopupElement>) => void;
   gridSize: number;
   snapToGrid: boolean;
+  onBringForward?: (id: string) => void;
+  onSendBackward?: (id: string) => void;
+  aspectRatioLocked?: boolean;
+  onToggleAspectRatioLock?: () => void;
 }
 
 export const CanvasElement = ({
@@ -19,7 +24,11 @@ export const CanvasElement = ({
   onSelect,
   onUpdate,
   gridSize,
-  snapToGrid
+  snapToGrid,
+  onBringForward,
+  onSendBackward,
+  aspectRatioLocked,
+  onToggleAspectRatioLock,
 }: CanvasElementProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -29,6 +38,7 @@ export const CanvasElement = ({
     x: 0, y: 0, width: 0, height: 0, elementX: 0, elementY: 0 
   });
   const [isHovered, setIsHovered] = useState(false);
+  const [isAspectRatioLocked, setIsAspectRatioLocked] = useState(false);
 
   const elementRef = useRef<HTMLDivElement>(null);
 
@@ -129,65 +139,148 @@ export const CanvasElement = ({
       
       let updates: Partial<PopupElement> = {};
       const minSize = 20;
-      
+      const origWidth = resizeStart.width;
+      const origHeight = resizeStart.height;
+      const aspect = origWidth / origHeight || 1;
+
+      // Handle aspect ratio locking
+      const applyAspect = (width: number, height: number) => {
+        if (!isAspectRatioLocked) return { width, height };
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          return { width, height: width / aspect };
+        }
+        return { width: height * aspect, height };
+      };
       switch (resizeHandle) {
-        case 'nw':
-          const newWidth = Math.max(minSize, snapToGridValue(resizeStart.width - deltaX));
-          const newHeight = Math.max(minSize, snapToGridValue(resizeStart.height - deltaY));
+        case 'nw': {
+          let newWidth = Math.max(minSize, snapToGridValue(origWidth - deltaX));
+          let newHeight = Math.max(minSize, snapToGridValue(origHeight - deltaY));
+          if (isAspectRatioLocked) {
+            const wh = applyAspect(newWidth, newHeight);
+            newWidth = wh.width;
+            newHeight = wh.height;
+          }
           updates = {
-            x: snapToGridValue(resizeStart.elementX + (resizeStart.width - newWidth)),
-            y: snapToGridValue(resizeStart.elementY + (resizeStart.height - newHeight)),
+            x: snapToGridValue(resizeStart.elementX + (origWidth - newWidth)),
+            y: snapToGridValue(resizeStart.elementY + (origHeight - newHeight)),
             width: newWidth,
             height: newHeight
           };
           break;
-        case 'ne':
+        }
+        case 'ne': {
+          let newWidth = Math.max(minSize, snapToGridValue(origWidth + deltaX));
+          let newHeight = Math.max(minSize, snapToGridValue(origHeight - deltaY));
+          if (isAspectRatioLocked) {
+            const wh = applyAspect(newWidth, newHeight);
+            newWidth = wh.width;
+            newHeight = wh.height;
+          }
           updates = {
-            y: snapToGridValue(resizeStart.elementY + deltaY),
-            width: Math.max(minSize, snapToGridValue(resizeStart.width + deltaX)),
-            height: Math.max(minSize, snapToGridValue(resizeStart.height - deltaY))
+            y: snapToGridValue(resizeStart.elementY + (origHeight - newHeight)),
+            width: newWidth,
+            height: newHeight
           };
           break;
-        case 'sw':
+        }
+        case 'sw': {
+          let newWidth = Math.max(minSize, snapToGridValue(origWidth - deltaX));
+          let newHeight = Math.max(minSize, snapToGridValue(origHeight + deltaY));
+          if (isAspectRatioLocked) {
+            const wh = applyAspect(newWidth, newHeight);
+            newWidth = wh.width;
+            newHeight = wh.height;
+          }
           updates = {
-            x: snapToGridValue(resizeStart.elementX + deltaX),
-            width: Math.max(minSize, snapToGridValue(resizeStart.width - deltaX)),
-            height: Math.max(minSize, snapToGridValue(resizeStart.height + deltaY))
+            x: snapToGridValue(resizeStart.elementX + (origWidth - newWidth)),
+            width: newWidth,
+            height: newHeight
           };
           break;
-        case 'se':
+        }
+        case 'se': {
+          let newWidth = Math.max(minSize, snapToGridValue(origWidth + deltaX));
+          let newHeight = Math.max(minSize, snapToGridValue(origHeight + deltaY));
+          if (isAspectRatioLocked) {
+            const wh = applyAspect(newWidth, newHeight);
+            newWidth = wh.width;
+            newHeight = wh.height;
+          }
           updates = {
-            width: Math.max(minSize, snapToGridValue(resizeStart.width + deltaX)),
-            height: Math.max(minSize, snapToGridValue(resizeStart.height + deltaY))
+            width: newWidth,
+            height: newHeight
           };
           break;
-        case 'n':
-          updates = {
-            y: snapToGridValue(resizeStart.elementY + deltaY),
-            height: Math.max(minSize, snapToGridValue(resizeStart.height - deltaY))
-          };
+        }
+        case 'n': {
+          let newHeight = Math.max(minSize, snapToGridValue(origHeight - deltaY));
+          if (isAspectRatioLocked) {
+            let newWidth = newHeight * aspect;
+            updates = {
+              y: snapToGridValue(resizeStart.elementY + (origHeight - newHeight)),
+              width: newWidth,
+              height: newHeight
+            };
+          } else {
+            updates = {
+              y: snapToGridValue(resizeStart.elementY + (origHeight - newHeight)),
+              height: newHeight
+            };
+          }
           break;
-        case 's':
-          updates = {
-            height: Math.max(minSize, snapToGridValue(resizeStart.height + deltaY))
-          };
+        }
+        case 's': {
+          let newHeight = Math.max(minSize, snapToGridValue(origHeight + deltaY));
+          if (isAspectRatioLocked) {
+            let newWidth = newHeight * aspect;
+            updates = {
+              width: newWidth,
+              height: newHeight
+            };
+          } else {
+            updates = {
+              height: newHeight
+            };
+          }
           break;
-        case 'w':
-          updates = {
-            x: snapToGridValue(resizeStart.elementX + deltaX),
-            width: Math.max(minSize, snapToGridValue(resizeStart.width - deltaX))
-          };
+        }
+        case 'w': {
+          let newWidth = Math.max(minSize, snapToGridValue(origWidth - deltaX));
+          if (isAspectRatioLocked) {
+            let newHeight = newWidth / aspect;
+            updates = {
+              x: snapToGridValue(resizeStart.elementX + (origWidth - newWidth)),
+              width: newWidth,
+              height: newHeight
+            };
+          } else {
+            updates = {
+              x: snapToGridValue(resizeStart.elementX + (origWidth - newWidth)),
+              width: newWidth
+            };
+          }
           break;
-        case 'e':
-          updates = {
-            width: Math.max(minSize, snapToGridValue(resizeStart.width + deltaX))
-          };
+        }
+        case 'e': {
+          let newWidth = Math.max(minSize, snapToGridValue(origWidth + deltaX));
+          if (isAspectRatioLocked) {
+            let newHeight = newWidth / aspect;
+            updates = {
+              width: newWidth,
+              height: newHeight
+            };
+          } else {
+            updates = {
+              width: newWidth
+            };
+          }
           break;
+        }
       }
       
       onUpdate(element.id, updates);
     }
-  }, [isDragging, isResizing, dragStart, resizeStart, resizeHandle, element.id, element.width, element.height, onUpdate, snapToGridValue]);
+  }, [isDragging, isResizing, dragStart, resizeStart, resizeHandle, element.id, element.width, element.height, onUpdate, snapToGridValue, isAspectRatioLocked]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -259,26 +352,79 @@ export const CanvasElement = ({
       
       {/* Action buttons - only show when selected */}
       {isSelected && (
-        <>
-          <button
-            onClick={togglePin}
-            className={`absolute -top-8 left-0 px-2 py-1 rounded text-xs flex items-center space-x-1 transition-colors shadow-md ${
-              element.isPinned 
-                ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                : 'bg-gray-500 text-white hover:bg-gray-600'
-            }`}
-          >
-            {element.isPinned ? <Pin className="w-3 h-3" /> : <PinOff className="w-3 h-3" />}
-            <span>{element.isPinned ? 'Pinned' : 'Pin'}</span>
-          </button>
-          
-          <button
-            onClick={handleDelete}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        </>
+        <TooltipProvider>
+          {/* Pin/Unpin */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={togglePin}
+                className={`absolute -top-8 left-0 px-2 py-1 rounded text-xs flex items-center space-x-1 transition-colors shadow-md ${
+                  element.isPinned 
+                    ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                    : 'bg-gray-500 text-white hover:bg-gray-600'
+                }`}
+              >
+                {element.isPinned ? <Pin className="w-3 h-3" /> : <PinOff className="w-3 h-3" />}
+                <span>{element.isPinned ? 'Pinned' : 'Pin'}</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Pin/Lock element (prevents moving/resizing)</TooltipContent>
+          </Tooltip>
+          {/* Delete (use tooltip for button) */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleDelete}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Delete element</TooltipContent>
+          </Tooltip>
+          {/* Z-order buttons */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  if (onBringForward) onBringForward(element.id);
+                }}
+                className="absolute -top-8 right-10 px-2 py-1 bg-blue-500 text-white rounded text-xs flex items-center hover:bg-blue-600 transition-colors shadow-md"
+              >
+                <span>↑</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Bring Forward</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  if (onSendBackward) onSendBackward(element.id);
+                }}
+                className="absolute -top-8 right-2 px-2 py-1 bg-blue-500 text-white rounded text-xs flex items-center hover:bg-blue-600 transition-colors shadow-md"
+              >
+                <span>↓</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Send Backward</TooltipContent>
+          </Tooltip>
+          {/* Aspect ratio lock indicator (if resizing) */}
+          {isResizing && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className={`absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded text-xs flex items-center bg-gray-800 text-white`}
+                >
+                  {isAspectRatioLocked ? "Aspect ratio locked" : "Free resize"} (hold Shift)
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Hold Shift to lock aspect ratio when resizing</TooltipContent>
+            </Tooltip>
+          )}
+        </TooltipProvider>
       )}
       
       {/* Enhanced resize handles */}
