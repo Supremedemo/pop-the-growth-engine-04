@@ -24,7 +24,8 @@ import {
   FormInput,
   Download,
   Plus,
-  Palette
+  Palette,
+  ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -56,10 +57,32 @@ export const EventBasedCampaignManager = () => {
   const [isCreateTemplateOpen, setIsCreateTemplateOpen] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState("");
   const [newTemplateDescription, setNewTemplateDescription] = useState("");
+  const [isCanvasEditorOpen, setIsCanvasEditorOpen] = useState(false);
 
   const { trackedUsers, userEvents, isLoading: trackingLoading, getEventAnalytics } = useUserTracking(selectedWebsiteId);
 
   const analytics = getEventAnalytics();
+
+  const createBasicCanvasData = () => ({
+    width: 400,
+    height: 300,
+    backgroundColor: '#ffffff',
+    backgroundType: 'color' as const,
+    backgroundImage: '',
+    elements: [],
+    zoom: 1,
+    showGrid: true,
+    gridSize: 8,
+    layout: {
+      type: 'modal' as const,
+      position: 'center' as const
+    },
+    showOverlay: true,
+    overlayColor: '#000000',
+    overlayOpacity: 50,
+    showCloseButton: true,
+    closeButtonPosition: 'top-right' as const
+  });
 
   const handleCreateTemplate = () => {
     if (!newTemplateName.trim()) {
@@ -67,29 +90,7 @@ export const EventBasedCampaignManager = () => {
       return;
     }
 
-    // Create a basic template structure
-    const basicCanvasData = {
-      width: 400,
-      height: 300,
-      backgroundColor: '#ffffff',
-      backgroundType: 'color' as const,
-      backgroundImage: '',
-      elements: [],
-      settings: {},
-      customCSS: '',
-      customJS: '',
-      metadata: {},
-      animations: [],
-      layout: {
-        type: 'modal' as const,
-        position: 'center' as const
-      },
-      showOverlay: true,
-      overlayColor: '#000000',
-      overlayOpacity: 50,
-      showCloseButton: true,
-      closeButtonPosition: 'top-right' as const
-    };
+    const basicCanvasData = createBasicCanvasData();
 
     saveTemplate({
       name: newTemplateName.trim(),
@@ -103,6 +104,14 @@ export const EventBasedCampaignManager = () => {
     setNewTemplateDescription("");
     setIsCreateTemplateOpen(false);
     toast.success('Template created! You can now select it.');
+  };
+
+  const handleOpenCanvasEditor = () => {
+    if (!newTemplateName.trim()) {
+      toast.error('Please enter a template name first');
+      return;
+    }
+    setIsCanvasEditorOpen(true);
   };
 
   const handleCreateCampaign = () => {
@@ -150,28 +159,7 @@ export const EventBasedCampaignManager = () => {
     createCampaign({
       name: campaignName,
       description: campaignDescription || undefined,
-      canvasData: template?.canvas_data || {
-        width: 400,
-        height: 300,
-        backgroundColor: '#ffffff',
-        backgroundType: 'color',
-        backgroundImage: '',
-        elements: [],
-        settings: {},
-        customCSS: '',
-        customJS: '',
-        metadata: {},
-        animations: [],
-        layout: {
-          type: 'modal',
-          position: 'center'
-        },
-        showOverlay: true,
-        overlayColor: '#000000',
-        overlayOpacity: 50,
-        showCloseButton: true,
-        closeButtonPosition: 'top-right'
-      },
+      canvasData: template?.canvas_data || createBasicCanvasData(),
       templateId: selectedTemplateId,
       targetingRules,
       displaySettings
@@ -376,60 +364,70 @@ export const EventBasedCampaignManager = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label htmlFor="template">Template</Label>
-                  <Dialog open={isCreateTemplateOpen} onOpenChange={setIsCreateTemplateOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Template
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          <Palette className="w-5 h-5" />
-                          Create New Template
-                        </DialogTitle>
-                        <DialogDescription>
-                          Create a new template that you can use for this campaign
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="newTemplateName">Template Name</Label>
-                          <Input
-                            id="newTemplateName"
-                            value={newTemplateName}
-                            onChange={(e) => setNewTemplateName(e.target.value)}
-                            placeholder="Enter template name"
-                          />
+                  <div className="flex space-x-2">
+                    <Dialog open={isCreateTemplateOpen} onOpenChange={setIsCreateTemplateOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Quick Template
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <Palette className="w-5 h-5" />
+                            Create New Template
+                          </DialogTitle>
+                          <DialogDescription>
+                            Create a basic template or open the full editor for advanced design
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="newTemplateName">Template Name</Label>
+                            <Input
+                              id="newTemplateName"
+                              value={newTemplateName}
+                              onChange={(e) => setNewTemplateName(e.target.value)}
+                              placeholder="Enter template name"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="newTemplateDescription">Description (Optional)</Label>
+                            <Textarea
+                              id="newTemplateDescription"
+                              value={newTemplateDescription}
+                              onChange={(e) => setNewTemplateDescription(e.target.value)}
+                              placeholder="Describe your template"
+                              rows={3}
+                            />
+                          </div>
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setIsCreateTemplateOpen(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button 
+                              variant="outline"
+                              onClick={handleOpenCanvasEditor}
+                              className="flex items-center gap-2"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              Full Editor
+                            </Button>
+                            <Button 
+                              onClick={handleCreateTemplate}
+                              disabled={isSavingTemplate}
+                            >
+                              {isSavingTemplate ? 'Creating...' : 'Create Basic'}
+                            </Button>
+                          </div>
                         </div>
-                        <div>
-                          <Label htmlFor="newTemplateDescription">Description (Optional)</Label>
-                          <Textarea
-                            id="newTemplateDescription"
-                            value={newTemplateDescription}
-                            onChange={(e) => setNewTemplateDescription(e.target.value)}
-                            placeholder="Describe your template"
-                            rows={3}
-                          />
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setIsCreateTemplateOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button 
-                            onClick={handleCreateTemplate}
-                            disabled={isSavingTemplate}
-                          >
-                            {isSavingTemplate ? 'Creating...' : 'Create Template'}
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
                 <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
                   <SelectTrigger>
@@ -500,6 +498,36 @@ export const EventBasedCampaignManager = () => {
           </Card>
         </div>
       </div>
+
+      {/* Canvas Editor Dialog */}
+      <Dialog open={isCanvasEditorOpen} onOpenChange={setIsCanvasEditorOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Palette className="w-5 h-5" />
+              Template Designer - {newTemplateName}
+            </DialogTitle>
+            <DialogDescription>
+              Design your template using the full canvas editor
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0">
+            <iframe
+              src="/builder"
+              className="w-full h-[80vh] border-0 rounded-lg"
+              title="Template Designer"
+            />
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCanvasEditorOpen(false)}
+            >
+              Close Editor
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
