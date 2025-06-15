@@ -1,8 +1,10 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   LineChart, 
   Line, 
@@ -28,24 +30,88 @@ import {
   Download,
   Filter
 } from "lucide-react";
+import { useCampaignAnalytics } from "@/hooks/useCampaignAnalytics";
+import { useCampaigns } from "@/hooks/useCampaigns";
+import { useUserTracking } from "@/hooks/useUserTracking";
 
 export const Analytics = () => {
-  const performanceData = [
-    { date: "Jan 1", impressions: 4200, conversions: 120, revenue: 2400 },
-    { date: "Jan 2", impressions: 3800, conversions: 98, revenue: 1890 },
-    { date: "Jan 3", impressions: 5100, conversions: 145, revenue: 3200 },
-    { date: "Jan 4", impressions: 4650, conversions: 132, revenue: 2950 },
-    { date: "Jan 5", impressions: 5890, conversions: 168, revenue: 4100 },
-    { date: "Jan 6", impressions: 6200, conversions: 175, revenue: 4500 },
-    { date: "Jan 7", impressions: 5700, conversions: 156, revenue: 3800 },
-  ];
+  const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+    to: new Date()
+  });
 
-  const campaignData = [
-    { name: "Welcome Discount", conversions: 1247, revenue: 8950, rate: 2.73 },
-    { name: "Cart Abandonment", conversions: 892, revenue: 6840, rate: 3.80 },
-    { name: "Exit Intent", conversions: 456, revenue: 3420, rate: 2.43 },
-    { name: "Newsletter", conversions: 1234, revenue: 0, rate: 2.17 },
-  ];
+  const { campaigns } = useCampaigns();
+  const { analytics, summary, isLoading } = useCampaignAnalytics(
+    selectedCampaign !== "all" ? selectedCampaign : undefined,
+    undefined,
+    dateRange
+  );
+  const { getEventAnalytics } = useUserTracking();
+
+  // Process analytics data for charts
+  const processTimeSeriesData = () => {
+    const dailyData: Record<string, any> = {};
+    
+    analytics.forEach(analytic => {
+      const date = new Date(analytic.timestamp).toLocaleDateString();
+      if (!dailyData[date]) {
+        dailyData[date] = {
+          date,
+          impressions: 0,
+          clicks: 0,
+          conversions: 0,
+          revenue: 0
+        };
+      }
+      
+      if (analytic.event_type === 'impression') dailyData[date].impressions++;
+      if (analytic.event_type === 'click') dailyData[date].clicks++;
+      if (analytic.event_type === 'conversion') dailyData[date].conversions++;
+      dailyData[date].revenue += analytic.revenue_value || 0;
+    });
+
+    return Object.values(dailyData).slice(-7); // Last 7 days
+  };
+
+  const processHourlyData = () => {
+    const hourlyData: Record<number, number> = {};
+    
+    analytics.forEach(analytic => {
+      if (analytic.event_type === 'conversion') {
+        const hour = new Date(analytic.timestamp).getHours();
+        hourlyData[hour] = (hourlyData[hour] || 0) + 1;
+      }
+    });
+
+    const hours = ['6AM', '9AM', '12PM', '3PM', '6PM', '9PM'];
+    return hours.map((hour, index) => ({
+      hour,
+      rate: ((hourlyData[6 + index * 3] || 0) / (analytics.filter(a => a.event_type === 'impression').length || 1)) * 100
+    }));
+  };
+
+  const processCampaignData = () => {
+    return campaigns.map(campaign => {
+      const campaignStats = summary.campaignStats[campaign.id] || {
+        impressions: 0,
+        clicks: 0,
+        conversions: 0,
+        revenue: 0
+      };
+      
+      const conversionRate = campaignStats.impressions > 0 
+        ? (campaignStats.conversions / campaignStats.impressions) * 100 
+        : 0;
+
+      return {
+        name: campaign.name,
+        conversions: campaignStats.conversions,
+        revenue: campaignStats.revenue,
+        rate: conversionRate
+      };
+    }).filter(c => c.conversions > 0 || c.revenue > 0);
+  };
 
   const deviceData = [
     { name: "Desktop", value: 45.2, color: "#3b82f6" },
@@ -53,40 +119,55 @@ export const Analytics = () => {
     { name: "Tablet", value: 13.0, color: "#f59e0b" },
   ];
 
+  const timeSeriesData = processTimeSeriesData();
+  const hourlyPerformanceData = processHourlyData();
+  const campaignPerformanceData = processCampaignData();
+
   const stats = [
     {
       title: "Total Revenue",
-      value: "$23,156",
-      change: "+15.7%",
+      value: `$${summary.totalRevenue.toFixed(2)}`,
+      change: "+15.7%", // TODO: Calculate actual change
       trend: "up",
       icon: DollarSign,
       color: "text-green-600"
     },
     {
       title: "Conversion Rate",
-      value: "3.02%",
-      change: "+0.4%",
+      value: `${summary.conversionRate.toFixed(2)}%`,
+      change: "+0.4%", // TODO: Calculate actual change
       trend: "up",
       icon: MousePointer,
       color: "text-blue-600"
     },
     {
       title: "Total Impressions",
-      value: "127,432",
-      change: "+12.5%",
+      value: summary.totalImpressions.toLocaleString(),
+      change: "+12.5%", // TODO: Calculate actual change
       trend: "up",
       icon: Eye,
       color: "text-purple-600"
     },
     {
-      title: "Avg. Session Value",
-      value: "$6.02",
-      change: "-2.1%",
+      title: "Click-Through Rate",
+      value: `${summary.clickThroughRate.toFixed(2)}%`,
+      change: "-2.1%", // TODO: Calculate actual change
       trend: "down",
       icon: Users,
       color: "text-orange-600"
     }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-background min-h-screen">
@@ -97,6 +178,19 @@ export const Analytics = () => {
           <p className="text-muted-foreground">Track your popup performance and revenue attribution</p>
         </div>
         <div className="flex items-center space-x-3">
+          <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select campaign" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Campaigns</SelectItem>
+              {campaigns.map(campaign => (
+                <SelectItem key={campaign.id} value={campaign.id}>
+                  {campaign.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline" className="bg-background">
             <Calendar className="w-4 h-4 mr-2" />
             Last 30 Days
@@ -161,44 +255,50 @@ export const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis yAxisId="left" />
-                    <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip />
-                    <Line 
-                      yAxisId="left"
-                      type="monotone" 
-                      dataKey="impressions" 
-                      stroke="#3b82f6" 
-                      strokeWidth={2}
-                      name="Impressions"
-                    />
-                    <Line 
-                      yAxisId="left"
-                      type="monotone" 
-                      dataKey="conversions" 
-                      stroke="#10b981" 
-                      strokeWidth={2}
-                      name="Conversions"
-                    />
-                    <Line 
-                      yAxisId="right"
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="#f59e0b" 
-                      strokeWidth={2}
-                      name="Revenue ($)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {timeSeriesData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={timeSeriesData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis yAxisId="left" />
+                      <YAxis yAxisId="right" orientation="right" />
+                      <Tooltip />
+                      <Line 
+                        yAxisId="left"
+                        type="monotone" 
+                        dataKey="impressions" 
+                        stroke="#3b82f6" 
+                        strokeWidth={2}
+                        name="Impressions"
+                      />
+                      <Line 
+                        yAxisId="left"
+                        type="monotone" 
+                        dataKey="conversions" 
+                        stroke="#10b981" 
+                        strokeWidth={2}
+                        name="Conversions"
+                      />
+                      <Line 
+                        yAxisId="right"
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="#f59e0b" 
+                        strokeWidth={2}
+                        name="Revenue ($)"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">No data available for the selected period</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Device Breakdown */}
+          {/* Device Breakdown and Hourly Performance */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="bg-card border-border">
               <CardHeader>
@@ -248,18 +348,11 @@ export const Analytics = () => {
               <CardContent>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={[
-                      { hour: "6AM", rate: 1.2 },
-                      { hour: "9AM", rate: 2.8 },
-                      { hour: "12PM", rate: 3.4 },
-                      { hour: "3PM", rate: 4.1 },
-                      { hour: "6PM", rate: 3.8 },
-                      { hour: "9PM", rate: 2.5 },
-                    ]}>
+                    <BarChart data={hourlyPerformanceData}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="hour" />
                       <YAxis />
-                      <Tooltip formatter={(value) => `${value}%`} />
+                      <Tooltip formatter={(value) => `${Number(value).toFixed(2)}%`} />
                       <Bar dataKey="rate" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -277,34 +370,40 @@ export const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {campaignData.map((campaign, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-2 h-8 bg-blue-500 rounded"></div>
-                      <div>
-                        <h4 className="font-medium">{campaign.name}</h4>
-                        <p className="text-sm text-muted-foreground">Active Campaign</p>
+                {campaignPerformanceData.length > 0 ? (
+                  campaignPerformanceData.map((campaign, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-2 h-8 bg-blue-500 rounded"></div>
+                        <div>
+                          <h4 className="font-medium">{campaign.name}</h4>
+                          <p className="text-sm text-muted-foreground">Active Campaign</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-8 text-sm">
+                        <div className="text-center">
+                          <div className="font-medium">{campaign.conversions.toLocaleString()}</div>
+                          <div className="text-muted-foreground">Conversions</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium">{campaign.rate.toFixed(2)}%</div>
+                          <div className="text-muted-foreground">CVR</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-medium">${campaign.revenue.toFixed(2)}</div>
+                          <div className="text-muted-foreground">Revenue</div>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-8 text-sm">
-                      <div className="text-center">
-                        <div className="font-medium">{campaign.conversions.toLocaleString()}</div>
-                        <div className="text-muted-foreground">Conversions</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-medium">{campaign.rate}%</div>
-                        <div className="text-muted-foreground">CVR</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-medium">${campaign.revenue.toLocaleString()}</div>
-                        <div className="text-muted-foreground">Revenue</div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No campaign data available</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
