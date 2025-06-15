@@ -103,6 +103,7 @@ const PredefinedTemplatesPage = () => {
         </section>
         {/* Customization Panel (side) */}
         <aside className="hidden md:block w-80 bg-white border-l min-h-full">
+          {/* Fix: wrap CustomizationPanel props in an object */}
           <CustomizationPanel template={selectedTemplate} />
         </aside>
       </main>

@@ -4,7 +4,6 @@ import {
   CircleCheck,
   CircleMinus,
   CirclePlus,
-  ColorPicker,
   Image as ImageIcon,
   Pencil,
   PencilLine,
@@ -14,11 +13,12 @@ import {
   ArrowUp,
 } from "lucide-react";
 
+// ColorPicker has been removed (it is not in the allowed/exported icons)
+
 const iconMap: Record<string, React.FC<{ className?: string }>> = {
   "circle-check": CircleCheck,
   "circle-minus": CircleMinus,
   "circle-plus": CirclePlus,
-  "color-picker": ColorPicker,
   "image": ImageIcon,
   "pencil": Pencil,
   "pencil-line": PencilLine,
