@@ -25,13 +25,20 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { query, params = [] }: SQLRequest = await req.json();
 
-    // Execute the SQL query with parameters
+    console.log("Executing SQL:", query, "with params:", params);
+
+    // Execute parameterized query directly using the Supabase client
     const { data, error } = await supabase.rpc('exec_sql', {
-      sql: query,
-      parameters: params
+      query,
+      params
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("SQL execution error:", error);
+      throw error;
+    }
+
+    console.log("SQL execution result:", data);
 
     return new Response(
       JSON.stringify({ data }),

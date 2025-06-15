@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Smartphone, Monitor } from "lucide-react";
@@ -103,6 +104,12 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
 
   const selectedElements = canvasState.elements.filter(el => selectedElementIds.includes(el.id));
 
+  // Generate code for template publishing
+  const generatedCode = `<!-- Popup Template: ${templateManager.templateName} -->
+<div class="popup-container">
+  <!-- Generated popup code would go here -->
+</div>`;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <EditorHeader
@@ -164,7 +171,7 @@ export const PopupBuilder = ({ onBack, templateId }: PopupBuilderProps) => {
         onOpenChange={templateManager.setIsCodeDialogOpen}
         canvasData={canvasState}
         templateName={templateManager.templateName || "Untitled Template"}
-        generatedCode={templateManager.generatedCode}
+        generatedCode={generatedCode}
       />
 
       <PublishDialog

@@ -31,7 +31,6 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
     queryFn: async () => {
       if (!user) return [];
       
-      // Use raw SQL query since the table types haven't been generated yet
       let query = `
         SELECT * FROM form_submission_rules 
         WHERE user_id = $1
@@ -49,13 +48,12 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
 
       query += ` ORDER BY priority DESC`;
 
-      const { data, error } = await supabase.rpc('execute_sql', {
-        query,
-        params
+      const { data, error } = await supabase.functions.invoke('execute-sql', {
+        body: { query, params }
       });
 
       if (error) throw error;
-      return (data || []) as FormSubmissionRule[];
+      return (data?.data || []) as FormSubmissionRule[];
     },
     enabled: !!user
   });
@@ -64,26 +62,28 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
     mutationFn: async (ruleData: Omit<FormSubmissionRule, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { data, error } = await supabase.rpc('execute_sql', {
-        query: `
-          INSERT INTO form_submission_rules (user_id, campaign_id, template_id, name, conditions, actions, is_active, priority)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-          RETURNING *
-        `,
-        params: [
-          user.id,
-          ruleData.campaign_id,
-          ruleData.template_id,
-          ruleData.name,
-          JSON.stringify(ruleData.conditions),
-          JSON.stringify(ruleData.actions),
-          ruleData.is_active,
-          ruleData.priority
-        ]
+      const { data, error } = await supabase.functions.invoke('execute-sql', {
+        body: {
+          query: `
+            INSERT INTO form_submission_rules (user_id, campaign_id, template_id, name, conditions, actions, is_active, priority)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+          `,
+          params: [
+            user.id,
+            ruleData.campaign_id,
+            ruleData.template_id,
+            ruleData.name,
+            JSON.stringify(ruleData.conditions),
+            JSON.stringify(ruleData.actions),
+            ruleData.is_active,
+            ruleData.priority
+          ]
+        }
       });
 
       if (error) throw error;
-      return data?.[0] as FormSubmissionRule;
+      return data?.data?.[0] as FormSubmissionRule;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['form-submission-rules'] });
@@ -97,30 +97,32 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
 
   const updateRuleMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<FormSubmissionRule> }) => {
-      const { data, error } = await supabase.rpc('execute_sql', {
-        query: `
-          UPDATE form_submission_rules 
-          SET name = COALESCE($2, name),
-              conditions = COALESCE($3, conditions),
-              actions = COALESCE($4, actions),
-              is_active = COALESCE($5, is_active),
-              priority = COALESCE($6, priority),
-              updated_at = NOW()
-          WHERE id = $1
-          RETURNING *
-        `,
-        params: [
-          id,
-          updates.name,
-          updates.conditions ? JSON.stringify(updates.conditions) : null,
-          updates.actions ? JSON.stringify(updates.actions) : null,
-          updates.is_active,
-          updates.priority
-        ]
+      const { data, error } = await supabase.functions.invoke('execute-sql', {
+        body: {
+          query: `
+            UPDATE form_submission_rules 
+            SET name = COALESCE($2, name),
+                conditions = COALESCE($3, conditions),
+                actions = COALESCE($4, actions),
+                is_active = COALESCE($5, is_active),
+                priority = COALESCE($6, priority),
+                updated_at = NOW()
+            WHERE id = $1
+            RETURNING *
+          `,
+          params: [
+            id,
+            updates.name,
+            updates.conditions ? JSON.stringify(updates.conditions) : null,
+            updates.actions ? JSON.stringify(updates.actions) : null,
+            updates.is_active,
+            updates.priority
+          ]
+        }
       });
 
       if (error) throw error;
-      return data?.[0] as FormSubmissionRule;
+      return data?.data?.[0] as FormSubmissionRule;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['form-submission-rules'] });
@@ -134,9 +136,11 @@ export const useFormSubmissionRules = (campaignId?: string, templateId?: string)
 
   const deleteRuleMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc('execute_sql', {
-        query: 'DELETE FROM form_submission_rules WHERE id = $1',
-        params: [id]
+      const { error } = await supabase.functions.invoke('execute-sql', {
+        body: {
+          query: 'DELETE FROM form_submission_rules WHERE id = $1',
+          params: [id]
+        }
       });
 
       if (error) throw error;

@@ -66,15 +66,17 @@ export const useTemplateManager = ({ templateId, canvasState, onLoadTemplate }: 
       const templateData = {
         name: templateName,
         description: templateDescription,
+        canvasData: canvasState,
         tags: templateTags,
-        canvas_data: canvasState,
-        is_public: false
+        isPublic: false
       };
 
       const savedTemplate = await saveTemplate(templateData, currentTemplateId || undefined);
-      setCurrentTemplateId(savedTemplate.id);
-      setIsSaveDialogOpen(false);
-      toast.success("Template saved successfully!");
+      if (savedTemplate) {
+        setCurrentTemplateId(savedTemplate.id);
+        setIsSaveDialogOpen(false);
+        toast.success("Template saved successfully!");
+      }
     } catch (error) {
       console.error("Error saving template:", error);
       toast.error("Failed to save template");
