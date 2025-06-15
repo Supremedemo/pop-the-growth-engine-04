@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,7 +73,11 @@ export const EventBasedCampaignManager = () => {
     showGrid: true,
     gridSize: 8,
     layout: {
+      id: "modal-center",
+      name: "Modal - Center",
       type: 'modal' as const,
+      description: "Classic popup in the center of screen",
+      dimensions: { width: 400, height: 300 },
       position: 'center' as const
     },
     showOverlay: true,
