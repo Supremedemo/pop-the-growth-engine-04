@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +18,11 @@ import {
   XCircle, 
   Clock,
   Trash2,
-  Edit
+  Edit,
+  AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const WebhookManager = () => {
   const { webhooks, createWebhook, updateWebhook, deleteWebhook, testWebhook, isCreating, isUpdating, isDeleting, isTesting } = useWebhooks();
@@ -29,6 +30,8 @@ export const WebhookManager = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null);
+  const [isTestingBeforeCreate, setIsTestingBeforeCreate] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   
   // Form state
   const [name, setName] = useState("");
@@ -47,6 +50,7 @@ export const WebhookManager = () => {
     setAuthType('none');
     setAuthConfig("");
     setIsActive(true);
+    setTestResult(null);
   };
 
   const loadWebhookForEdit = (webhook: Webhook) => {
@@ -61,9 +65,83 @@ export const WebhookManager = () => {
     setIsEditDialogOpen(true);
   };
 
+  const testWebhookBeforeCreate = async () => {
+    if (!url.trim()) {
+      toast.error('Please enter webhook URL before testing');
+      return;
+    }
+
+    setIsTestingBeforeCreate(true);
+    setTestResult(null);
+
+    try {
+      const parsedHeaders = headers.trim() ? JSON.parse(headers) : {};
+      const parsedAuthConfig = authConfig.trim() ? JSON.parse(authConfig) : {};
+
+      // Prepare test payload
+      const testPayload = {
+        test: true,
+        timestamp: new Date().toISOString(),
+        message: "This is a test webhook delivery",
+        form_data: {
+          email: "test@example.com",
+          name: "Test User",
+          message: "Test message"
+        }
+      };
+
+      // Prepare headers
+      const requestHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...parsedHeaders
+      };
+
+      // Add authentication if configured
+      if (authType === 'bearer' && parsedAuthConfig.token) {
+        requestHeaders['Authorization'] = `Bearer ${parsedAuthConfig.token}`;
+      } else if (authType === 'basic' && parsedAuthConfig.username && parsedAuthConfig.password) {
+        const credentials = btoa(`${parsedAuthConfig.username}:${parsedAuthConfig.password}`);
+        requestHeaders['Authorization'] = `Basic ${credentials}`;
+      } else if (authType === 'api_key' && parsedAuthConfig.key && parsedAuthConfig.header) {
+        requestHeaders[parsedAuthConfig.header] = parsedAuthConfig.key;
+      }
+
+      // Test the webhook
+      const response = await fetch(url.trim(), {
+        method,
+        headers: requestHeaders,
+        body: JSON.stringify(testPayload),
+      });
+
+      const success = response.ok;
+      const message = success 
+        ? `Webhook test successful! (${response.status})`
+        : `Webhook test failed with status ${response.status}`;
+
+      setTestResult({ success, message });
+
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message);
+      }
+    } catch (error) {
+      const message = `Webhook test failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      setTestResult({ success: false, message });
+      toast.error(message);
+    } finally {
+      setIsTestingBeforeCreate(false);
+    }
+  };
+
   const handleCreateWebhook = () => {
     if (!name.trim() || !url.trim()) {
       toast.error('Please enter webhook name and URL');
+      return;
+    }
+
+    if (!testResult || !testResult.success) {
+      toast.error('Please test the webhook successfully before creating it');
       return;
     }
 
@@ -149,14 +227,20 @@ export const WebhookManager = () => {
         <Input
           id="url"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => {
+            setUrl(e.target.value);
+            setTestResult(null); // Reset test result when URL changes
+          }}
           placeholder="https://api.example.com/webhook"
         />
       </div>
 
       <div>
         <Label htmlFor="method">HTTP Method</Label>
-        <Select value={method} onValueChange={setMethod}>
+        <Select value={method} onValueChange={(value) => {
+          setMethod(value);
+          setTestResult(null); // Reset test result when method changes
+        }}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -173,7 +257,10 @@ export const WebhookManager = () => {
         <Textarea
           id="headers"
           value={headers}
-          onChange={(e) => setHeaders(e.target.value)}
+          onChange={(e) => {
+            setHeaders(e.target.value);
+            setTestResult(null); // Reset test result when headers change
+          }}
           placeholder='{"Content-Type": "application/json"}'
           rows={3}
         />
@@ -181,7 +268,10 @@ export const WebhookManager = () => {
 
       <div>
         <Label htmlFor="authType">Authentication Type</Label>
-        <Select value={authType} onValueChange={(value: any) => setAuthType(value)}>
+        <Select value={authType} onValueChange={(value: any) => {
+          setAuthType(value);
+          setTestResult(null); // Reset test result when auth changes
+        }}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -200,7 +290,10 @@ export const WebhookManager = () => {
           <Textarea
             id="authConfig"
             value={authConfig}
-            onChange={(e) => setAuthConfig(e.target.value)}
+            onChange={(e) => {
+              setAuthConfig(e.target.value);
+              setTestResult(null); // Reset test result when auth config changes
+            }}
             placeholder={authType === 'bearer' ? '{"token": "your-token"}' : 
                         authType === 'basic' ? '{"username": "user", "password": "pass"}' :
                         '{"key": "your-api-key", "header": "X-API-Key"}'}
@@ -217,6 +310,46 @@ export const WebhookManager = () => {
         />
         <Label htmlFor="isActive">Active</Label>
       </div>
+
+      {!isEdit && (
+        <>
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <Label>Test Webhook</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={testWebhookBeforeCreate}
+                disabled={isTestingBeforeCreate || !url.trim()}
+                className="flex items-center gap-2"
+              >
+                <TestTube className="w-4 h-4" />
+                {isTestingBeforeCreate ? 'Testing...' : 'Test Webhook'}
+              </Button>
+            </div>
+            
+            {testResult && (
+              <div className={`flex items-center gap-2 p-3 rounded-md ${
+                testResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+              }`}>
+                {testResult.success ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <AlertCircle className="w-4 h-4" />
+                )}
+                <span className="text-sm">{testResult.message}</span>
+              </div>
+            )}
+            
+            {!testResult && (
+              <p className="text-sm text-slate-500">
+                Test the webhook endpoint before creating it to ensure it works properly.
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       <div className="flex justify-end space-x-2">
         <Button 
@@ -235,7 +368,7 @@ export const WebhookManager = () => {
         </Button>
         <Button 
           onClick={isEdit ? handleUpdateWebhook : handleCreateWebhook}
-          disabled={isEdit ? isUpdating : isCreating}
+          disabled={isEdit ? isUpdating : (isCreating || (!testResult || !testResult.success))}
         >
           {isEdit 
             ? (isUpdating ? 'Updating...' : 'Update Webhook')
@@ -270,7 +403,7 @@ export const WebhookManager = () => {
             <DialogHeader>
               <DialogTitle>Create New Webhook</DialogTitle>
               <DialogDescription>
-                Add a new webhook endpoint to receive form submission data
+                Add a new webhook endpoint to receive form submission data. The webhook will be tested before creation.
               </DialogDescription>
             </DialogHeader>
             <WebhookForm />
