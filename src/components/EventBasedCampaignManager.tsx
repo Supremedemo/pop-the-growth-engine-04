@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useWebsiteManagement } from "@/hooks/useWebsiteManagement";
 import { useUserTracking } from "@/hooks/useUserTracking";
 import { useTemplates } from "@/hooks/useTemplates";
@@ -21,7 +23,8 @@ import {
   Eye,
   FormInput,
   Download,
-  Plus
+  Plus,
+  Palette
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,7 +38,7 @@ const eventTypeOptions = [
 
 export const EventBasedCampaignManager = () => {
   const { websites, isLoading: websitesLoading } = useWebsiteManagement();
-  const { templates } = useTemplates();
+  const { templates, saveTemplate, isSaving: isSavingTemplate } = useTemplates();
   const { createCampaign, isCreating } = useCampaigns();
   
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>("");
@@ -49,9 +52,58 @@ export const EventBasedCampaignManager = () => {
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
 
+  // Template creation state
+  const [isCreateTemplateOpen, setIsCreateTemplateOpen] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState("");
+  const [newTemplateDescription, setNewTemplateDescription] = useState("");
+
   const { trackedUsers, userEvents, isLoading: trackingLoading, getEventAnalytics } = useUserTracking(selectedWebsiteId);
 
   const analytics = getEventAnalytics();
+
+  const handleCreateTemplate = () => {
+    if (!newTemplateName.trim()) {
+      toast.error('Please enter a template name');
+      return;
+    }
+
+    // Create a basic template structure
+    const basicCanvasData = {
+      width: 400,
+      height: 300,
+      backgroundColor: '#ffffff',
+      backgroundType: 'color' as const,
+      backgroundImage: '',
+      elements: [],
+      settings: {},
+      customCSS: '',
+      customJS: '',
+      metadata: {},
+      animations: [],
+      layout: {
+        type: 'modal' as const,
+        position: 'center' as const
+      },
+      showOverlay: true,
+      overlayColor: '#000000',
+      overlayOpacity: 50,
+      showCloseButton: true,
+      closeButtonPosition: 'top-right' as const
+    };
+
+    saveTemplate({
+      name: newTemplateName.trim(),
+      description: newTemplateDescription.trim() || undefined,
+      canvasData: basicCanvasData,
+      tags: []
+    });
+
+    // Reset form
+    setNewTemplateName("");
+    setNewTemplateDescription("");
+    setIsCreateTemplateOpen(false);
+    toast.success('Template created! You can now select it.');
+  };
 
   const handleCreateCampaign = () => {
     if (!campaignName.trim()) {
@@ -105,12 +157,20 @@ export const EventBasedCampaignManager = () => {
         backgroundType: 'color',
         backgroundImage: '',
         elements: [],
-        version: '1.0',
         settings: {},
         customCSS: '',
         customJS: '',
         metadata: {},
-        animations: []
+        animations: [],
+        layout: {
+          type: 'modal',
+          position: 'center'
+        },
+        showOverlay: true,
+        overlayColor: '#000000',
+        overlayOpacity: 50,
+        showCloseButton: true,
+        closeButtonPosition: 'top-right'
       },
       templateId: selectedTemplateId,
       targetingRules,
@@ -146,7 +206,7 @@ export const EventBasedCampaignManager = () => {
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
             <Target className="w-8 h-8" />
-            Event-Based Campaigns
+            Campaign Creator
           </h1>
           <p className="text-slate-600 mt-2">
             Create campaigns that trigger based on user behavior and events
@@ -314,7 +374,63 @@ export const EventBasedCampaignManager = () => {
 
               {/* Template Selection */}
               <div>
-                <Label htmlFor="template">Template</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="template">Template</Label>
+                  <Dialog open={isCreateTemplateOpen} onOpenChange={setIsCreateTemplateOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Template
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Palette className="w-5 h-5" />
+                          Create New Template
+                        </DialogTitle>
+                        <DialogDescription>
+                          Create a new template that you can use for this campaign
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="newTemplateName">Template Name</Label>
+                          <Input
+                            id="newTemplateName"
+                            value={newTemplateName}
+                            onChange={(e) => setNewTemplateName(e.target.value)}
+                            placeholder="Enter template name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="newTemplateDescription">Description (Optional)</Label>
+                          <Textarea
+                            id="newTemplateDescription"
+                            value={newTemplateDescription}
+                            onChange={(e) => setNewTemplateDescription(e.target.value)}
+                            placeholder="Describe your template"
+                            rows={3}
+                          />
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setIsCreateTemplateOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            onClick={handleCreateTemplate}
+                            disabled={isSavingTemplate}
+                          >
+                            {isSavingTemplate ? 'Creating...' : 'Create Template'}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a template" />

@@ -39,7 +39,7 @@ const Index = () => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'builder', label: 'Popup Builder', icon: Palette },
     { id: 'campaigns', label: 'Campaign Analytics', icon: TrendingUp },
-    { id: 'campaign-creator', label: 'Create Campaign', icon: Target },
+    { id: 'campaign-creator', label: 'Campaign Creator', icon: Target },
     { id: 'templates', label: 'Templates', icon: Image },
     { id: 'websites', label: 'Websites', icon: Globe },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
