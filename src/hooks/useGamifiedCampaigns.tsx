@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useCampaigns } from "./useCampaigns";
 import { useGamification } from "./useGamification";
 import { toast } from "sonner";
+import { CanvasState } from "@/components/PopupBuilder";
 
 export interface GamifiedCampaignConfig {
   templateId: string;
@@ -23,29 +24,39 @@ export const useGamifiedCampaigns = () => {
       setIsCreating(true);
       
       // Convert gamified template to canvas data format
-      const canvasData = {
+      const canvasData: CanvasState = {
         elements: [{
           id: 'gamified-element',
-          type: 'gamified-template',
+          type: 'html',
           templateId: config.templateId,
           config: config.customization,
           x: 50,
           y: 50,
           width: 400,
           height: 300,
-          zIndex: 1
+          zIndex: 1,
+          content: `<div data-template="${config.templateId}" data-config='${JSON.stringify(config.customization)}'></div>`,
+          styles: {}
         }],
         width: 500,
         height: 400,
         backgroundColor: config.customization.backgroundColor || '#ffffff',
+        backgroundType: 'color',
+        zoom: 1,
+        showGrid: false,
+        gridSize: 8,
         showOverlay: true,
         overlayColor: '#000000',
         overlayOpacity: 50,
         showCloseButton: true,
         closeButtonPosition: 'top-right' as const,
         layout: {
+          id: 'modal-center',
+          name: 'Modal - Center',
           type: 'modal' as const,
-          position: 'center' as const
+          position: 'center' as const,
+          description: 'Gamified template popup',
+          dimensions: { width: 500, height: 400 }
         }
       };
 

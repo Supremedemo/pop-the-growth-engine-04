@@ -14,7 +14,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useGamification } from "@/hooks/useGamification";
 import { useTemplateCustomization } from "@/hooks/useTemplateCustomization";
-import { useCampaigns } from "@/hooks/useCampaigns";
+import { useGamifiedCampaigns } from "@/hooks/useGamifiedCampaigns";
 import { GamifiedTemplatePreview } from "./GamifiedTemplatePreview";
 import { 
   Star, 
@@ -52,7 +52,6 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [campaignName, setCampaignName] = useState("");
-  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
 
   const { 
     userProgression, 
@@ -72,7 +71,7 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
     isSaving
   } = useTemplateCustomization();
 
-  const { createCampaign, isCreating } = useCampaigns();
+  const { createGamifiedCampaign, isCreating } = useGamifiedCampaigns();
 
   const progressToNext = getProgressToNextLevel();
   const unlockedAchievements = userAchievements.map(ua => ua.achievement_id);
@@ -128,38 +127,11 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
     }
 
     try {
-      setIsCreatingCampaign(true);
-      
-      // Create campaign with the customized template
-      createCampaign({
-        name: campaignName,
-        description: `Interactive ${selectedTemplate.name} campaign`,
-        canvasData: {
-          elements: [{
-            id: 'gamified-element',
-            type: 'gamified-template',
-            templateId: selectedTemplate.id,
-            config: customizationConfig,
-            x: 50,
-            y: 50,
-            width: 400,
-            height: 300,
-            zIndex: 1
-          }],
-          width: 500,
-          height: 400,
-          backgroundColor: customizationConfig.backgroundColor || '#ffffff',
-          showOverlay: true,
-          overlayColor: '#000000',
-          overlayOpacity: 50,
-          showCloseButton: true,
-          closeButtonPosition: 'top-right',
-          layout: {
-            type: 'modal',
-            position: 'center'
-          }
-        },
+      const success = await createGamifiedCampaign({
         templateId: selectedTemplate.id,
+        templateName: selectedTemplate.name,
+        customization: customizationConfig,
+        campaignName: campaignName,
         targetingRules: {
           pageUrl: '/*',
           triggerType: 'time_delay',
@@ -172,18 +144,15 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
         }
       });
 
-      updateProgression({ action: 'campaign_created' });
-      toast.success('Campaign created successfully!');
-      setIsCustomizing(false);
-      setIsCreatingCampaign(false);
-      
-      if (onCreateCampaign) {
-        onCreateCampaign(selectedTemplate, customizationConfig);
+      if (success) {
+        setIsCustomizing(false);
+        if (onCreateCampaign) {
+          onCreateCampaign(selectedTemplate, customizationConfig);
+        }
       }
     } catch (error) {
       console.error('Error creating campaign:', error);
       toast.error('Failed to create campaign');
-      setIsCreatingCampaign(false);
     }
   };
 
@@ -421,26 +390,14 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
                   
                   <CardContent>
                     <div className="space-y-2">
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          disabled={isLocked}
-                          onClick={() => handleTemplateCustomize(template)}
-                          className="flex-1"
-                        >
-                          <Palette className="w-4 h-4 mr-2" />
-                          Customize & Deploy
-                        </Button>
-                      </div>
                       <Button
                         size="sm"
-                        variant="outline"
                         disabled={isLocked}
-                        onClick={() => handleUseTemplate(template)}
+                        onClick={() => handleTemplateCustomize(template)}
                         className="w-full"
                       >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Quick Use
+                        <Palette className="w-4 h-4 mr-2" />
+                        Customize & Deploy
                       </Button>
                     </div>
                   </CardContent>
@@ -475,14 +432,20 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
                   <div className="flex space-x-2">
                     <Button
                       size="sm"
-                      onClick={() => handleUseTemplate({
-                        ...gamifiedTemplates.find(t => t.id === customization.template_base_id),
-                        config: customization.customization_data
-                      })}
+                      onClick={() => {
+                        const baseTemplate = gamifiedTemplates.find(t => t.id === customization.template_base_id);
+                        if (baseTemplate) {
+                          setSelectedTemplate(baseTemplate);
+                          setCustomizationConfig(customization.customization_data);
+                          setTemplateName(customization.template_name);
+                          setCampaignName(`${customization.template_name} Campaign`);
+                          setIsCustomizing(true);
+                        }
+                      }}
                       className="flex-1"
                     >
                       <Play className="w-4 h-4 mr-2" />
-                      Use
+                      Deploy
                     </Button>
                     <Button
                       size="sm"
@@ -629,11 +592,11 @@ export const TemplateGalleryEnhanced = ({ onTemplateSelect, onCreateCampaign }: 
             </div>
             <Button 
               onClick={handleCreateCampaignFromTemplate} 
-              disabled={isCreatingCampaign || isCreating}
+              disabled={isCreating}
               className="bg-green-600 hover:bg-green-700"
             >
               <Globe className="w-4 h-4 mr-2" />
-              {isCreatingCampaign || isCreating ? 'Creating...' : 'Deploy as Campaign'}
+              {isCreating ? 'Creating...' : 'Deploy as Campaign'}
             </Button>
           </div>
         </DialogContent>
