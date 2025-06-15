@@ -1,15 +1,15 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import Auth from './Auth';
-import Dashboard from '@/components/Dashboard';
-import RealDashboard from '@/components/RealDashboard';
-import PopupBuilder from '@/components/PopupBuilder';
-import CampaignManager from '@/components/CampaignManager';
-import Analytics from '@/components/Analytics';
-import TemplateGalleryEnhanced from '@/components/TemplateGalleryEnhanced';
-import WebsiteManagerEnhanced from '@/components/WebsiteManagerEnhanced';
-import UserProgressDashboard from '@/components/UserProgressDashboard';
+import { Auth } from './Auth';
+import { Dashboard } from '@/components/Dashboard';
+import { RealDashboard } from '@/components/RealDashboard';
+import { PopupBuilder } from '@/components/PopupBuilder';
+import { CampaignManager } from '@/components/CampaignManager';
+import { Analytics } from '@/components/Analytics';
+import { TemplateGalleryEnhanced } from '@/components/TemplateGalleryEnhanced';
+import { WebsiteManagerEnhanced } from '@/components/WebsiteManagerEnhanced';
+import { UserProgressDashboard } from '@/components/UserProgressDashboard';
 import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { 
@@ -23,10 +23,10 @@ import {
 } from 'lucide-react';
 
 const Index = () => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');
 
-  if (isLoading) {
+  if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
@@ -47,7 +47,7 @@ const Index = () => {
   const renderContent = () => {
     switch (activeView) {
       case 'dashboard':
-        return <RealDashboard />;
+        return <RealDashboard onNavigate={setActiveView} />;
       case 'builder':
         return <PopupBuilder />;
       case 'campaigns':
@@ -61,7 +61,7 @@ const Index = () => {
       case 'progress':
         return <UserProgressDashboard />;
       default:
-        return <RealDashboard />;
+        return <RealDashboard onNavigate={setActiveView} />;
     }
   };
 
