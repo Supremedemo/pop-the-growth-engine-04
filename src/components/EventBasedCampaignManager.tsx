@@ -13,6 +13,7 @@ import { useUserTracking } from "@/hooks/useUserTracking";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useCampaignDeployments } from "@/hooks/useCampaignDeployments";
+import { AdvancedTriggerBuilder } from "./AdvancedTriggerBuilder";
 import { 
   Target, 
   Users, 
@@ -31,14 +32,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const eventTypeOptions = [
-  { value: "page_view", label: "Page View", icon: Eye },
-  { value: "click", label: "Click", icon: MousePointer },
-  { value: "form_submit", label: "Form Submit", icon: FormInput },
-  { value: "download", label: "Download", icon: Download },
-  { value: "custom", label: "Custom Event", icon: Plus }
-];
-
 export const EventBasedCampaignManager = () => {
   const { websites, isLoading: websitesLoading } = useWebsiteManagement();
   const { templates, saveTemplate, isSaving: isSavingTemplate } = useTemplates();
@@ -48,14 +41,12 @@ export const EventBasedCampaignManager = () => {
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>("");
   const [campaignName, setCampaignName] = useState("");
   const [campaignDescription, setCampaignDescription] = useState("");
-  const [selectedEventType, setSelectedEventType] = useState("");
-  const [customEventType, setCustomEventType] = useState("");
-  const [targetUrl, setTargetUrl] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [scheduleType, setScheduleType] = useState<"immediate" | "scheduled">("immediate");
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
   const [goLiveAfterCreation, setGoLiveAfterCreation] = useState(false);
+  const [triggerRules, setTriggerRules] = useState<any>(null);
 
   // Template creation state
   const [isCreateTemplateOpen, setIsCreateTemplateOpen] = useState(false);
@@ -133,30 +124,23 @@ export const EventBasedCampaignManager = () => {
       return;
     }
 
-    if (!selectedEventType) {
-      toast.error('Please select an event type');
-      return;
-    }
-
-    if (selectedEventType === "custom" && !customEventType.trim()) {
-      toast.error('Please enter a custom event type');
-      return;
-    }
-
     if (!selectedTemplateId) {
       toast.error('Please select a template');
       return;
     }
 
-    const eventType = selectedEventType === "custom" ? customEventType : selectedEventType;
-    
+    if (!triggerRules || !triggerRules.eventType) {
+      toast.error('Please configure trigger rules');
+      return;
+    }
+
     const targetingRules = {
       websiteId: selectedWebsiteId,
-      eventType,
-      targetUrl: targetUrl || undefined,
+      eventType: triggerRules.eventType,
       triggerConditions: {
-        eventType,
-        urlPattern: targetUrl || '*',
+        eventType: triggerRules.eventType,
+        logic: triggerRules.logic || 'AND',
+        rules: triggerRules.rules || [],
         frequency: 'once_per_session'
       }
     };
@@ -200,14 +184,12 @@ export const EventBasedCampaignManager = () => {
       // Reset form
       setCampaignName("");
       setCampaignDescription("");
-      setSelectedEventType("");
-      setCustomEventType("");
-      setTargetUrl("");
       setSelectedTemplateId("");
       setScheduleType("immediate");
       setScheduledDate("");
       setScheduledTime("");
       setGoLiveAfterCreation(false);
+      setTriggerRules(null);
 
     } catch (error) {
       console.error('Error creating campaign:', error);
@@ -234,7 +216,7 @@ export const EventBasedCampaignManager = () => {
             Campaign Creator
           </h1>
           <p className="text-slate-600 mt-2">
-            Create campaigns that trigger based on user behavior and events
+            Create campaigns that trigger based on discovered events and advanced rules
           </p>
         </div>
       </div>
@@ -320,7 +302,7 @@ export const EventBasedCampaignManager = () => {
             <CardHeader>
               <CardTitle>Create New Campaign</CardTitle>
               <CardDescription>
-                Set up a campaign that triggers based on user events
+                Set up a campaign with advanced event-based triggers
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -348,57 +330,14 @@ export const EventBasedCampaignManager = () => {
                 </div>
               </div>
 
-              {/* Event Configuration */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Event Trigger</h3>
-                
-                <div>
-                  <Label htmlFor="eventType">Event Type</Label>
-                  <Select value={selectedEventType} onValueChange={setSelectedEventType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select event type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {eventTypeOptions.map((option) => {
-                        const Icon = option.icon;
-                        return (
-                          <SelectItem key={option.value} value={option.value}>
-                            <div className="flex items-center gap-2">
-                              <Icon className="w-4 h-4" />
-                              {option.label}
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {selectedEventType === "custom" && (
-                  <div>
-                    <Label htmlFor="customEventType">Custom Event Type</Label>
-                    <Input
-                      id="customEventType"
-                      value={customEventType}
-                      onChange={(e) => setCustomEventType(e.target.value)}
-                      placeholder="Enter custom event type"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <Label htmlFor="targetUrl">Target URL (Optional)</Label>
-                  <Input
-                    id="targetUrl"
-                    value={targetUrl}
-                    onChange={(e) => setTargetUrl(e.target.value)}
-                    placeholder="e.g., /checkout, /product/*"
-                  />
-                  <p className="text-sm text-slate-500 mt-1">
-                    Leave empty to trigger on any page. Use wildcards (*) for pattern matching.
-                  </p>
-                </div>
-              </div>
+              {/* Advanced Trigger Configuration */}
+              {selectedWebsiteId && (
+                <AdvancedTriggerBuilder
+                  websiteId={selectedWebsiteId}
+                  onTriggerRulesChange={setTriggerRules}
+                  initialRules={triggerRules}
+                />
+              )}
 
               {/* Template Selection */}
               <div>

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { FormSubmissionRulesManager } from "../FormSubmissionRulesManager";
+import { AdvancedTriggerBuilder } from "../AdvancedTriggerBuilder";
 import { useWebhooks, Webhook } from "@/hooks/useWebhooks";
 import { 
   Settings, 
@@ -21,16 +22,26 @@ import {
   XCircle, 
   Clock,
   Trash2,
-  Edit
+  Edit,
+  Zap
 } from "lucide-react";
 import { toast } from "sonner";
 
 interface RulesPanelProps {
   campaignId?: string;
   templateId?: string;
+  websiteId?: string;
+  onTriggerRulesChange?: (rules: any) => void;
+  initialTriggerRules?: any;
 }
 
-export const RulesPanel = ({ campaignId, templateId }: RulesPanelProps) => {
+export const RulesPanel = ({ 
+  campaignId, 
+  templateId, 
+  websiteId,
+  onTriggerRulesChange,
+  initialTriggerRules 
+}: RulesPanelProps) => {
   const { webhooks, createWebhook, updateWebhook, deleteWebhook, testWebhook, isCreating, isUpdating, isDeleting, isTesting } = useWebhooks();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -265,13 +276,17 @@ export const RulesPanel = ({ campaignId, templateId }: RulesPanelProps) => {
           Automation Rules
         </h2>
         <p className="text-sm text-slate-500 mt-1">
-          Configure form submission processing
+          Configure campaign triggers and automation
         </p>
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <Tabs defaultValue="rules" className="h-full flex flex-col">
-          <TabsList className="grid w-full grid-cols-2 mx-4 mt-4">
+        <Tabs defaultValue="triggers" className="h-full flex flex-col">
+          <TabsList className="grid w-full grid-cols-3 mx-4 mt-4">
+            <TabsTrigger value="triggers" className="flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              Triggers
+            </TabsTrigger>
             <TabsTrigger value="rules" className="flex items-center gap-1">
               <Filter className="w-3 h-3" />
               Rules
@@ -283,6 +298,25 @@ export const RulesPanel = ({ campaignId, templateId }: RulesPanelProps) => {
           </TabsList>
           
           <div className="flex-1 overflow-y-auto">
+            <TabsContent value="triggers" className="p-4 m-0">
+              {websiteId && onTriggerRulesChange ? (
+                <AdvancedTriggerBuilder
+                  websiteId={websiteId}
+                  onTriggerRulesChange={onTriggerRulesChange}
+                  initialRules={initialTriggerRules}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <Zap className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
+                      Select a website to configure advanced triggers
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+            
             <TabsContent value="rules" className="p-4 m-0">
               <FormSubmissionRulesManager campaignId={campaignId} templateId={templateId} />
             </TabsContent>
